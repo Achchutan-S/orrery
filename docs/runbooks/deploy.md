@@ -8,6 +8,8 @@ tags: []
 
 One Vercel project serves `apps/site` as static files ([ADR-002](../adr/002-static-by-default.md), [ADR-016](../adr/016-vercel-deployment.md)). No adapter, no functions, no server runtime.
 
+The Control Center server (`apps/control`) is never deployed: no Vercel project points at it, it refuses to start when `VERCEL` or `CI` is set, and it binds only to 127.0.0.1 ([control-center.md](../control-center.md)). A deployed Control Center needs owner identity and its own origin (Phase 4a).
+
 ## What is in the repository (automatic)
 
 `apps/site/vercel.json` and `apps/site/package.json` carry everything that can live in code:

@@ -66,6 +66,7 @@ The table `BUDGETS` at the top of that file is the only place limits live; an ex
 | `catalog-deps` | `experience-catalog` imports only `platform-schema` and its own files: data only, no Astro, React or site code. |
 | `exclusive-imports` | A package in an entry's `exclusiveImports` is imported only from that experience. |
 | `site-control` | The public site never imports `apps/control`. |
+| `control-deps` | `apps/control` imports only `@pu/platform-schema`, `@pu/experience-catalog`, npm packages, Node built-ins and its own files. |
 
 Allowed direction: experiences → kernel → `platform-schema`; build code (frontmatter, integration, kernel `release/`) → `experience-catalog` → `platform-schema` → zod. External experiences have no folder at all (folder coverage). Test files are not checked.
 

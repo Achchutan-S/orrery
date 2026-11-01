@@ -118,3 +118,15 @@ test('MDX: top-level imports are checked, prose mentioning imports is not', () =
   const bad = f(`${E}/alpha/chapters/02.mdx`, "import Layout from '../../beta/Layout.astro';\n\nText.\n");
   assert.deepEqual(run(bad), [`${E}/alpha/chapters/02.mdx:1 [experience-isolation]`]);
 });
+
+test('the site and the Control Center stay apart; the Control Center uses only the two packages', () => {
+  assert.deepEqual(run(
+    f('apps/site/src/pages/x.ts', "import { createApp } from '../../../control/server/app.ts';\n"),
+    f('apps/control/server/ok.ts', "import { Hono } from 'hono';\nimport { readFile } from 'node:fs/promises';\nimport { catalog } from '@pu/experience-catalog';\nimport { resolve } from '@pu/platform-schema';\nimport { x } from './store.ts';\n"),
+    f('apps/control/server/bad.ts', "import { flag } from '../../site/src/platform/release/index.ts';\nimport { readDist } from '../../../tools/checks/src/repo.ts';\n"),
+  ), [
+    'apps/site/src/pages/x.ts:1 [site-control]',
+    'apps/control/server/bad.ts:1 [control-deps]',
+    'apps/control/server/bad.ts:2 [control-deps]',
+  ]);
+});

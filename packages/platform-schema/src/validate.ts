@@ -14,7 +14,7 @@ const routeShape = (pattern: string) =>
 const underPrefix = (pattern: string, prefix: string) =>
   pattern === prefix || pattern.startsWith(`${prefix}/`);
 
-const zodIssues = (error: z.ZodError, base: string): Issue[] =>
+export const zodIssues = (error: z.ZodError, base: string): Issue[] =>
   error.issues.map((i) => ({
     path: [base, ...i.path.map(String)].filter(Boolean).join('.'),
     rule: 'schema',

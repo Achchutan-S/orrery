@@ -16,10 +16,10 @@ The design is in [`blueprint.md`](blueprint.md); decisions are in [`adr/`](adr/)
 | `packages/experience-catalog` | Data-only catalog: `entries/<id>.ts`, one index line each; `parseCatalog()` | `platform-schema` |
 | `config/release.json` | Release state (lifecycle, access, discoverability, flag values); `release.schema.json` is generated | — |
 | `apps/site` | Astro 7 static site; the `mount-experiences` integration; experiences under `src/experiences/` | `astro`, React, MDX, both packages |
-
+| `apps/control` | Control Center: `server/` is the local Hono API over `config/release.json` ([control-center.md](control-center.md), ADR-017); `web/` arrives with task 13 | `hono`, `@hono/node-server`, `zod`, both packages |
 | `tools/checks` | Repository checks and the `config/release.schema.json` generator ([runbook](runbooks/checks.md), ADR-014) | both packages, `zod` |
 
-Not yet built: `apps/control` (see [`tracker.md`](tracker.md)).
+Not yet built: the Control Center frontend, `apps/control/web` (task 13).
 
 ## Kernel (`apps/site/src/platform`)
 
@@ -45,7 +45,7 @@ Modules and interfaces are listed in [ADR-012](adr/012-platform-layer.md). An ex
 | `release.ts` | `ReleaseState`, `ReleaseEntry`, `Lifecycle`, `Access`, `defaultReleaseEntry`, `releaseEntryFor`, `channelOf` | 3.2, 3.4 |
 | `resolve.ts` | `environmentFrom`, `resolve`, `resolveAll`, `mountedRoutes`, `resolvePlatformFlags`, `PHASE_0` | 3.4–3.7 |
 | `validate.ts` | `validateCatalog`, `validateCoverage`, `parseRelease`, `validateRelease`, `validatePlatform` (all of them, used by the build and the checks), `Issue` | 3.8 |
-| `patch.ts` / `control.ts` | `canTransition`, `applyPatch`, `ReleasePatch` | 3.4, 4.0 |
+| `patch.ts` / `control.ts` | `canTransition`, `applyPatch`, `ReleasePatch`, `serializeRelease` (canonical release-file format), the Control Center API contract (`PatchRequest`, `API_ERRORS`, response types) | 3.4, 4.0 |
 
 Every function is pure. `validateCoverage` takes the folder list and a `fileExists` callback, so the site integration does the filesystem reads. Release state uses strict objects: an unknown key in `release.json` is an error, not silently dropped.
 

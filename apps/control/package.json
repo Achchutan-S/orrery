@@ -1,0 +1,20 @@
+{
+  "name": "@pu/control",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "node server/main.ts",
+    "test": "node --test --test-reporter=spec \"server/**/*.test.ts\"",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.5",
+    "@pu/experience-catalog": "workspace:*",
+    "@pu/platform-schema": "workspace:*",
+    "hono": "4.13.13",
+    "zod": "4.6.7"
+  }
+}

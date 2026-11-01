@@ -24,6 +24,8 @@ Status is `complete` only when the acceptance evidence passes. Source: blueprint
 | 10 | CI (GitHub Actions) | complete locally; hosted run not yet executed (nothing pushed) | ADR-015; `.github/workflows/ci.yml`; both jobs' exact steps passed in a clean copy on Node 22.23.4 | all suites |
 | 11 | Vercel, close Phase 0 | deployed at https://orrery-teal.vercel.app/ (commit 65194d2); production smoke test passed 1 November 2026; hosted CI run 41313826313 passed | ADR-016; `apps/site/vercel.json` schema-valid; `pnpm smoke` tested against fixtures and local servers; CSP verified in the browser | `tools/checks/src/smoke.test.ts` (9), CSP tests in `browser.test.ts` |
 
+| 12 | Control Center server | complete locally (not deployed, by design); hosted CI not yet run | ADR-017; `docs/control-center.md`; `pnpm check` and full suites pass on Node 22.23.4; mutation checks failed as expected | `apps/control/server/*.test.ts` (50), `platform-schema/src/control.test.ts` (3), boundaries `control-deps` |
+| 13 | Control Center web | not started | — | — |
 | — | The Orrery Journal (`journal`) | complete locally, not yet deployed | 8 MDX chapters in `apps/site/src/experiences/journal/chapters/`; published/listed via `config/release.json` | pipeline Journal tests, browser `The Orrery Journal` suite, `release.test.ts` withdraw test |
 
 ## Outstanding decisions

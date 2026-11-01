@@ -24,10 +24,11 @@ apps/site                  Astro 7 static site (React islands, MDX)
   src/pages/               platform routes only (404, later rss, sitemap)
 packages/platform-schema   zod schemas + pure resolve/validate/patch functions
 packages/experience-catalog  data-only entries/<id>.ts + one index line each
+apps/control/server        Control Center API: local Hono server over config/release.json (docs/control-center.md)
 tools/checks               repository checks (leaks, budgets, metadata, boundaries)
 config/release.json        release state; release.schema.json is generated
 ```
-Planned: `apps/control` (Phase 1).
+Planned: `apps/control/web`, the Control Center frontend (task 13).
 
 ## Commands
 
@@ -44,6 +45,7 @@ Node 22.23.4 (`.nvmrc`; Astro 7 minimum), pnpm via Corepack (`corepack enable`).
 | `pnpm check` | all repository checks: boundaries, production build, metadata, leaks, budgets (see `docs/runbooks/checks.md`) |
 | `pnpm check:boundaries`, `check:metadata`, `check:leaks`, `check:budgets` | one check each; the last three need `pnpm build:production` |
 | CI | `.github/workflows/ci.yml` runs `typecheck`, `test`, `check` and `test:browser` on pull requests and pushes to `main`; see `docs/runbooks/checks.md` § CI |
+| `pnpm control:server` | Control Center API on `127.0.0.1:4318` (`PU_CONTROL_PORT`); never in CI or on Vercel |
 | `pnpm smoke <url> --env production\|preview` | HTTP smoke test of a deployment (see `docs/runbooks/deploy.md`) |
 | `pnpm gen:release-schema` | regenerate `config/release.schema.json` after changing the release schema |
 
@@ -53,7 +55,7 @@ Node 22.23.4 (`.nvmrc`; Astro 7 minimum), pnpm via Corepack (`corepack enable`).
 - `platform-schema` imports only `zod`. `experience-catalog` imports only `platform-schema`.
 - An experience never imports another experience. Packages in an entry's `exclusiveImports` are imported only from that experience.
 - The catalog and `config/release.json` are read only by `.astro` frontmatter, the kernel and build code — never island/client code. Anything passed to an island as props is public.
-- `apps/site` never imports `apps/control`.
+- `apps/site` never imports `apps/control`; `apps/control` imports only the two packages.
 - All of the above are enforced by `pnpm check:boundaries`.
 - Flag-gated UI marks its root element `data-pu-flag="<experience>:<flag>"`, so the leak scan can prove it is not rendered in production.
 
@@ -70,9 +72,10 @@ Node 22.23.4 (`.nvmrc`; Astro 7 minimum), pnpm via Corepack (`corepack enable`).
 - Feature flags are not secrecy: an "off" island's JavaScript is still emitted (ADR-004 spike).
 - A folder is not a security boundary; a path is not an origin.
 - No admin endpoint on the primary origin, ever.
+- The Control Center server writes `config/release.json` only through `FileReleaseStore`, binds only to 127.0.0.1, and never prints or logs its session token. Never deploy it, add CORS to it, or loosen its Host/Origin checks.
 - Pages run under a strict CSP (ADR-016): no inline `style="…"` attributes or unhashed inline scripts.
 
-**Deferred — do not build early:** auth, database, on-demand rendering, Vercel adapter (all Phase 4); Control Center (Phase 1); search, RSS (Phase 2); Turborepo, CMS, microservices, Module Federation (never without a real need).
+**Deferred — do not build early:** auth, database, on-demand rendering, Vercel adapter (all Phase 4); a deployed Control Center (Phase 4a); search, RSS (Phase 2); Turborepo, CMS, microservices, Module Federation (never without a real need).
 
 ## Working agreement
 

@@ -4,6 +4,6 @@ dist/
 .env
 .env.*
 !.env.example
-config/.release.json.bak
+config/.release.json.*.tmp
 .DS_Store
 test-results/

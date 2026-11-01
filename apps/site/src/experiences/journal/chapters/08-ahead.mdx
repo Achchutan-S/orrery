@@ -4,6 +4,7 @@ summary: The roadmap as the blueprint orders it, phase by phase, and what each s
 sources:
   - docs/blueprint.md, §8 Phased implementation roadmap
   - docs/blueprint.md, §4 Control Center specification
+  - docs/control-center.md
   - docs/blueprint.md, §10 First implementation sequence
 ---
 import Claim from '../components/Claim.astro';
@@ -59,7 +60,13 @@ The first Control Center will run only on the owner's machine: a small interface
 
 <Claim standing="implemented">
 
-Part of it already exists. The operations it will perform (changing a lifecycle stage, access, discoverability, a flag or a note) are written today as pure, tested functions in the schema package, with the rules for which lifecycle changes are allowed. The Control Center will be an interface to those functions, not a second set of rules.
+Part of it already exists. The operations it will perform (changing a lifecycle stage, access, discoverability, a flag or a note) are written as pure, tested functions in the schema package, with the rules for which lifecycle changes are allowed. The Control Center is an interface to those functions, not a second set of rules.
+
+</Claim>
+
+<Claim standing="verified">
+
+The local server is built and passes its tests (task 12). It listens only on the owner's own machine, answers only to its own addresses and to requests from the Control Center page, and needs a session that ends when the server stops. Each change is checked with the same functions the site build uses, written atomically, and refused if the file changed since it was loaded, so it never overwrites a newer edit. It never runs Git and is never deployed. The screens that use it are the next task.
 
 </Claim>
 

@@ -1,0 +1,25 @@
+---
+noteId: "103fe640d61011f1ae605f8c0e08bb6f"
+tags: []
+
+---
+
+# ADR-017 — Control Center server: cookie session, API shape, file store
+
+Status: accepted (1 November 2026) · Implements blueprint task 12 and ADR-006; refines blueprint §4.0 where listed. Reference: [control-center.md](../control-center.md).
+
+**Decision:** `apps/control` is one workspace package, `@pu/control`, with the server in `server/` (the frontend joins it as `web/` in task 13). Hono 4 on `@hono/node-server`, run directly by Node 22's type stripping, bound to `127.0.0.1:4318`. Rules come only from `platform-schema`; the release file is written only through `FileReleaseStore`.
+
+Where this departs from the blueprint, and why:
+
+1. **Session token in an HttpOnly cookie, not in the URL.** The blueprint prints `http://127.0.0.1:4317/#token=…`, keeps the token in `sessionStorage` and sends it as `X-Control-Token`. Task 12's requirements forbid printing the token and prefer keeping it out of URLs and browser history; a token in `sessionStorage` is also readable by any script in the page. Instead `POST /api/session`, guarded by the Host and Origin checks, sets `pu_control_session` (`HttpOnly; SameSite=Strict; Path=/api`). The token is never printed, logged or readable by page scripts. Consequence: a cookie brings CSRF into scope, answered by SameSite=Strict, the exact-Origin check on every write and the JSON content-type requirement; a separate CSRF token would add nothing. The cookie is not `Secure` (plain HTTP on loopback). Trade-off accepted: any page served from the UI origin can obtain a session, so the session proves "the Control Center page in a browser on this machine", not identity. That was also true of the blueprint design for anyone who could see the terminal.
+2. **Response envelope and error codes.** Responses are `{ ok, data, meta }` / `{ ok: false, error }`. Codes follow task 12's catalogue: `INVALID_REQUEST`/`INVALID_JSON` (blueprint `BAD_REQUEST`), `UNAUTHORIZED` (`MISSING_TOKEN`), `INVALID_ORIGIN` (`FORBIDDEN_ORIGIN`), `NOT_FOUND` (`UNKNOWN_EXPERIENCE`), `STORE_UNAVAILABLE` (`WRITE_FAILED`, now also unreadable files); added `INVALID_HOST`, `METHOD_NOT_ALLOWED`, `WRITE_CONFLICT`, `PAYLOAD_TOO_LARGE`, `UNSUPPORTED_MEDIA_TYPE`, `INTERNAL_ERROR`; kept `STALE_REVISION`, `ILLEGAL_TRANSITION`, `VALIDATION_FAILED`, `CATALOG_INVALID`. The table with statuses is `API_ERRORS` in `platform-schema/src/control.ts`.
+3. **Endpoints.** `GET /api/registry` and `GET /api/experiences/:id` replace `GET /api/catalog` and `GET /api/resolution?env=`: each item carries its release entry, channel and all three environments, which is what the Registry and Experience detail screens show. `GET /api/release/pending` returns structured before/after entries and resolution changes instead of a unified diff, which needs no diff library and is easier to render. `PATCH /api/release`, `POST /api/release/preview` and `POST /api/release/revert` are as specified. No separate promote endpoint: promotion is the `transition` patch.
+4. **Host also allows the UI port.** Requests forwarded by the UI's dev proxy keep `Host: 127.0.0.1:4317`, so both ports are accepted, for `127.0.0.1` and `localhost` only.
+5. **No `config/.release.json.bak`.** Atomic rename means the file is always a complete old or new version; the session baseline (revert) and Git cover undoing a valid but unwanted change. The `.gitignore` entry now covers the store's temporary files instead.
+6. **WRITE_CONFLICT.** Besides the compare-and-swap before writing, the store re-checks the revision after the temporary file is complete and immediately before the rename, so an editor save during a write is reported, not overwritten.
+7. **No `tsx`.** Node 22.23.4 runs TypeScript directly, as everywhere else in the repository.
+
+**Also:** `ReleasePatch` objects are now strict (unknown fields are errors) and ids, flag names and revisions have formats; `serializeRelease` (canonical format, reproduces today's file byte for byte) and `zodIssues` are exported from `platform-schema`. The boundary checker scans `apps/control/server` and adds `control-deps`: the Control Center may import only the two packages and its own files.
+
+**Not done:** a cross-process lock (one server per checkout), a content endpoint (no writing collection exists yet), comparison with Git `HEAD` (the server never runs Git, by design).

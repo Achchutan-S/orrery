@@ -161,6 +161,10 @@ export function checkBoundaries(files: SourceFile[], experiences: readonly Exper
       // The kernel does not depend on any experience.
       if (file.path.startsWith('apps/site/src/platform/') && target) fail('kernel-independence', `the platform kernel may not depend on experience "${target}"`);
       if (file.path.startsWith('apps/site/') && r.path?.startsWith('apps/control/')) fail('site-control', 'the public site never imports the Control Center');
+      // The Control Center shares only the two packages with the rest of the repository (blueprint §5).
+      if (file.path.startsWith('apps/control/') && r.path && !/^(apps\/control|packages\/(platform-schema|experience-catalog))\//.test(r.path)) {
+        fail('control-deps', 'the Control Center may import only @pu/platform-schema, @pu/experience-catalog and its own files');
+      }
       // Packages owned by one experience (catalog exclusiveImports).
       const owner = r.pkg && exclusive.get(r.pkg);
       if (owner && own !== owner) fail('exclusive-imports', `${r.pkg} is exclusive to "${owner}"`);
@@ -175,7 +179,7 @@ export function checkBoundaries(files: SourceFile[], experiences: readonly Exper
   return findings;
 }
 
-const SCAN = ['apps/site/src', 'apps/site/integrations', 'packages/platform-schema/src', 'packages/experience-catalog/src', 'tools/checks/src', 'config'];
+const SCAN = ['apps/site/src', 'apps/site/integrations', 'apps/control/server', 'packages/platform-schema/src', 'packages/experience-catalog/src', 'tools/checks/src', 'config'];
 
 export function readSources(root: string): SourceFile[] {
   return SCAN.flatMap((dir) => readdirSync(posix.join(root, dir), { recursive: true }).map(String)
