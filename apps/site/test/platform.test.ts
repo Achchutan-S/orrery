@@ -23,6 +23,7 @@ const edit = (id: string, patch: Partial<ReleaseState['experiences'][string]>) =
 test('discovery lists public, listed experiences in catalog order, internal and external', () => {
   const entries = publicDiscoveryIndex(experiences, release, 'production');
   assert.deepEqual(entries.map((e) => [e.id, e.href, e.weight, e.host]), [
+    ['journal', '/journal', 'static', undefined],
     ['kawaiui', 'https://kawaiui.vercel.app/', 'external', 'kawaiui.vercel.app'],
     ['devxray', 'https://devxray-one.vercel.app/', 'external', 'devxray-one.vercel.app'],
     ['sample-content', '/sample-content', 'static', undefined],

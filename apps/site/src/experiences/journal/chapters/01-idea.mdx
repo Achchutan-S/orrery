@@ -1,0 +1,51 @@
+---
+title: The idea
+summary: Why one place for many independent things, and why the owner decides what reaches the public.
+sources:
+  - docs/blueprint.md, §1 Executive architecture decision
+  - docs/blueprint.md, Agreement and Disagreement Review
+  - AGENTS.md
+---
+import Claim from '../components/Claim.astro';
+
+## Not a portfolio
+
+<Claim standing="intent">
+
+A portfolio is a page about work. Orrery is meant to be the place where the work itself lives: technical explorations, interactive applications, engineering writing, visualisations, a professional profile with a resume, and, later, a few experiences meant only for chosen people.
+
+Those things have little in common. An essay wants a quiet reading column. A simulator wants the whole screen. A tool wants density. Forcing them into one template would make each of them worse, so the first idea was the opposite of a template: one platform underneath, and complete freedom of presentation on top.
+
+</Claim>
+
+## One destination, many independent things
+
+<Claim standing="intent">
+
+Everything should be reachable from one address and one index, so a visitor never has to know how the pieces are built. But each piece should be independent: its own layout, typography, colour, navigation and, where it is justified, its own technology. Projects that already exist elsewhere should stay where they are and be linked, not copied in.
+
+</Claim>
+
+## The owner decides what is public
+
+<Claim standing="intent">
+
+Some work is finished, some is half-built, some is personal. The platform should make the difference explicit and enforceable: what is built, who may see it, whether it is advertised, and which unfinished features are switched on. Publishing should be a deliberate act that leaves a record, not a side effect of a file existing.
+
+</Claim>
+
+## Room to grow, nothing in advance
+
+<Claim standing="intent">
+
+The platform is expected to grow for years: private experiences, invitations, an owner's control panel, analytics. The decision was to design for that growth now but build each piece only when something real needs it. The blueprint sorts every capability into one of four lists: implement now, design now and build later, deliberately defer, and never unless a real requirement appears.
+
+</Claim>
+
+## Vision and reality
+
+<Claim standing="implemented">
+
+What exists today is the foundation that vision rests on: the release model, the experience catalog, the build that enforces them, the checks that guard them, and a first set of experiences. Chapter 7 lists exactly what is live, what exists only in previews, and what is still a plan.
+
+</Claim>

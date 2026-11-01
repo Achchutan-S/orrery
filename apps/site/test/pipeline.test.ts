@@ -45,17 +45,19 @@ const distFiles = (o: Output) => o.files.map((path) => {
   const bytes = readFileSync(join(o.dir, path));
   return { path, bytes, text: bytes.toString('utf8') };
 });
+const journalPages = ['journal.html', ...readdirSync(new URL('../src/experiences/journal/chapters/', import.meta.url))
+  .map((f) => `journal/${f.replace(/^\d+-/, '').replace(/\.mdx$/, '.html')}`)];
 const appPages = views.map((v) => `sample-app/${v.path}.html`);
 const htmlOf = (o: Output) => o.files.filter((f) => f.endsWith('.html'));
 
 describe('planMount (pure)', () => {
-  const folders = ['sample-content', 'sample-app', 'canary-draft', 'sample-hostile'];
+  const folders = ['journal', 'sample-content', 'sample-app', 'canary-draft', 'sample-hostile'];
   const input = { catalog, release, folders, fileExists: () => true };
 
   test('production plans only the public internal experiences; externals are never mounted', () => {
     const { routes, issues } = planMount({ ...input, env: 'production' });
     assert.deepEqual(issues, []);
-    assert.deepEqual([...new Set(routes.map((r) => r.id))], ['sample-content', 'sample-app']);
+    assert.deepEqual([...new Set(routes.map((r) => r.id))], ['journal', 'sample-content', 'sample-app']);
     assert.deepEqual(planMount({ ...input, env: 'preview' }).routes.map((r) => r.id).filter((id) => id === 'kawaiui' || id === 'devxray'), []);
   });
 
@@ -76,7 +78,7 @@ describe('production build', () => {
   before(() => { out = built('production'); });
 
   test('mounts every public route; Astro emits exactly the views the React router knows', () => {
-    assert.deepEqual(htmlOf(out).sort(), ['404.html', 'index.html', 'sample-app.html', ...appPages, 'sample-content.html'].sort());
+    assert.deepEqual(htmlOf(out).sort(), ['404.html', 'index.html', ...journalPages, 'sample-app.html', ...appPages, 'sample-content.html'].sort());
   });
 
   test('each view has its own title', () => {
@@ -99,7 +101,7 @@ describe('production build', () => {
   test('the discovery index links listed experiences; external projects are marked as leaving', () => {
     const html = out.text('index.html');
     const links = [...html.matchAll(/<h2[^>]*><a href="([^"]+)"/g)].map((m) => m[1]);
-    assert.deepEqual(links, ['https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']);
+    assert.deepEqual(links, ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']);
     assert.equal(html.match(/\(external site\)/g)?.length, 2);
     assert.match(html, /Leaves Personal Universe for <span[^>]*translate="no"[^>]*>kawaiui\.vercel\.app<\/span>\./);
     assert.match(html, /Leaves Personal Universe for <span[^>]*translate="no"[^>]*>devxray-one\.vercel\.app<\/span>\./);
@@ -113,7 +115,10 @@ describe('production build', () => {
     for (const f of htmlOf(out)) {
       // The layer order is declared before any other stylesheet, on every page.
       assert.match(out.text(f), /^[^]*?<style>@layer platform\.reset, platform\.tokens, platform\.chrome, experience;<\/style>/, f);
-      assert.ok(out.text(f).indexOf('@layer platform.reset,') < out.text(f).indexOf('@layer experience{'), f);
+      // ...and before every other style, whether inlined or linked as a file.
+      const html = out.text(f);
+      const firstStyle = Math.min(...[html.indexOf('@layer experience{'), html.indexOf('rel="stylesheet"')].filter((i) => i >= 0));
+      assert.ok(html.indexOf('@layer platform.reset,') < firstStyle, f);
     }
     assert.match(out.text('sample-app/states/draft.html'), /<link rel="canonical" href="http:\/\/localhost:4321\/sample-app\/states\/draft">/);
   });
@@ -132,9 +137,43 @@ describe('production build', () => {
     }
   });
 
-  test('the platform font loads only on platform pages', () => {
+  test('the platform font loads only on platform pages and the Journal, which opts in', () => {
     const withFont = htmlOf(out).filter((f) => /\.woff2/.test(out.text(f))).sort();
-    assert.deepEqual(withFont, ['404.html', 'index.html']);
+    assert.deepEqual(withFont, ['404.html', 'index.html', ...journalPages].sort());
+  });
+
+  test('Journal: a cover and one page per chapter file, no scripts, canonical URLs', () => {
+    for (const f of journalPages) {
+      assert.ok(out.files.includes(f), f);
+      assert.doesNotMatch(out.text(f), /<script/, f);
+      const path = `/${f.replace(/\.html$/, '')}`;
+      assert.match(out.text(f), new RegExp(`<link rel="canonical" href="http://localhost:4321${path}">`), f);
+    }
+    assert.match(out.text('journal/today.html'), /<title>7\. The platform today · The Orrery Journal<\/title>/);
+  });
+
+  test('Journal: every passage states its standing, and every chapter cites its sources', () => {
+    for (const f of journalPages.filter((p) => p !== 'journal.html')) {
+      const html = out.text(f);
+      const standings = [...html.matchAll(/class="claim" data-standing="([a-z]+)"/g)].map((m) => m[1]);
+      assert.ok(standings.length > 0, `${f} has no passages`);
+      for (const s of standings) assert.ok(['intent', 'implemented', 'verified', 'deployed', 'planned'].includes(s!), `${f}: ${s}`);
+      assert.match(html, /Sources in the repository<\/h2><ul><li><code>/, f);
+    }
+  });
+
+  test('Journal: internal links resolve to built pages; external links are only catalog sites and the live site', () => {
+    const externals = new Set([...parseCatalog().experiences.flatMap((e) => (e.kind === 'external' ? [e.url] : [])), 'https://orrery-teal.vercel.app/']);
+    for (const f of journalPages) {
+      for (const [, href] of out.text(f).matchAll(/<a [^>]*href="([^"]+)"/g)) {
+        if (href!.startsWith('https://')) assert.ok(externals.has(href!), `${f} links ${href}`);
+        else {
+          const path = href!.split(/[?#]/)[0]!;
+          const file = path === '/' ? 'index.html' : `${path.slice(1)}.html`;
+          assert.ok(out.files.includes(file), `${f} links ${href}, which was not built`);
+        }
+      }
+    }
   });
 
   test('leak scan (tools/checks): nothing unreleased, no source maps, every listed entry linked', () => {

@@ -22,7 +22,9 @@ Status is `complete` only when the acceptance evidence passes. Source: blueprint
 | 15 (part) | External entries for UI Lab (KawaiUI) and Dev X-Ray | catalog part complete; subdomains blocked on the domain | ADR-013; live sites inspected 1 November 2026 | `index.test.ts`, browser external-link tests |
 | 9 | `tools/checks`: leaks, budgets, metadata, boundaries | complete | ADR-014; `pnpm check` passes; real failing runs observed for each check | `tools/checks/src/*.test.ts` (35) |
 | 10 | CI (GitHub Actions) | complete locally; hosted run not yet executed (nothing pushed) | ADR-015; `.github/workflows/ci.yml`; both jobs' exact steps passed in a clean copy on Node 22.23.4 | all suites |
-| 11 | Vercel, close Phase 0 | prepared and verified locally; deployment blocked (no commit, empty GitHub remote, no Vercel project) | ADR-016; `apps/site/vercel.json` schema-valid; `pnpm smoke` tested against fixtures and local servers; CSP verified in the browser | `tools/checks/src/smoke.test.ts` (9), CSP tests in `browser.test.ts` |
+| 11 | Vercel, close Phase 0 | deployed at https://orrery-teal.vercel.app/ (commit 65194d2); production smoke test passed 1 November 2026; hosted CI run 41313826313 passed | ADR-016; `apps/site/vercel.json` schema-valid; `pnpm smoke` tested against fixtures and local servers; CSP verified in the browser | `tools/checks/src/smoke.test.ts` (9), CSP tests in `browser.test.ts` |
+
+| — | The Orrery Journal (`journal`) | complete locally, not yet deployed | 8 MDX chapters in `apps/site/src/experiences/journal/chapters/`; published/listed via `config/release.json` | pipeline Journal tests, browser `The Orrery Journal` suite, `release.test.ts` withdraw test |
 
 ## Outstanding decisions
 
@@ -30,3 +32,4 @@ Status is `complete` only when the acceptance evidence passes. Source: blueprint
 2. **First commit, push and Vercel project.** `origin` exists but is empty; the deployment steps are in runbooks/deploy.md. Production needs the gate there and owner approval.
 3. **Manual accessibility checks not yet done** (axe passes, which is not proof): VoiceOver and NVDA reading order and the external link's announcement; 200% and 400% zoom; Windows High Contrast / forced colours (the focus ring uses `box-shadow`, which forced-colours mode removes; the outline band remains); real touch devices; cognitive review of the copy.
 4. **og:image.** The Foundation checklist requires an OG image on every mounted route; none exists, so `check:metadata` does not enforce it yet (ADR-014). Decide between a platform default image now or per-entry generation in Phase 2.
+5. **Repository visibility.** GitHub reports the repository as public; ADR-003 planned it private. Owner decision.

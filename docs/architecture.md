@@ -31,6 +31,7 @@ Modules and interfaces are listed in [ADR-012](adr/012-platform-layer.md). An ex
 | --- | --- | --- | --- |
 | `kawaiui` | external | listed link | https://kawaiui.vercel.app/ (ADR-013) |
 | `devxray` | external | listed link | https://devxray-one.vercel.app/ (ADR-013) |
+| `journal` | internal, content | mounted | The Orrery Journal: platform history in MDX chapters, each passage marked with its standing (intent, implemented, verified, deployed, planned). Withdraw it by editing its entry in `config/release.json` (access `owner`, or `discoverability: unlisted`); its content stays. The Inventory and orrery diagram list only publicly listed experiences. |
 | `sample-content` | internal, content | mounted | static essay, zero JavaScript |
 | `sample-app` | internal, interactive | mounted | lifecycle explorer, in-app router, `inspector` flag (preview only) |
 | `canary-draft` | internal | never | leak-check fixture |

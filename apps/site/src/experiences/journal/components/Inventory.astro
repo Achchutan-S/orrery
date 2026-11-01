@@ -1,0 +1,23 @@
+---
+// Generated at build time from the catalog and release state: exactly the experiences
+// this build lists publicly. Never lists anything that is not public (blueprint 3.5a).
+import { publicDiscoveryIndex, weightLine } from '../../../platform/discovery/index.ts';
+import { env, experiences, releaseState } from '../../../platform/release/index.ts';
+
+const entries = publicDiscoveryIndex(experiences, releaseState, env);
+---
+<table class="inventory">
+  <caption>Experiences listed by this build of the site</caption>
+  <thead>
+    <tr><th scope="col">Experience</th><th scope="col">Where it runs</th><th scope="col">What opening it involves</th></tr>
+  </thead>
+  <tbody>
+    {entries.map((e) => (
+      <tr>
+        <th scope="row"><a href={e.href}>{e.title}</a></th>
+        <td>{e.host ? <>Separate site, <span class="host" translate="no">{e.host}</span></> : 'Hosted here'}</td>
+        <td>{e.host ? 'Leaves Personal Universe.' : weightLine(e)}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>

@@ -1,0 +1,13 @@
+---
+// A passage and its standing. Every factual passage in the Journal says which of five
+// kinds of evidence it rests on, in words (not colour), so planned work is never read
+// as finished work.
+import { STANDING, type Standing } from '../standing.ts';
+
+interface Props { standing: Standing }
+const { standing } = Astro.props;
+---
+<div class="claim" data-standing={standing}>
+  <p class="mark"><span class="visually-hidden">Standing: </span>{STANDING[standing].label}</p>
+  <div class="claim-body"><slot /></div>
+</div>

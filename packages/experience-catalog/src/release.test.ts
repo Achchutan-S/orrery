@@ -24,15 +24,15 @@ test('config/release.json parses and is coherent with the catalog', () => {
 });
 
 test('production mounts the public samples and lists them with the external projects', () => {
-  assert.deepEqual(ids('production', 'mounted'), ['sample-content', 'sample-app']);
-  assert.deepEqual(ids('production', 'listed'), ['kawaiui', 'devxray', 'sample-content', 'sample-app']);
+  assert.deepEqual(ids('production', 'mounted'), ['journal', 'sample-content', 'sample-app']);
+  assert.deepEqual(ids('production', 'listed'), ['journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app']);
   assert.deepEqual(mountedRoutes(experiences, load(), 'production').map((r) => r.pattern),
-    ['/sample-content', '/sample-app', '/sample-app/[...path]']);
+    ['/journal', '/journal/[chapter]', '/sample-content', '/sample-app', '/sample-app/[...path]']);
 });
 
 test('preview and development also mount the two draft fixtures, but never list them', () => {
   for (const env of ['development', 'preview'] as const) {
-    assert.deepEqual(ids(env, 'mounted'), ['sample-content', 'sample-app', 'canary-draft', 'sample-hostile']);
+    assert.deepEqual(ids(env, 'mounted'), ['journal', 'sample-content', 'sample-app', 'canary-draft', 'sample-hostile']);
     assert.ok(!ids(env, 'listed').some((id) => id === 'canary-draft' || id === 'sample-hostile'));
   }
 });
@@ -78,4 +78,19 @@ test('an invalid experience id key or lifecycle fails parsing', () => {
   const unknown = { ...(raw as object), experiences: { 'Not An Id': { lifecycle: 'draft', access: { kind: 'owner' }, discoverability: 'unlisted' } } };
   const s = parseRelease(unknown).state!;
   assert.deepEqual(validateRelease(s, experiences).map((i) => i.rule), ['unknown-experience']);
+});
+
+test('the Journal is withdrawn by editing its release entry alone, never by deleting it', () => {
+  for (const [change, mounted, listed] of [
+    [{ access: { kind: 'owner' } }, false, false],
+    [{ lifecycle: 'draft', access: { kind: 'owner' } }, false, false],
+    [{ discoverability: 'unlisted' }, true, false],
+  ] as const) {
+    const s = structuredClone(load());
+    s.experiences.journal = { ...s.experiences.journal!, ...change };
+    assert.deepEqual(validateRelease(s, experiences), [], JSON.stringify(change));
+    assert.equal(ids('production', 'mounted', s).includes('journal'), mounted, JSON.stringify(change));
+    assert.equal(ids('production', 'listed', s).includes('journal'), listed, JSON.stringify(change));
+    assert.equal(mountedRoutes(experiences, s, 'production').some((r) => r.id === 'journal'), mounted);
+  }
 });

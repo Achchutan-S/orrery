@@ -20,6 +20,14 @@
       "discoverability": "listed",
       "note": "Independent project at devxray-one.vercel.app; linked, never built here."
     },
+    "journal": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "note": "Unpublish by setting access to owner (or lifecycle draft); hide from discovery with discoverability unlisted. Content stays in the repository either way."
+    },
     "kawaiui": {
       "lifecycle": "published",
       "access": {

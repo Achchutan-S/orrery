@@ -1,0 +1,64 @@
+---
+title: The platform today
+summary: An honest inventory. What is live, what exists only in previews, what is still a plan, and where the build differs from the blueprint.
+sources:
+  - config/release.json
+  - packages/experience-catalog/src/
+  - docs/tracker.md
+---
+import Claim from '../components/Claim.astro';
+import Inventory from '../components/Inventory.astro';
+
+## Available now
+
+<Claim standing="deployed">
+
+The discovery index at [the front page](/), and every experience listed below. This list is not written by hand: it is generated from the catalog and the release file each time the site is built, so it cannot fall out of date.
+
+</Claim>
+
+<Inventory />
+
+<Claim standing="verified">
+
+Underneath them: the release model, the catalog, release-driven routing, the shared page shell and accessibility tokens, the Content Security Policy, the four repository checks, the browser suite, continuous integration, and the deployment configuration.
+
+</Claim>
+
+## Built, but only in some environments
+
+<Claim standing="verified">
+
+Draft experiences, including the hostile stylesheet and the leak canary, are built in local development and in previews, and never in production. The explorer's inspector panel appears only in previews. All of this follows from one file, `config/release.json`.
+
+</Claim>
+
+## Not built yet
+
+<Claim standing="planned">
+
+- The owner's Control Center, in any form.
+- Owner sign-in, audiences, invitations and a full authorization system.
+- A publishing interface; today, publishing is an edit to the release file and a commit.
+- Private experiences and the private content store.
+- An audit history beyond Git, and usage analytics or dashboards.
+- The resume, the writing collection, search and feeds.
+- The Beacon: the platform's identity mark and command palette.
+- A custom domain.
+
+</Claim>
+
+## Where the build differs from the blueprint
+
+<Claim standing="implemented">
+
+Each difference is recorded in an architecture decision record:
+
+- **Astro 7 instead of Astro 6** (ADR-011), because Astro 7 had been released and kept every routing guarantee.
+- **The front page is a platform page**, not yet the home experience the blueprint describes; the home experience replaces it in Phase 1 (ADR-012).
+- **A small custom import checker** instead of ESLint with dependency-cruiser, because two of the rules need knowledge of the repository a linter cannot express (ADR-014).
+- **Browser tests run against local builds**, not against Vercel previews, so continuous integration needs no Vercel credentials; the live smoke test covers what only Vercel does (ADR-015, ADR-016).
+- **Link-preview images are not required yet**, although the foundation checklist asks for them; no page has one (ADR-014).
+- **The repository is public**, where the blueprint planned a private one (ADR-003).
+
+</Claim>

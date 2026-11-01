@@ -1,0 +1,34 @@
+---
+import Layout from '../Layout.astro';
+import { chapters } from '../chapters.ts';
+
+export function getStaticPaths() {
+  return chapters.map((chapter, i) => ({
+    params: { chapter: chapter.slug },
+    props: { chapter, previous: chapters[i - 1], next: chapters[i + 1] },
+  }));
+}
+const { chapter, previous, next } = Astro.props;
+const { Content } = chapter;
+---
+<Layout title={`${chapter.number}. ${chapter.title} · The Orrery Journal`} description={chapter.summary}>
+  <main id="content">
+    <p class="breadcrumb"><a href="/journal">The Orrery Journal</a></p>
+    <header class="chapter-head">
+      <span class="chapter-number" aria-hidden="true">{chapter.number}</span>
+      <h1><span class="visually-hidden">Chapter {chapter.number}: </span>{chapter.title}</h1>
+      <p class="lede">{chapter.summary}</p>
+    </header>
+    <article>
+      <Content />
+      <section class="sources" aria-labelledby="sources-title">
+        <h2 id="sources-title">Sources in the repository</h2>
+        <ul>{chapter.sources.map((s) => <li><code>{s}</code></li>)}</ul>
+      </section>
+    </article>
+    <nav class="pager" aria-label="Chapters">
+      {previous ? <a href={`/journal/${previous.slug}`}><span class="hint">Previous chapter</span>{previous.number}. {previous.title}</a> : <a href="/journal"><span class="hint">Back to</span>The contents</a>}
+      {next && <a class="next" href={`/journal/${next.slug}`}><span class="hint">Next chapter</span>{next.number}. {next.title}</a>}
+    </nav>
+  </main>
+</Layout>

@@ -3,7 +3,7 @@
 //   pnpm check:boundaries
 //
 // Reads static imports, `export ... from`, side-effect imports and dynamic import() in
-// .ts/.tsx/.astro files (Astro: frontmatter and <script> blocks). Resolves relative paths
+// .ts/.tsx/.astro/.mdx files (Astro: frontmatter and <script> blocks; MDX: top-level ESM lines). Resolves relative paths
 // and @pu/* workspace packages. The repository uses no tsconfig `paths` aliases; add them
 // to `resolve()` if that changes. Test files are not checked.
 import { readdirSync, readFileSync } from 'node:fs';
@@ -20,7 +20,7 @@ const WORKSPACE: Record<string, string> = {
   '@pu/checks': 'tools/checks',
 };
 const EXPERIENCES = 'apps/site/src/experiences/';
-const SOURCE = /\.(ts|tsx|astro)$/;
+const SOURCE = /\.(ts|tsx|astro|mdx)$/;
 const isTest = (p: string) => /\.test\.tsx?$/.test(p) || /\/(test|test-browser)\//.test(p);
 
 const frontmatter = (text: string) => text.match(/^---\n([^]*?)\n---/)?.[1] ?? '';
@@ -33,6 +33,10 @@ const blank = (t: string) => t.replace(/[^\n]/g, ' ');
  */
 function code(file: SourceFile, part: 'all' | 'scripts'): string {
   let text = file.text;
+  // MDX: only top-level ESM lines are code; prose may mention imports freely.
+  if (file.path.endsWith('.mdx')) {
+    return part === 'scripts' ? blank(text) : text.split('\n').map((l) => (/^(import|export)\s/.test(l) ? l : blank(l))).join('\n');
+  }
   if (file.path.endsWith('.astro')) {
     const keep: [number, number][] = [];
     const fm = text.match(/^---\n([^]*?)\n---/);

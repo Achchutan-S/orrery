@@ -15,8 +15,11 @@ const STATES = ['draft', 'alpha', 'beta', 'published', 'frozen', 'deprecated', '
 /** A fixture deployment behaving as a correct Vercel deployment of this site should. */
 function site(env: 'production' | 'preview') {
   const files = new Map<string, string>([
-    ['index.html', html('Personal Universe', ['https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app'].map((h) => `<a href="${h}">x</a>`).join(''))],
+    ['index.html', html('Personal Universe', ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app'].map((h) => `<a href="${h}">x</a>`).join(''))],
     ['404.html', html('Not found')],
+    ['journal.html', html('The Orrery Journal', '<a href="/journal/idea">1</a><a href="/journal/ahead">8</a>')],
+    ['journal/idea.html', html('The idea')],
+    ['journal/ahead.html', html('Where Orrery is going')],
     ['sample-content.html', html('Essay', '<link href="/_astro/fonts/f.woff2">')],
     ['sample-app.html', html('Explorer', ['states', ...STATES.map((s) => `states/${s}`)].map((v) => `<a href="/sample-app/${v}">x</a>`).join(''))],
     ['sample-app/states.html', html('States', `<script src="/_astro/App.js"></script>${env === 'preview' ? '<aside data-pu-flag="sample-app:inspector">' : ''}`)],
@@ -102,8 +105,8 @@ test('a single-page-app fallback (200 for everything) fails the 404 checks', asy
 
 test('missing clean-URL and trailing-slash redirects fail', async () => {
   const out = await run('production', { noRedirects: true });
-  assert.ok(out.includes('/sample-content.html: expected 308 to /sample-content, got 404'));
-  assert.ok(out.includes('/sample-content/?pu=1: expected 308 to /sample-content?pu=1, got 404'));
+  assert.ok(out.includes('/journal.html: expected 308 to /journal, got 404'));
+  assert.ok(out.includes('/journal/?pu=1: expected 308 to /journal?pu=1, got 404'));
 });
 
 test('hashed assets that are not immutable fail', async () => {

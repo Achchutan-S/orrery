@@ -1,0 +1,30 @@
+---
+// The platform drawn as an orrery, from the catalog at build time: experiences built
+// here turn on the inner orbit (filled), separate sites on the outer one (hollow).
+import { publicDiscoveryIndex } from '../../../platform/discovery/index.ts';
+import { env, experiences, releaseState } from '../../../platform/release/index.ts';
+
+const entries = publicDiscoveryIndex(experiences, releaseState, env);
+const hosted = entries.filter((e) => !e.host);
+const external = entries.filter((e) => e.host);
+const C = 200;
+const place = (i: number, n: number, r: number, offset: number) => {
+  const a = ((offset + (360 / n) * i) * Math.PI) / 180;
+  return { x: +(C + r * Math.cos(a)).toFixed(1), y: +(C + r * Math.sin(a)).toFixed(1) };
+};
+const description = `A central body for the platform. On the inner orbit, ${hosted.length} experiences built here: ${hosted.map((e) => e.title).join(', ')}. On the outer orbit, ${external.length} separate sites: ${external.map((e) => e.title).join(', ')}.`;
+---
+<figure class="orrery">
+  <svg viewBox="0 0 400 400" role="img" aria-labelledby="orrery-title orrery-desc">
+    <title id="orrery-title">The platform as an orrery</title>
+    <desc id="orrery-desc">{description}</desc>
+    <circle class="orbit" cx={C} cy={C} r="95" />
+    <circle class="orbit outer" cx={C} cy={C} r="170" />
+    <circle class="sun" cx={C} cy={C} r="30" />
+    {hosted.map((_, i) => { const p = place(i, hosted.length, 95, -90); return <circle class="body" cx={p.x} cy={p.y} r="11" />; })}
+    {external.map((_, i) => { const p = place(i, external.length, 170, -30); return <circle class="body external" cx={p.x} cy={p.y} r="13" />; })}
+  </svg>
+  <figcaption>
+    The shared foundation at the centre. Filled: {hosted.length} experiences built here. Hollow, on the outer orbit: {external.length} separate sites that keep their own deployments. Drawn from the catalog when the site is built.
+  </figcaption>
+</figure>

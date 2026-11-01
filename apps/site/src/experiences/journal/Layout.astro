@@ -1,0 +1,378 @@
+---
+// The Journal's presentation: the platform's own voice (Atkinson Hyperlegible Next,
+// mineral palette), set as an archive with a margin for each passage's standing.
+import { Font } from 'astro:assets';
+import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
+
+interface Props { title?: string; description?: string }
+---
+<ExperienceRoot experience="journal" title={Astro.props.title} description={Astro.props.description}>
+  <Font slot="head" cssVariable="--font-platform" preload />
+  <slot />
+</ExperienceRoot>
+
+<style is:global>
+  @layer experience {
+    [data-experience='journal'] {
+      --j-plate: light-dark(#eef2ef, #121816);
+      --j-ink: light-dark(#17201d, #e2e8e5);
+      --j-graphite: light-dark(#4f5b57, #a3afaa);
+      --j-verdigris: light-dark(#1f6656, #7cc7b4);
+      --j-rule: light-dark(#c3cdc8, #2e3935);
+      --j-code: light-dark(#e3e9e5, #1c2420);
+      --j-gutter: clamp(1rem, 4vw, 3rem);
+      --j-margin: 10rem;
+    }
+
+    [data-experience='journal'] body {
+      background: var(--j-plate);
+      color: var(--j-ink);
+      font-family: var(--font-platform);
+      font-size: 1.125rem;
+      line-height: 1.55;
+      text-size-adjust: 100%;
+    }
+
+    [data-experience='journal'] ::selection {
+      background: var(--j-verdigris);
+      color: var(--j-plate);
+    }
+
+    [data-experience='journal'] a {
+      color: var(--j-verdigris);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+    }
+
+    [data-experience='journal'] a:hover {
+      text-decoration-thickness: 3px;
+    }
+
+    [data-experience='journal'] code {
+      font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      font-size: 0.875em;
+      background: var(--j-code);
+      padding: 0.1em 0.3em;
+      overflow-wrap: anywhere;
+    }
+
+    [data-experience='journal'] main,
+    [data-experience='journal'] .pu-colophon {
+      max-inline-size: 64rem;
+      margin-inline: auto;
+      padding-inline: var(--j-gutter);
+    }
+
+    [data-experience='journal'] main {
+      padding-block: var(--pu-space-6) var(--pu-space-5);
+    }
+
+    [data-experience='journal'] .pu-colophon {
+      color: var(--j-graphite);
+    }
+
+    [data-experience='journal'] h1,
+    [data-experience='journal'] h2,
+    [data-experience='journal'] h3 {
+      line-height: 1.15;
+      text-wrap: balance;
+    }
+
+    [data-experience='journal'] h1 {
+      font-size: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    [data-experience='journal'] h2 {
+      font-size: 1.5rem;
+      margin: var(--pu-space-5) 0 var(--pu-space-3);
+    }
+
+    [data-experience='journal'] p,
+    [data-experience='journal'] li {
+      max-inline-size: 40rem;
+    }
+
+    [data-experience='journal'] .lede {
+      color: var(--j-graphite);
+      font-size: 1.25rem;
+      margin-block: var(--pu-space-3) 0;
+    }
+
+    [data-experience='journal'] .masthead {
+      padding-block-end: var(--pu-space-5);
+      border-block-end: 1px solid var(--j-rule);
+    }
+
+    [data-experience='journal'] .visually-hidden {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    /* Passages and their standing. The word is the signal; the rule beside the text
+       repeats it in form (never only in colour): none for intent, thin for implemented,
+       thick for verified, double for deployed, dashed for planned. */
+    [data-experience='journal'] .claim {
+      margin-block: var(--pu-space-4);
+    }
+
+    [data-experience='journal'] .claim-body {
+      padding-inline-start: var(--pu-space-3);
+      border-inline-start: 1px solid var(--j-rule);
+    }
+
+    [data-experience='journal'] .claim-body > :first-child { margin-block-start: 0; }
+    [data-experience='journal'] .claim-body > :last-child { margin-block-end: 0; }
+
+    [data-experience='journal'] [data-standing='intent'] .claim-body { border-inline-start-color: transparent; }
+    [data-experience='journal'] [data-standing='verified'] .claim-body { border-inline-start: 3px solid var(--j-verdigris); }
+    [data-experience='journal'] [data-standing='deployed'] .claim-body { border-inline-start: 5px double var(--j-verdigris); }
+    [data-experience='journal'] [data-standing='planned'] .claim-body { border-inline-start: 2px dashed var(--j-graphite); }
+
+    [data-experience='journal'] .mark {
+      margin: 0 0 var(--pu-space-1);
+      color: var(--j-graphite);
+      font-size: 0.9375rem;
+    }
+
+    @media (min-width: 56rem) {
+      [data-experience='journal'] article {
+        padding-inline-start: var(--j-margin);
+      }
+
+      [data-experience='journal'] .claim {
+        position: relative;
+      }
+
+      [data-experience='journal'] .mark {
+        position: absolute;
+        inset-inline-start: calc(-1 * var(--j-margin));
+        inline-size: calc(var(--j-margin) - var(--pu-space-4));
+        text-align: end;
+        margin: 0;
+      }
+    }
+
+    /* Cover */
+    [data-experience='journal'] .origin {
+      display: grid;
+      gap: var(--pu-space-5);
+      padding-block: var(--pu-space-5);
+      border-block-end: 1px solid var(--j-rule);
+    }
+
+    @media (min-width: 56rem) {
+      [data-experience='journal'] .origin {
+        grid-template-columns: minmax(0, 1fr) minmax(16rem, 22rem);
+        align-items: start;
+      }
+    }
+
+    [data-experience='journal'] .orrery {
+      margin: 0;
+    }
+
+    [data-experience='journal'] .orrery svg {
+      inline-size: 100%;
+      max-inline-size: 22rem;
+      block-size: auto;
+      display: block;
+    }
+
+    [data-experience='journal'] .orrery .orbit { fill: none; stroke: var(--j-rule); stroke-width: 1.5; }
+    [data-experience='journal'] .orrery .orbit.outer { stroke-dasharray: 2 6; stroke-linecap: round; }
+    [data-experience='journal'] .orrery .sun { fill: var(--j-ink); }
+    [data-experience='journal'] .orrery .body { fill: var(--j-verdigris); }
+    [data-experience='journal'] .orrery .body.external { fill: var(--j-plate); stroke: var(--j-verdigris); stroke-width: 3; }
+
+    [data-experience='journal'] figcaption {
+      color: var(--j-graphite);
+      font-size: 1rem;
+      margin-block-start: var(--pu-space-2);
+      max-inline-size: 22rem;
+    }
+
+    [data-experience='journal'] .legend {
+      display: grid;
+      gap: var(--pu-space-3);
+      margin: var(--pu-space-3) 0 0;
+    }
+
+    @media (min-width: 40rem) {
+      [data-experience='journal'] .legend {
+        grid-template-columns: 9rem minmax(0, 32rem);
+      }
+    }
+
+    [data-experience='journal'] .legend dt {
+      font-weight: 700;
+      padding-inline-start: var(--pu-space-3);
+      border-inline-start: 1px solid var(--j-rule);
+    }
+
+    [data-experience='journal'] .legend dd { margin: 0; color: var(--j-graphite); }
+    [data-experience='journal'] .legend [data-standing='intent'] { border-inline-start-color: transparent; }
+    [data-experience='journal'] .legend [data-standing='verified'] { border-inline-start: 3px solid var(--j-verdigris); }
+    [data-experience='journal'] .legend [data-standing='deployed'] { border-inline-start: 5px double var(--j-verdigris); }
+    [data-experience='journal'] .legend [data-standing='planned'] { border-inline-start: 2px dashed var(--j-graphite); }
+
+    [data-experience='journal'] .contents {
+      list-style: none;
+      margin: var(--pu-space-3) 0 0;
+      padding: 0;
+      counter-reset: chapter;
+    }
+
+    [data-experience='journal'] .host {
+      white-space: nowrap;
+    }
+
+    [data-experience='journal'] .contents li {
+      display: grid;
+      align-items: baseline;
+      grid-template-columns: 2.5rem minmax(0, 1fr);
+      gap: 0 var(--pu-space-3);
+      padding-block: var(--pu-space-3);
+      border-block-start: 1px solid var(--j-rule);
+      max-inline-size: 48rem;
+    }
+
+    [data-experience='journal'] .contents .number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--j-graphite);
+      line-height: 1.2;
+    }
+
+    [data-experience='journal'] .contents a {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--j-ink);
+      text-decoration-color: var(--j-verdigris);
+      padding-block: 0.4rem;
+    }
+
+    [data-experience='journal'] .contents p {
+      grid-column: 2;
+      margin: var(--pu-space-1) 0 0;
+      color: var(--j-graphite);
+    }
+
+    /* Chapter */
+    [data-experience='journal'] .chapter-head {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 0 var(--pu-space-4);
+      align-items: baseline;
+      padding-block-end: var(--pu-space-4);
+      border-block-end: 1px solid var(--j-rule);
+    }
+
+    [data-experience='journal'] .chapter-number {
+      font-size: clamp(3rem, 2rem + 4vw, 5rem);
+      font-weight: 700;
+      line-height: 1;
+      color: var(--j-verdigris);
+    }
+
+    [data-experience='journal'] .chapter-head .lede {
+      grid-column: 1 / -1;
+    }
+
+    [data-experience='journal'] .breadcrumb {
+      margin: 0 0 var(--pu-space-4);
+    }
+
+    [data-experience='journal'] .phases {
+      padding-inline-start: 1.5rem;
+    }
+
+    [data-experience='journal'] .phases li {
+      margin-block: var(--pu-space-3);
+      padding-inline-start: var(--pu-space-2);
+      border-inline-start: 2px dashed var(--j-graphite);
+      padding-inline-start: var(--pu-space-3);
+    }
+
+    [data-experience='journal'] .sources {
+      margin-block-start: var(--pu-space-6);
+      padding-block-start: var(--pu-space-4);
+      border-block-start: 1px solid var(--j-rule);
+      color: var(--j-graphite);
+      font-size: 1rem;
+    }
+
+    [data-experience='journal'] .sources h2 {
+      font-size: 1.125rem;
+      margin-block-start: 0;
+      color: var(--j-ink);
+    }
+
+    [data-experience='journal'] .sources ul {
+      padding-inline-start: 1.25rem;
+    }
+
+    [data-experience='journal'] .pager {
+      display: grid;
+      gap: var(--pu-space-3);
+      margin-block-start: var(--pu-space-5);
+    }
+
+    @media (min-width: 40rem) {
+      [data-experience='journal'] .pager {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      [data-experience='journal'] .pager .next {
+        text-align: end;
+      }
+    }
+
+    [data-experience='journal'] .pager a {
+      display: block;
+      padding-block: var(--pu-space-2);
+      font-weight: 700;
+    }
+
+    [data-experience='journal'] .pager .hint {
+      display: block;
+      font-weight: 400;
+      color: var(--j-graphite);
+      font-size: 1rem;
+    }
+
+    [data-experience='journal'] .inventory {
+      border-collapse: collapse;
+      margin-block: var(--pu-space-3);
+      inline-size: 100%;
+      max-inline-size: 48rem;
+    }
+
+    [data-experience='journal'] .inventory caption {
+      text-align: start;
+      color: var(--j-graphite);
+      padding-block-end: var(--pu-space-2);
+    }
+
+    [data-experience='journal'] .inventory th,
+    [data-experience='journal'] .inventory td {
+      text-align: start;
+      vertical-align: top;
+      padding: var(--pu-space-2) var(--pu-space-3) var(--pu-space-2) 0;
+      border-block-end: 1px solid var(--j-rule);
+    }
+
+    @media (max-width: 40rem) {
+      [data-experience='journal'] .inventory thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+      [data-experience='journal'] .inventory tr { display: block; padding-block: var(--pu-space-2); border-block-end: 1px solid var(--j-rule); }
+      [data-experience='journal'] .inventory th,
+      [data-experience='journal'] .inventory td { display: block; border: 0; padding: 0; }
+      [data-experience='journal'] .inventory td { color: var(--j-graphite); }
+    }
+  }
+</style>

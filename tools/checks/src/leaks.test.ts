@@ -7,9 +7,9 @@ import { loadPlatform, type DistFile } from './repo.ts';
 
 const { experiences, state } = loadPlatform();
 const file = (path: string, text = ''): DistFile => ({ path, bytes: Buffer.from(text), text });
-const INDEX = file('index.html', ['https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']
+const INDEX = file('index.html', ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']
   .map((h) => `<a href="${h}">x</a>`).join(''));
-const clean = (): DistFile[] => [INDEX, file('404.html'), file('sample-content.html'), file('sample-app.html'), file('sample-app/states.html')];
+const clean = (): DistFile[] => [INDEX, file('404.html'), file('journal.html'), file('sample-content.html'), file('sample-app.html'), file('sample-app/states.html')];
 const scan = (files: DistFile[]) => scanLeaks(files, experiences, state!).map((f) => `${f.file}: ${f.reason}`);
 
 test('a correct production build passes', () => {

@@ -1,0 +1,74 @@
+---
+title: Going live
+summary: Task 11. One static Vercel project, a build that refuses to guess its environment, and headers checked on the live site.
+sources:
+  - docs/runbooks/deploy.md
+  - docs/adr/016-vercel-deployment.md
+  - apps/site/vercel.json
+---
+import Claim from '../components/Claim.astro';
+
+## One project, configured in the repository
+
+<Claim standing="deployed">
+
+The site runs at [orrery-teal.vercel.app](https://orrery-teal.vercel.app/), a single static Vercel project built from the `apps/site` folder of the repository. There is no server, no adapter and no function: every response is a file. Everything Vercel allows to live in code does: the install and build commands, the output folder, clean addresses without `.html` or trailing slashes, the security headers and the caching rules. The remaining settings are dashboard switches, listed in the deployment runbook.
+
+</Claim>
+
+## A build that refuses to guess
+
+<Claim standing="verified">
+
+Production and preview builds differ only in what the release file says about each environment, and Vercel tells the build which environment it is in. If that information were ever missing, the build would have assumed local development and published every draft. The deployment build command therefore marks itself as a deployment, and such a build stops with an error instead of guessing.
+
+</Claim>
+
+<Claim standing="intent">
+
+Previews include every draft, so the runbook has them protected by Vercel's sign-in for previews. That is a convenience, not access control: anyone holding a shared preview link sees the whole preview, which is why nothing private is ever placed in the repository.
+
+</Claim>
+
+## Headers and policy
+
+<Claim standing="deployed">
+
+On 1 November 2026 the live front page answered with these headers, matching the configuration exactly (the configuration applies them to every response):
+
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains`
+- `X-Content-Type-Options: nosniff`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()`
+- `Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'`
+- `X-Frame-Options: DENY`
+
+</Claim>
+
+<Claim standing="verified">
+
+The main Content Security Policy is written by Astro into each page: it allows only the site's own files plus the exact fingerprints of every inline script and style the page contains. Nothing inline runs unless it was put there by the build. The header adds only what a page cannot declare for itself, such as refusing to be framed by other sites. The browser tests prove that a script injected into a page is blocked.
+
+</Claim>
+
+<Claim standing="deployed">
+
+Files whose names are fingerprints of their content (scripts, styles, fonts) are cached for a year. Pages are revalidated on every visit, so each new deployment's pages are what visitors see.
+
+</Claim>
+
+## Checked against the live site
+
+<Claim standing="deployed">
+
+A smoke test reads the catalog, the release file and the Vercel configuration, then makes real requests to a deployment and compares what comes back. Run against the live site on 1 November 2026, it passed: every published route answered, every unreleased route and unknown address returned a genuine 404, `.html` and trailing-slash addresses redirected permanently with their query strings, cached files were immutable, no draft or switched-off feature appeared, and both external projects answered at their exact addresses.
+
+</Claim>
+
+## Undoing a release
+
+<Claim standing="implemented">
+
+The runbook's rollback is Vercel's instant rollback to the previous production deployment, followed by fixing the release file or the code through the normal checks. It has not yet been needed or rehearsed.
+
+</Claim>

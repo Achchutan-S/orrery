@@ -1,0 +1,51 @@
+---
+title: Quality, security and discipline
+summary: Tasks 9 and 10. Checks that turn the architecture's promises into failing builds, and continuous integration that runs them on every change.
+sources:
+  - docs/runbooks/checks.md
+  - docs/adr/014-repository-checks.md
+  - docs/adr/015-ci.md
+  - .github/workflows/ci.yml
+---
+import Claim from '../components/Claim.astro';
+
+## Four guardrails
+
+<Claim standing="verified">
+
+A rule that is only written down will eventually be broken by accident. Four repository checks turn the main rules into failing commands:
+
+- **Leak scan.** Reads the production build and fails if any file belongs to an unreleased route, contains the canary text or the description of anything not public, renders a switched-off feature, or carries a source map. It also fails if something published is missing.
+- **Performance budgets.** Measures what a first visit to each page downloads, compressed, against limits per kind of experience. Reading pages may ship no JavaScript of their own. The interactive explorer measured 70.8 KB of JavaScript against its 150 KB limit at the first commit.
+- **Metadata.** Validates the catalog and release file with the same function the build uses, then checks that every built page has a title, description and the right indexing and canonical tags for its release state.
+- **Import boundaries.** A small static checker that understands which files run in the browser. Browser code may not import the catalog, the release file or server-only modules; one experience may not import another; the shared packages may depend only on what the blueprint allows.
+
+</Claim>
+
+<Claim standing="verified">
+
+Each check was proved able to fail before it was trusted: a planted canary, a temporarily lowered budget, a catalog import added to browser code, and a cross-experience import were each reported with the file and line.
+
+</Claim>
+
+## Tests
+
+<Claim standing="verified">
+
+At the first commit (`65194d2`) the repository held 151 automated tests, all passing: 37 for the schema, 13 for the catalog and release file, 44 for the repository checks, 27 for the site's build pipeline and 30 in a real browser.
+
+</Claim>
+
+<Claim standing="verified">
+
+The browser suite uses Playwright and axe. It runs the WCAG 2.2 A and AA rules on every main page at desktop and phone widths in light and dark mode; walks the index with the keyboard and checks the focus ring; follows routes, reloads, back and forward; checks that only the explorer loads JavaScript; runs the hostile stylesheet test; and fails if any page violates its Content Security Policy. An automated accessibility pass is not proof of accessibility; screen-reader, zoom and forced-colour checks remain manual.
+
+</Claim>
+
+## Continuous integration
+
+<Claim standing="verified">
+
+GitHub Actions runs two jobs in parallel on every pull request and every push to `main`: one for type checking, tests and the four guardrails, and one for the browser suite. Node (22.23.4) and pnpm (10.34.9) are pinned to exact versions, every action is pinned to a commit, the job token is read-only, and no secrets are used. The first hosted run, on commit `65194d2`, passed both jobs.
+
+</Claim>

@@ -1,0 +1,67 @@
+---
+title: Making experiences independent
+summary: Task 8. Two real projects linked as they are, and three small experiences built to prove the architecture works.
+sources:
+  - docs/adr/008-external-apps.md
+  - docs/adr/013-external-projects-and-task-8.md
+  - packages/experience-catalog/src/entries/
+---
+import Claim from '../components/Claim.astro';
+
+## Two projects that stay where they are
+
+<Claim standing="deployed">
+
+[KawaiUI](https://kawaiui.vercel.app/) and [Dev X-Ray](https://devxray-one.vercel.app/) are separate projects with their own repositories, designs and deployments. Orrery lists them in its catalog as *external* experiences: it links to them and builds nothing of theirs. Neither codebase was copied, rebuilt or modified. Both links were checked against the live sites when this chapter was written.
+
+</Claim>
+
+<Claim standing="deployed">
+
+**KawaiUI** calls itself UI Lab: a museum of interface experiments, arranged in rooms of exhibits, from physics toys and motion studies to WebGL liquids, cursor tricks, games and a synthesiser. **Dev X-Ray** is a set of developer tools that run entirely in the browser, for formatting, decoding and converting JSON, GraphQL, YAML, SQL, JWTs and more, without an account or uploading anything.
+
+</Claim>
+
+<Claim standing="verified">
+
+Because they are external, they are never routes here: `/kawaiui` is a real 404 on this site. The index marks them in three ways that do not depend on colour: an external-link icon, a dashed underline, and the words "Leaves Personal Universe for" followed by the host. Screen readers hear the same.
+
+</Claim>
+
+## Three experiences built to test the platform
+
+<Claim standing="deployed">
+
+**A static essay** ([How a page reaches you](/sample-content)) proves that reading material ships as HTML and CSS with no JavaScript at all, in its own serif typography, unlike anything else on the site.
+
+</Claim>
+
+<Claim standing="deployed">
+
+**An interactive application** ([Release lifecycle explorer](/sample-app)) proves that a React app can live on static files. Every one of its eight views is a real page, so links, refreshes and shared addresses work. Inside the app, a deliberately small router moves between views without reloading, keeps the back and forward buttons working, moves keyboard focus to each new heading, and keeps the selected access level in the address (`?access=owner`).
+
+</Claim>
+
+<Claim standing="verified">
+
+The explorer also carries a feature flag called `inspector`: a debugging panel that is switched on in preview deployments and off in production. Production pages never render it. Its code is still in the downloaded script, which is acceptable because it shows only the visitor's own address.
+
+</Claim>
+
+<Claim standing="verified">
+
+**A hostile stylesheet** (`sample-hostile`) contains the most destructive CSS rule there is, `* { all: unset }`, in its own layer. It exists only in development and preview builds. Browser tests visit it, then open the other experiences and compare their computed styles with a build that does not contain it at all: typography, links, layout and focus rings must be identical, and they are. The test found one real weakness on the way: the rule could remove the focus ring on its own page. The focus ring was then made impossible to override.
+
+</Claim>
+
+<Claim standing="verified">
+
+A fourth, invisible experience, `canary-draft`, exists only to be leaked: its pages and metadata carry unique text that the production checks search for.
+
+</Claim>
+
+<Claim standing="intent">
+
+None of these three are products. The blueprint plans to delete the essay and the explorer once real experiences take their place, and to keep the canary permanently.
+
+</Claim>

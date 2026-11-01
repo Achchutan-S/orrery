@@ -1,0 +1,72 @@
+---
+title: Where Orrery is going
+summary: The roadmap as the blueprint orders it, phase by phase, and what each step waits for.
+sources:
+  - docs/blueprint.md, §8 Phased implementation roadmap
+  - docs/blueprint.md, §4 Control Center specification
+  - docs/blueprint.md, §10 First implementation sequence
+---
+import Claim from '../components/Claim.astro';
+
+## Growing in steps
+
+<Claim standing="planned">
+
+The blueprint orders the future in phases. Each one begins only when the one before it is finished and something real needs it. Nothing below exists yet.
+
+</Claim>
+
+<ol class="phases">
+<li>
+
+**Phase 1: the platform experience.** A real home page in place of today's index; the Beacon, a small identity mark with a command palette for moving around; the resume with a downloadable PDF; a first piece of writing; a first real interactive experience; UI Lab and Dev X-Ray on subdomains of the platform's own domain; privacy-respecting page analytics with a privacy page; and the first version of the Control Center. The samples are deleted then; the canary stays.
+
+</li>
+<li>
+
+**Phase 2: publishing and discovery.** The writing collection with tags, related entries, a feed, a sitemap, link-preview images and a search index, all built from what is actually published.
+
+</li>
+<li>
+
+**Phase 3: governance and observability.** A more complete Control Center (promotion checks, archiving with redirects), anonymous usage events through `track()`, error reporting for interactive experiences, and a rehearsed rollback.
+
+</li>
+<li>
+
+**Phase 4a: owner identity.** Sign-in for one person, the owner. The Control Center moves to its own subdomain, and the first pages rendered per request appear, behind `authorize()`.
+
+</li>
+<li>
+
+**Phase 4b: audiences.** A small database for invitations, grants, sessions and an append-only audit log; private experiences shared with chosen people; a personal "shared with you" page; feature flags for specific audiences.
+
+</li>
+<li>
+
+**Phase 5: advanced experiences.** Experiences that outgrow the shared build move to their own deployments while keeping their addresses, and an exploratory view of everything appears once there are enough experiences to explore.
+
+</li>
+</ol>
+
+## The Control Center
+
+<Claim standing="planned">
+
+The first Control Center will run only on the owner's machine: a small interface and a local server that read the catalog, show what each environment would build, and write `config/release.json` after validating every change. Committing stays a manual, visible act. A later version moves to its own subdomain behind owner sign-in and records each change as a commit.
+
+</Claim>
+
+<Claim standing="implemented">
+
+Part of it already exists. The operations it will perform (changing a lifecycle stage, access, discoverability, a flag or a note) are written today as pure, tested functions in the schema package, with the rules for which lifecycle changes are allowed. The Control Center will be an interface to those functions, not a second set of rules.
+
+</Claim>
+
+## This Journal
+
+<Claim standing="implemented">
+
+The Journal is an experience like any other. Its chapters live in the repository; whether it is built, listed or hidden is decided by its entry in `config/release.json`. Withdrawing it is an edit to that entry, not a deletion, and the future Control Center will manage it through the same functions as everything else.
+
+</Claim>

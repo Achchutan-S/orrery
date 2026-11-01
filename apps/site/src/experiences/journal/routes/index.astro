@@ -1,0 +1,50 @@
+---
+import Layout from '../Layout.astro';
+import { chapters } from '../chapters.ts';
+import Orrery from '../components/Orrery.astro';
+import { STANDING } from '../standing.ts';
+---
+<Layout>
+  <main id="content">
+    <header class="masthead">
+      <h1>The Orrery Journal</h1>
+      <p class="lede">The idea, architecture and evolution of a personal universe.</p>
+    </header>
+
+    <section class="origin" aria-labelledby="origin-title">
+      <div>
+        <h2 id="origin-title">What this is</h2>
+        <p>Orrery is a personal universe: one place where independent projects, writing, tools and experiments live side by side, each in its own form. This journal is its own record: why it was built, how it was designed, what was tested and shipped, and what comes next.</p>
+        <h2>Why “orrery”</h2>
+        <p>An orrery is a mechanical model of a planetary system: a central body, planets turning on their own orbits at their own pace, and one hidden train of gears that keeps them in relation. The platform is built the same way. The shared foundation is the mechanism. Each experience is a body with its own character and orbit. The platform keeps them in relation without making them alike.</p>
+      </div>
+      <Orrery />
+    </section>
+
+    <section aria-labelledby="reading-title">
+      <h2 id="reading-title">How to read it</h2>
+      <p>Every passage says what it rests on, in the margin, so a plan is never mistaken for something finished.</p>
+      <dl class="legend">
+        {Object.entries(STANDING).map(([key, s]) => (
+          <>
+            <dt data-standing={key}>{s.label}</dt>
+            <dd>{s.meaning}</dd>
+          </>
+        ))}
+      </dl>
+    </section>
+
+    <section aria-labelledby="contents-title">
+      <h2 id="contents-title">Chapters</h2>
+      <ol class="contents">
+        {chapters.map((c) => (
+          <li>
+            <span class="number" aria-hidden="true">{c.number}</span>
+            <a href={`/journal/${c.slug}`}>{c.title}</a>
+            <p>{c.summary}</p>
+          </li>
+        ))}
+      </ol>
+    </section>
+  </main>
+</Layout>

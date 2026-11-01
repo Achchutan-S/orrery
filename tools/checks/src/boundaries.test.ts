@@ -111,3 +111,10 @@ test('test files are not checked', () => {
 test('the real repository passes', () => {
   assert.deepEqual(checkBoundaries(readSources(repoRoot), loadPlatform().experiences), []);
 });
+
+test('MDX: top-level imports are checked, prose mentioning imports is not', () => {
+  const ok = f(`${E}/alpha/chapters/01.mdx`, "---\ntitle: x\n---\nimport Note from '../Note.astro';\n\nWrite import x from '../../beta/y.ts' in prose freely.\n");
+  assert.deepEqual(run(ok), []);
+  const bad = f(`${E}/alpha/chapters/02.mdx`, "import Layout from '../../beta/Layout.astro';\n\nText.\n");
+  assert.deepEqual(run(bad), [`${E}/alpha/chapters/02.mdx:1 [experience-isolation]`]);
+});

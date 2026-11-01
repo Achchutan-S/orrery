@@ -1,0 +1,58 @@
+---
+title: Establishing the architecture
+summary: A written blueprint, a review it argued with, and the decisions that shape everything since.
+sources:
+  - docs/blueprint.md (Revision 2, 30 October 2026)
+  - docs/adr/001-astro-host.md to docs/adr/010-identity-later.md
+  - docs/adr/011-astro-7.md
+---
+import Claim from '../components/Claim.astro';
+
+## A blueprint before any code
+
+<Claim standing="implemented">
+
+The architecture was written down before the first file of code: an architecture blueprint, Revision 2 dated 30 October 2026, kept in the repository at `docs/blueprint.md`. It answers an earlier review point by point. Of ten points it accepts nine, most with qualifications, and partly disagrees with one: it argues that plain file-based routing cannot keep unfinished work out of a public build, so a small piece of routing code is worth having from the first day. That argument turned out to matter more than any other (chapter 3).
+
+</Claim>
+
+## The decisions
+
+<Claim standing="implemented">
+
+- **One application, one repository, one deployment.** A pnpm workspace with one lockfile: the site, two shared packages (the schema and the experience catalog), and a package of repository checks. No build orchestrator.
+- **Astro as the host, React only where it earns its place.** Pages are static HTML. Interactive parts are React "islands" that load JavaScript only on the pages that use them. The blueprint chose Astro 6; Astro 7 was released before work started, and the decision to move to it is recorded with its evidence in ADR-011.
+- **Static first.** Every page is a file on a CDN. There is no server code path, and so nothing to attack but what is published.
+- **TypeScript in strict mode**, with schemas written in zod and checked by pure functions.
+- **Vercel** for hosting, with security headers and redirects declared in a configuration file rather than in code that runs per request.
+- **A catalog and a release file.** What an experience *is* lives in code; whether it *ships* lives in one data file. The two have different owners and change at different speeds.
+
+</Claim>
+
+<Claim standing="implemented">
+
+The blueprint planned a private repository, so that drafts would never be public in Git history (ADR-003). At the time of writing the repository is public. The platform's guarantee is about what reaches the website, not what is in the repository: no draft is ever built into the public site.
+
+</Claim>
+
+## What was deliberately left out
+
+<Claim standing="intent">
+
+None of these are bad technologies. Each was deferred because nothing yet needed what it costs to run:
+
+- **Microservices and Kubernetes:** one static site has nothing to orchestrate.
+- **A database:** nothing per-person exists yet. Grants, invitations, sessions and audit records will need one in Phase 4.
+- **Authentication:** there is nobody to sign in. Owner sign-in is designed for Phase 4a, audiences for 4b.
+- **A CMS:** one author publishing through Git needs no editor, vendor or second source of truth.
+- **Server-side rendering:** it will be added only for pages whose answer depends on who is asking, which also begins in Phase 4.
+
+</Claim>
+
+## Interfaces before implementations
+
+<Claim standing="verified">
+
+Some things were designed now so that they can be built later without redesign. The release schema already has fields for signed-in and policy access, which validation refuses until Phase 4. An `authorize()` function exists with its final shape and refuses everything. A `track()` function exists and sends nothing. Route prefixes such as `/auth`, `/me` and `/api` are reserved now and rejected for experiences.
+
+</Claim>

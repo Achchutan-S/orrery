@@ -21,7 +21,7 @@ const VIEWPORTS = {
   desktop: { viewport: { width: 1280, height: 900 } },
   mobile: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
 } satisfies Record<string, BrowserContextOptions>;
-const ROUTES = ['/', '/sample-content', '/sample-app', '/sample-app/states', '/sample-app/states/beta?access=owner', '/no-such-page'];
+const ROUTES = ['/', '/journal', '/journal/today', '/sample-content', '/sample-app', '/sample-app/states', '/sample-app/states/beta?access=owner', '/no-such-page'];
 const EXTERNAL = [
   { title: 'KawaiUI', href: 'https://kawaiui.vercel.app/', host: 'kawaiui.vercel.app' },
   { title: 'Dev X-Ray', href: 'https://devxray-one.vercel.app/', host: 'devxray-one.vercel.app' },
@@ -134,7 +134,7 @@ describe('discovery index', () => {
   test('keyboard: Tab reaches each entry in catalog order with a visible two-band focus ring', async () => {
     const page = await open('/');
     const order: string[] = [];
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       await page.keyboard.press('Tab');
       const focus = await page.evaluate(() => {
         const el = document.activeElement as HTMLElement;
@@ -145,7 +145,7 @@ describe('discovery index', () => {
       assert.match(focus.shadow, /rgb\(242, 193, 78\)/, `${focus.href} inner band`);
       order.push(focus.href!);
     }
-    assert.deepEqual(order, ['https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']);
+    assert.deepEqual(order, ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']);
     await page.keyboard.press('Shift+Tab');
     await page.screenshot({ path: join(shots, 'index-focus-desktop.png') });
     await page.keyboard.press('Enter');
@@ -171,7 +171,7 @@ describe('discovery index', () => {
 
   test('internal entries are not marked external', async () => {
     const page = await open('/');
-    for (const name of ['How a page reaches you', 'Release lifecycle explorer']) {
+    for (const name of ['The Orrery Journal', 'How a page reaches you', 'Release lifecycle explorer']) {
       assert.equal(await page.getByRole('link', { name, exact: true }).count(), 1, name);
     }
     assert.equal(await page.locator('[data-weight="external"]').count(), 2);
@@ -221,8 +221,53 @@ describe('discovery index', () => {
   });
 });
 
+describe('The Orrery Journal', () => {
+  test('opens from the index and reads front to back with the keyboard', async () => {
+    const page = await open('/');
+    await page.getByRole('link', { name: 'The Orrery Journal', exact: true }).click();
+    await page.waitForURL('**/journal');
+    await page.getByRole('link', { name: 'The idea', exact: true }).click();
+    await page.waitForURL('**/journal/idea');
+    const visited = [await h1(page)];
+    for (;;) {
+      const next = page.getByRole('navigation', { name: 'Chapters' }).getByRole('link', { name: /^Next chapter/ });
+      if (await next.count() === 0) break;
+      await next.focus();
+      await page.keyboard.press('Enter');
+      await page.waitForLoadState();
+      visited.push(await h1(page));
+    }
+    assert.equal(visited.length, 8);
+    assert.match(visited[0]!, /The idea$/);
+    assert.match(visited[7]!, /Where Orrery is going$/);
+    await page.context().close();
+  });
+
+  test('every passage announces its standing to assistive technology', async () => {
+    const page = await open('/journal/going-live');
+    const marks = await page.locator('.claim .mark').allInnerTexts();
+    assert.ok(marks.length > 0);
+    // Screen readers hear "Standing: Deployed"; the prefix is visually hidden.
+    for (const m of marks) assert.match(m.replace(/\s+/g, ' ').trim(), /^Standing: (Intent|Implemented|Verified|Deployed|Planned)$/);
+    const spoken = await page.locator('.claim .mark').first().textContent();
+    assert.match(spoken!, /^Standing: /);
+    await page.context().close();
+  });
+
+  test('desktop puts standings in the margin; phones put them above the passage', async () => {
+    for (const [name, vp] of Object.entries(VIEWPORTS)) {
+      const page = await open('/journal/foundation', vp);
+      const mark = (await page.locator('.claim .mark').first().boundingBox())!;
+      const body = (await page.locator('.claim .claim-body').first().boundingBox())!;
+      if (name === 'desktop') assert.ok(mark.x + mark.width <= body.x, 'mark left of the passage');
+      else assert.ok(mark.y + mark.height <= body.y + 1, 'mark above the passage');
+      await page.context().close();
+    }
+  });
+});
+
 describe('JavaScript footprint (network)', () => {
-  for (const [path, expectReact] of [['/', false], ['/sample-content', false], ['/sample-app', false], ['/sample-app/states', true]] as const) {
+  for (const [path, expectReact] of [['/', false], ['/journal', false], ['/journal/foundation', false], ['/sample-content', false], ['/sample-app', false], ['/sample-app/states', true]] as const) {
     test(`${path} ${expectReact ? 'loads React' : 'loads no JavaScript'}`, async () => {
       const page = await (await newContext({}, `js-footprint${path}`)).newPage();
       const scripts: string[] = [];
@@ -366,6 +411,12 @@ describe('CSS isolation (adversarial)', () => {
       table: ['border-collapse', 'font-variant-numeric'],
       'nav a': ['color', 'display', 'text-transform'],
     },
+    '/journal/experiences': {
+      body: ['font-family', 'color', 'background-color', '--j-ink'],
+      '.chapter-number': ['font-size', 'color'],
+      '.claim-body': ['border-left-style', 'padding-left'],
+      '.mark': ['color', 'font-size'],
+    },
     '/': {
       body: ['font-family', 'font-size', 'color', 'background-color'],
       h1: ['font-size', 'font-weight'],
@@ -413,6 +464,7 @@ describe('CSS isolation (adversarial)', () => {
   const ANCHORS: Record<string, Record<string, string | RegExp>> = {
     '/sample-content': { 'h1 display': 'block', 'body font-family': /^"Iowan Old Style"/, 'main max-width': '608px', 'main a color': 'rgb(122, 52, 24)' },
     '/sample-app/states': { '.explorer display': 'grid', 'body background-color': 'rgb(16, 20, 28)', 'table border-collapse': 'collapse' },
+    '/journal/experiences': { '.claim-body border-left-style': 'double', 'body background-color': 'rgb(238, 242, 239)' },
     '/': { '.entry display': 'grid', 'body background-color': 'rgb(238, 242, 239)', '.entry h2 a padding-top': '9.6px' },
   };
 

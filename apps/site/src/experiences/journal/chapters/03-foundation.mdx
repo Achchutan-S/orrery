@@ -1,0 +1,64 @@
+---
+title: Building the foundation
+summary: Tasks 1 to 7. A workspace, a spike that tested the riskiest assumption, the release model, and a thin shared platform.
+sources:
+  - docs/tracker.md
+  - docs/adr/004-experience-model.md (spike results)
+  - docs/adr/005-release-dimensions.md
+  - docs/adr/012-platform-layer.md
+  - docs/design/platform-identity.md
+---
+import Claim from '../components/Claim.astro';
+
+## The sequence
+
+<Claim standing="verified">
+
+The blueprint orders the work as numbered tasks. The first seven were completed in this order:
+
+1. **Workspace and documentation.** The pnpm workspace, version pins, an agent guide (`AGENTS.md`), the architecture page, and ten architecture decision records.
+2. **The Astro site and a routing spike.** Before depending on it, the spike tested whether routes can be added from data rather than from files, in development and in production builds. They can. It also showed that a React island hidden behind a switched-off feature flag still ships its JavaScript, so flags were defined as release management, never as a way to keep something secret.
+3. **The platform schema.** The release model as types and pure functions, with a test for every combination of lifecycle stage, environment and access.
+4. **The experience catalog.** One small data file per experience, and a check that every folder has exactly one entry.
+5. **The release configuration.** `config/release.json`, validated against the catalog, with a generated JSON Schema for editors.
+6. **Release-driven routing.** A build integration that reads the catalog and the release file and registers only the routes allowed in the current environment.
+7. **The shared platform layer.** The page shell, metadata, design tokens and the discovery index.
+
+</Claim>
+
+## Four answers instead of one switch
+
+<Claim standing="verified">
+
+A single "visible or hidden" switch mixes up four separate questions, so the release file answers them separately for each experience:
+
+- **Lifecycle:** draft, alpha, beta, published, frozen, deprecated or archived.
+- **Access:** public, or owner only (signed-in and policy access are designed but refused until Phase 4).
+- **Discoverability:** listed in the index, or reachable only by its address.
+- **Flags:** unfinished features, each with its own value for previews and for production.
+
+Release channels such as "stable" and "beta" are worked out from the lifecycle, never stored, so they cannot drift out of date.
+
+</Claim>
+
+## Not built means not shipped
+
+<Claim standing="verified">
+
+A draft is not hidden in production; it is absent. The build never compiles its pages, scripts or styles. A test plants unique "canary" text inside a permanent draft experience and fails the build if that text appears anywhere in the production output. That is the central guarantee of the whole platform.
+
+</Claim>
+
+## A thin shared layer
+
+<Claim standing="verified">
+
+The platform owns very little of what a visitor sees: the document shell and its metadata, an ordered set of CSS layers, a few accessibility tokens, a two-band focus ring that stays visible on any background, an optional colophon, and the discovery index. Everything inside the page body belongs to the experience. CSS cascade layers make experience styles always win over platform defaults, with two exceptions no experience can override: reduced motion and the focus ring.
+
+</Claim>
+
+<Claim standing="implemented">
+
+The visual direction for the few pages the platform owns is an instrument maker's catalogue: plain, exact, and honest about what each thing costs to open. It is set in Atkinson Hyperlegible Next, a typeface designed for readers with low vision, because accessibility is the one thing the platform owns everywhere. The index tells a visitor, in words, whether an entry is a static page, an interactive application, or a separate site.
+
+</Claim>
