@@ -1,0 +1,18 @@
+{
+  "name": "@pu/checks",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./leaks": "./src/leaks.ts",
+    "./metadata": "./src/metadata.ts"
+  },
+  "scripts": {
+    "test": "node --test --test-reporter=spec \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@pu/experience-catalog": "workspace:*",
+    "@pu/platform-schema": "workspace:*",
+    "zod": "4.6.7"
+  }
+}

@@ -1,0 +1,27 @@
+---
+import Layout from '../Layout.astro';
+---
+<Layout>
+  <article>
+    <h1>How a page reaches you</h1>
+    <p class="standfirst">Every page on this site is a plain file on a CDN. Deciding which files exist is the interesting part.</p>
+
+    <h2>It starts as a folder</h2>
+    <p>Each experience is one folder of its own pages, styles and components, plus one entry in a catalog that says what it is: its name, its routes, and how heavy it is to open. The catalog is data, so the tools that manage releases can read it without loading the site itself.</p>
+
+    <h2>A release entry decides who gets it</h2>
+    <p>Whether an experience ships is not written in its code. It lives in one file, separate from the catalog, with four independent answers: how finished it is, who may see it, whether it is advertised, and which unfinished features are switched on.</p>
+    <pre><code>{`"sample-content": {
+  "lifecycle": "published",
+  "access": { "kind": "public" },
+  "discoverability": "listed"
+}`}</code></pre>
+    <p>An experience with no entry at all is treated as a private draft. The <a href="/sample-app/states">lifecycle explorer</a> shows where each state is built.</p>
+
+    <h2>The build mounts only what may ship</h2>
+    <p>Before anything is compiled, the build reads the catalog and the release file and works out which experiences belong in this environment. Only their routes are registered. A draft is never compiled for production, so its pages, scripts and even its title cannot end up in the output by accident. A test searches every production file for planted text to prove it.</p>
+
+    <h2>Why this page has no script</h2>
+    <p>This is reading material, so it is HTML and CSS only. Interactive experiences load their own JavaScript, and only on their own pages.</p>
+  </article>
+</Layout>

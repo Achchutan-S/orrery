@@ -1,0 +1,17 @@
+---
+// CSS isolation fixture. The rule below is deliberately as destructive as CSS allows.
+// It is scoped by nothing and sits in this experience's own layer. Do not weaken it:
+// the browser test proves it changes no other experience.
+import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
+---
+<ExperienceRoot experience="sample-hostile">
+  <slot />
+</ExperienceRoot>
+
+<style is:global>
+  @layer experience {
+    * {
+      all: unset;
+    }
+  }
+</style>

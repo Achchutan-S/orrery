@@ -1,0 +1,115 @@
+---
+// Layout for the few pages the platform itself owns: the discovery index and 404.
+// The "_" prefix keeps it out of routing. Design: docs/design/platform-identity.md.
+import { Font } from 'astro:assets';
+import '../platform/tokens/platform.css';
+import SeoHead from '../platform/root/SeoHead.astro';
+
+interface Props { title: string; description: string; listed?: boolean }
+const { title, description, listed = true } = Astro.props;
+---
+<!doctype html>
+<html lang="en" data-platform-page>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#eef2ef" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#121816" />
+    <SeoHead title={title} description={description} listed={listed} />
+    <Font cssVariable="--font-platform" preload />
+  </head>
+  <body>
+    <div class="page">
+      <slot />
+    </div>
+  </body>
+</html>
+
+<style is:global>
+  @layer experience {
+    :root {
+      color-scheme: light dark;
+      --plate: light-dark(#eef2ef, #121816);
+      --ink: light-dark(#17201d, #e2e8e5);
+      --graphite: light-dark(#4f5b57, #a3afaa);
+      --verdigris: light-dark(#1f6656, #7cc7b4);
+      --rule: light-dark(#c3cdc8, #2e3935);
+      --gutter: clamp(1rem, 4vw, 3rem);
+    }
+
+    body {
+      background: var(--plate);
+      color: var(--ink);
+      font-family: var(--font-platform);
+      font-size: 1.125rem;
+      line-height: 1.5;
+      text-size-adjust: 100%;
+    }
+
+    ::selection {
+      background: var(--verdigris);
+      color: var(--plate);
+    }
+
+    a {
+      color: var(--verdigris);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.2em;
+    }
+
+    a:hover {
+      text-decoration-thickness: 3px;
+    }
+
+    .page {
+      max-inline-size: 72rem;
+      margin-inline: auto;
+      padding-inline: var(--gutter);
+    }
+
+    .masthead {
+      padding-block: var(--pu-space-6) var(--pu-space-5);
+      border-block-end: 1px solid var(--rule);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.25rem, 1.6rem + 2.6vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.01em;
+      text-wrap: balance;
+    }
+
+    .lede {
+      margin: var(--pu-space-3) 0 0;
+      max-inline-size: 62ch;
+      color: var(--graphite);
+    }
+
+    main {
+      padding-block: var(--pu-space-5);
+    }
+
+    .colophon {
+      padding-block: var(--pu-space-5) var(--pu-space-6);
+      color: var(--graphite);
+      font-size: 1rem;
+    }
+
+    .colophon p {
+      margin: 0;
+      max-inline-size: 62ch;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+</style>

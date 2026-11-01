@@ -1,0 +1,44 @@
+---
+// The platform shell (blueprint 2, 3.9). It owns the document, metadata, platform
+// stylesheet and the chrome the catalog entry opts into. The experience owns
+// everything inside <body>: its landmarks, <main>, layout, fonts and styles.
+import '../tokens/platform.css';
+import Colophon from '../colophon/Colophon.astro';
+import { internalExperience, resolutionOf } from '../release/index.ts';
+import SeoHead from './SeoHead.astro';
+
+interface Props {
+  experience: string;
+  /** Defaults to the catalog title. */
+  title?: string;
+  /** Defaults to the catalog summary. */
+  description?: string;
+  lang?: string;
+}
+const { experience, title, description, lang = 'en' } = Astro.props;
+const meta = internalExperience(experience);
+if (meta.chrome === 'full') {
+  // ponytail: no experience uses the shared header yet; build it with the first one that does.
+  throw new Error(`"${experience}" uses chrome "full", which is not implemented yet; use "minimal" or "beacon"`);
+}
+const scheme = { light: 'light', dark: 'dark', 'light-dark': 'light dark', custom: undefined }[meta.colorScheme];
+---
+<!doctype html>
+<html lang={lang} data-experience={experience}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* The meta tag sets the page's color scheme (and light-dark()); an inline style attribute would need 'unsafe-inline' under the CSP. */}
+    {scheme && <meta name="color-scheme" content={scheme} />}
+    <SeoHead
+      title={title ?? meta.title}
+      description={description ?? meta.summary}
+      listed={resolutionOf(experience).listed}
+    />
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+    {meta.chrome === 'minimal' && <Colophon experience={experience} />}
+  </body>
+</html>

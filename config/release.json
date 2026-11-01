@@ -1,0 +1,60 @@
+{
+  "$schema": "./release.schema.json",
+  "platform": {
+    "flags": {}
+  },
+  "experiences": {
+    "canary-draft": {
+      "lifecycle": "draft",
+      "access": {
+        "kind": "owner"
+      },
+      "discoverability": "unlisted",
+      "note": "Permanent leak-check canary. Never promote: production builds must not contain it."
+    },
+    "devxray": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "note": "Independent project at devxray-one.vercel.app; linked, never built here."
+    },
+    "kawaiui": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "note": "Independent project at kawaiui.vercel.app; linked, never built here."
+    },
+    "sample-app": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "flags": {
+        "inspector": {
+          "preview": true,
+          "production": false
+        }
+      }
+    },
+    "sample-content": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed"
+    },
+    "sample-hostile": {
+      "lifecycle": "draft",
+      "access": {
+        "kind": "owner"
+      },
+      "discoverability": "unlisted",
+      "note": "Permanent CSS isolation fixture. Never promote."
+    }
+  }
+}

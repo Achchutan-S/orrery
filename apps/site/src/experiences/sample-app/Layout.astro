@@ -1,0 +1,159 @@
+---
+// sample-app's own presentation: a dark tool surface in the system UI font.
+// chrome is "beacon", so the platform adds no colophon here.
+import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
+
+interface Props { title?: string }
+---
+<ExperienceRoot experience="sample-app" title={Astro.props.title}>
+  <main id="content">
+    <slot />
+  </main>
+</ExperienceRoot>
+
+<style is:global>
+  @layer experience {
+    [data-experience='sample-app'] {
+      --sa-bg: #10141c;
+      --sa-panel: #171d28;
+      --sa-ink: #dfe6f2;
+      --sa-quiet: #9aa7bd;
+      --sa-link: #8fb8ff;
+      --sa-line: #2a3446;
+    }
+
+    [data-experience='sample-app'] body {
+      background: var(--sa-bg);
+      color: var(--sa-ink);
+      font-family: system-ui, sans-serif;
+      line-height: 1.5;
+    }
+
+    [data-experience='sample-app'] main {
+      padding: 2rem clamp(1rem, 4vw, 3rem);
+      max-inline-size: 72rem;
+    }
+
+    [data-experience='sample-app'] a {
+      color: var(--sa-link);
+      text-underline-offset: 0.2em;
+    }
+
+    [data-experience='sample-app'] a[aria-current] {
+      color: var(--sa-ink);
+      font-weight: 700;
+      text-decoration-thickness: 3px;
+    }
+
+    [data-experience='sample-app'] h1 {
+      margin: 0 0 0.5rem;
+      font-size: 2rem;
+    }
+
+    [data-experience='sample-app'] .state-name {
+      text-transform: capitalize;
+    }
+
+    [data-experience='sample-app'] h2 {
+      font-size: 1.125rem;
+      margin: 1.75rem 0 0.5rem;
+    }
+
+    [data-experience='sample-app'] ul[role='list'] {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    [data-experience='sample-app'] .explorer {
+      display: grid;
+      gap: 2rem;
+    }
+
+    @media (min-width: 52rem) {
+      [data-experience='sample-app'] .explorer {
+        grid-template-columns: 11rem minmax(0, 1fr);
+      }
+
+      [data-experience='sample-app'] .inspector {
+        grid-column: 2;
+      }
+    }
+
+    /* Phones: the state list wraps into a compact row above the view. */
+    [data-experience='sample-app'] nav ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 1rem;
+    }
+
+    @media (min-width: 52rem) {
+      [data-experience='sample-app'] nav ul {
+        display: block;
+      }
+
+      [data-experience='sample-app'] nav li + li {
+        margin-block-start: 0.5rem;
+      }
+    }
+
+    [data-experience='sample-app'] .next li + li,
+    [data-experience='sample-app'] .intro li + li {
+      margin-block-start: 0.5rem;
+    }
+
+    [data-experience='sample-app'] nav a {
+      display: inline-block;
+      padding-block: 0.25rem;
+      text-transform: capitalize;
+    }
+
+    [data-experience='sample-app'] table {
+      border-collapse: collapse;
+      font-variant-numeric: tabular-nums;
+      margin-block-start: 0.75rem;
+    }
+
+    [data-experience='sample-app'] caption {
+      text-align: start;
+      color: var(--sa-quiet);
+      padding-block-end: 0.5rem;
+    }
+
+    [data-experience='sample-app'] td {
+      white-space: nowrap;
+    }
+
+    [data-experience='sample-app'] th,
+    [data-experience='sample-app'] td {
+      border-block-end: 1px solid var(--sa-line);
+      padding: 0.5rem 1rem 0.5rem 0;
+      text-align: start;
+    }
+
+    [data-experience='sample-app'] .inspector {
+      background: var(--sa-panel);
+      border: 1px solid var(--sa-line);
+      padding: 1rem;
+    }
+
+    [data-experience='sample-app'] .inspector h2 {
+      margin-block-start: 0;
+    }
+
+    [data-experience='sample-app'] dl {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.25rem 1rem;
+      margin: 0;
+    }
+
+    [data-experience='sample-app'] dd {
+      margin: 0;
+    }
+
+    [data-experience='sample-app'] .table-scroll {
+      overflow-x: auto;
+    }
+  }
+</style>

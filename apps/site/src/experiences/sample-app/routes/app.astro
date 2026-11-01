@@ -1,0 +1,15 @@
+---
+import { flag } from '../../../platform/release/index.ts';
+import App from '../App.tsx';
+import { stateFacts } from '../facts.ts';
+import Layout from '../Layout.astro';
+import { views } from '../views.ts';
+
+export function getStaticPaths() {
+  return views.map((v) => ({ params: { path: v.path }, props: { title: v.title } }));
+}
+const { title } = Astro.props;
+---
+<Layout title={title}>
+  <App client:load path={Astro.params.path ?? ''} facts={stateFacts()} inspector={flag('sample-app', 'inspector')} />
+</Layout>

@@ -1,0 +1,75 @@
+---
+// sample-content's own presentation: a serif reading column with its own tokens.
+// Proves an experience can look nothing like the platform pages while using the same shell.
+import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
+
+interface Props { title?: string }
+---
+<ExperienceRoot experience="sample-content" title={Astro.props.title}>
+  <main id="content">
+    <slot />
+  </main>
+</ExperienceRoot>
+
+<style is:global>
+  @layer experience {
+    [data-experience='sample-content'] {
+      --sc-paper: light-dark(#fbfaf7, #1b1a18);
+      --sc-ink: light-dark(#262421, #e9e6df);
+      --sc-quiet: light-dark(#5e5850, #b3ada3);
+      --sc-accent: light-dark(#7a3418, #f0a582);
+      --sc-code: light-dark(#f1eee7, #26241f);
+    }
+
+    [data-experience='sample-content'] body {
+      background: var(--sc-paper);
+      color: var(--sc-ink);
+      font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+      font-size: 1.1875rem;
+      line-height: 1.6;
+    }
+
+    [data-experience='sample-content'] main,
+    [data-experience='sample-content'] .pu-colophon {
+      max-inline-size: 38rem;
+      margin-inline: auto;
+      padding-inline: 1.25rem;
+    }
+
+    [data-experience='sample-content'] main {
+      padding-block: 4rem 1rem;
+    }
+
+    [data-experience='sample-content'] h1 {
+      font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem);
+      line-height: 1.1;
+      font-weight: 600;
+      margin: 0 0 1rem;
+      text-wrap: balance;
+    }
+
+    [data-experience='sample-content'] h2 {
+      font-size: 1.375rem;
+      line-height: 1.25;
+      margin: 2.5rem 0 0.5rem;
+    }
+
+    [data-experience='sample-content'] .standfirst {
+      color: var(--sc-quiet);
+      font-size: 1.3125rem;
+      line-height: 1.5;
+    }
+
+    [data-experience='sample-content'] a {
+      color: var(--sc-accent);
+    }
+
+    [data-experience='sample-content'] pre {
+      background: var(--sc-code);
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+    }
+  }
+</style>

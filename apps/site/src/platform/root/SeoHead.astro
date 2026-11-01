@@ -1,0 +1,36 @@
+---
+// Document metadata for every page (blueprint 3.5, 3.10). Also emits the cascade layer
+// order first, so layer priority never depends on the order stylesheets end up in. Not-listed pages are noindex
+// and send no referrer, so an unlisted URL is not advertised by search or Referer headers.
+import { LAYER_ORDER } from '../tokens/layer-order.ts';
+
+interface Props {
+  title: string;
+  description: string;
+  listed: boolean;
+  /** Absolute or root-relative URL of a 1200×630 image. Omitted when the page has none. */
+  image?: string;
+}
+const { title, description, listed, image } = Astro.props;
+if (!title.trim() || !description.trim()) {
+  throw new Error(`${Astro.url.pathname}: a page needs a non-empty title and description`);
+}
+// build.format 'file' reports '/x.html' and '/index.html'; the public URL is '/x' and '/'.
+const path = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+// A page that asks not to be indexed does not declare a canonical URL either.
+const canonical = listed && Astro.site ? new URL(path, Astro.site).href : undefined;
+const imageUrl = image && Astro.site ? new URL(image, Astro.site).href : image;
+---
+<style is:inline set:html={LAYER_ORDER}></style>
+<title>{title}</title>
+<meta name="description" content={description} />
+{canonical && <link rel="canonical" href={canonical} />}
+{!listed && <meta name="robots" content="noindex" />}
+{!listed && <meta name="referrer" content="no-referrer" />}
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Personal Universe" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{canonical && <meta property="og:url" content={canonical} />}
+{imageUrl && <meta property="og:image" content={imageUrl} />}
+<meta name="twitter:card" content={imageUrl ? 'summary_large_image' : 'summary'} />

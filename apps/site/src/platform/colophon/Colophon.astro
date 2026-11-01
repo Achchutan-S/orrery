@@ -1,0 +1,12 @@
+---
+// Optional colophon (chrome `full` or `minimal`): the way back to the index, and an
+// honest line about what this page loads. Inherits the experience's colour and type.
+import { weightLine, weightOf } from '../discovery/index.ts';
+import { internalExperience } from '../release/index.ts';
+
+interface Props { experience: string }
+const line = weightLine({ weight: weightOf(internalExperience(Astro.props.experience)) });
+---
+<footer class="pu-colophon">
+  <p>Part of <a href="/" translate="no">Personal Universe</a>. {line}</p>
+</footer>

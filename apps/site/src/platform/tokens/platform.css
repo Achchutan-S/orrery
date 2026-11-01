@@ -1,0 +1,92 @@
+/*
+ * Platform stylesheet, loaded on every page. Blueprint 2 and 3.9, ADR-007.
+ * Layer order: an experience always beats platform defaults without !important.
+ * The only exceptions are the focus ring and reduced motion, below.
+ */
+@layer platform.reset, platform.tokens, platform.chrome, experience;
+
+@layer platform.tokens {
+  :root {
+    /* Two-band focus ring: one band always contrasts with whatever background an experience uses. */
+    --pu-focus-inner: #f2c14e;
+    --pu-focus-outer: #0b1310;
+    --pu-focus-width: 3px;
+    --pu-duration: 160ms;
+    --pu-target-min: 44px;
+    --pu-space-1: 0.25rem;
+    --pu-space-2: 0.5rem;
+    --pu-space-3: 1rem;
+    --pu-space-4: 1.5rem;
+    --pu-space-5: 2.5rem;
+    --pu-space-6: 4rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --pu-duration: 0ms;
+    }
+  }
+}
+
+@layer platform.reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  img,
+  video {
+    max-inline-size: 100%;
+    block-size: auto;
+  }
+
+  /*
+   * The focus ring is the one style no experience can remove (blueprint J: freedom
+   * stops at accessibility). Important declarations in this first layer outrank every
+   * later layer, including an experience that unsets everything (sample-hostile).
+   */
+  :focus-visible {
+    outline: var(--pu-focus-width) solid var(--pu-focus-outer) !important;
+    outline-offset: var(--pu-focus-width) !important;
+    box-shadow: 0 0 0 var(--pu-focus-width) var(--pu-focus-inner) !important;
+  }
+
+  /*
+   * Important declarations in the first layer outrank every later layer, so no
+   * experience can opt out of reduced motion for CSS animation and transitions.
+   * JavaScript-driven motion must still check the media query itself.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer platform.chrome {
+  .pu-colophon {
+    padding: var(--pu-space-5) clamp(1rem, 4vw, 3rem);
+    font-size: 1rem;
+    line-height: 1.45;
+  }
+
+  .pu-colophon p {
+    margin: 0;
+    max-inline-size: 62ch;
+  }
+
+  .pu-colophon a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+  }
+}

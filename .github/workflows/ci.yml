@@ -1,0 +1,135 @@
+# Continuous integration: docs/runbooks/checks.md ("CI") and ADR-015.
+# Two parallel jobs on the same commit; every command is a repository script.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Read-only token; no job needs to write to the repository or use secrets.
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels the older run; main always finishes.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+  ASTRO_TELEMETRY_DISABLED: '1'
+
+jobs:
+  verify:
+    name: Typecheck, tests and guardrails
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Enable pnpm at the version in package.json "packageManager"
+        run: |
+          corepack enable
+          echo "node $(node --version), pnpm $(pnpm --version)"
+
+      - name: Locate the pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+
+      - name: Install (fails if pnpm-lock.yaml is out of date)
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Schema, catalog, checker and site tests. The site tests build production and
+      # preview output in temporary directories and run the dev server.
+      - name: Tests
+        run: pnpm test
+
+      # Boundaries, production build, metadata, leak scan, budgets (tools/checks).
+      - name: Repository checks
+        run: pnpm check
+
+      - name: Nothing changed in the working tree
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)"
+
+      - name: Upload the production build for inspection
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-dist
+          path: apps/site/dist
+          if-no-files-found: ignore
+          retention-days: 7
+
+  browser:
+    name: Browser (Playwright and axe)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Enable pnpm at the version in package.json "packageManager"
+        run: |
+          corepack enable
+          echo "node $(node --version), pnpm $(pnpm --version)"
+
+      - name: Locate the pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+
+      - name: Install (fails if pnpm-lock.yaml is out of date)
+        run: pnpm install --frozen-lockfile
+
+      # The suite launches headless Chromium only; the lockfile pins the Playwright version.
+      - name: Install Chromium headless shell and its system libraries
+        run: pnpm --filter @pu/site exec playwright install --with-deps --only-shell chromium
+
+      # Builds production and preview output, serves each with `astro preview` (awaited
+      # until listening, stopped in after()), then runs axe, keyboard, routing, flag,
+      # CSS isolation and external-link tests. PU_TRACE records a Playwright trace per context.
+      - name: Browser tests
+        run: pnpm test:browser
+        env:
+          PU_TRACE: '1'
+
+      - name: Upload screenshots, traces and JUnit report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: browser-results
+          path: apps/site/test-results
+          if-no-files-found: ignore
+          retention-days: 14

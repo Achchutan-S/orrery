@@ -1,0 +1,14 @@
+---
+// Static intro: no JavaScript. The app itself lives on the enumerated paths below it.
+import Layout from '../Layout.astro';
+import { STATES } from '../lifecycles.ts';
+import { BASE } from '../views.ts';
+---
+<Layout>
+  <h1>Release lifecycle explorer</h1>
+  <p>Every experience on this site is in one of seven release states. This small application shows where each state is built and what it can become next.</p>
+  <ul role="list" class="intro">
+    <li><a href={`${BASE}/states`}>See all states</a></li>
+    {STATES.map((s) => <li><a href={`${BASE}/states/${s}`}>{s}</a></li>)}
+  </ul>
+</Layout>

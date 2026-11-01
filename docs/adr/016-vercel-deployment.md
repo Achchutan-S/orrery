@@ -1,0 +1,20 @@
+---
+noteId: "ca52f290d5fa11f1ae605f8c0e08bb6f"
+tags: []
+
+---
+
+# ADR-016 — Vercel deployment configuration, headers and CSP
+
+Status: accepted (1 November 2026), not yet deployed · Implements blueprint task 11 and ADR-002. Operations: [runbooks/deploy.md](../runbooks/deploy.md).
+
+**Decision:** one static Vercel project, Root Directory `apps/site`, configured from `apps/site/vercel.json` wherever Vercel allows; the few dashboard settings are listed in the runbook.
+
+1. **Fail-closed environment.** If a project switches off "System Environment Variables", Vercel builds without `VERCEL_ENV`, and `environmentFrom()` would choose development and mount drafts in a public deployment. The deployment build command sets `PU_DEPLOYMENT=1`; `buildEnvironment()` in `platform-schema` then throws without `VERCEL_ENV`. Local and CI builds are unchanged.
+2. **CSP in two parts.** Astro's `security.csp` (stable since Astro 6) emits a `<meta>` policy with hashes for every script and style it emits, plus fixed directives (`default-src 'self'`, `img-src 'self' data:`, `font-src 'self'`, `connect-src 'self'`, `object-src`, `base-uri`, `form-action`). The inline layer-order statement is hashed explicitly from one constant. `vercel.json` sends a header policy with only `frame-ancestors`, `base-uri`, `form-action` and `object-src`: two policies both apply, so a header `script-src` would block what the meta policy allows. No `'unsafe-inline'`.
+3. **Consequences of the CSP:** `ExperienceRoot` no longer writes a `style="color-scheme: …"` attribute (the `color-scheme` meta tag already sets the scheme); Markdown syntax highlighting is off (`markdown.syntaxHighlight: false`) because Shiki writes inline styles.
+4. **Caching.** `/_astro/*` (content-hashed JS, CSS and fonts) is `immutable` for a year. HTML and 404 responses keep Vercel's revalidating default, so environment-specific HTML is never served stale.
+5. **Versions.** `apps/site` declares `engines.node: "22.x"` because Vercel reads engines from the Root Directory and can pin only a major; Astro's CLI rejects anything below 22.23.4, so an older patch fails the build. pnpm comes from Corepack (`ENABLE_EXPERIMENTAL_COREPACK=1`, a dashboard variable). Locally, Node 24 now prints pnpm's "Unsupported engine" warning, which is accurate: the project targets 22.
+6. **Smoke test instead of a hosted Playwright run.** `pnpm smoke <url> --env …` checks a deployment over HTTP from the catalog, release state and `vercel.json`. Browser tests stay on local builds (ADR-015).
+
+**Not verified:** no deployment exists yet (no commit, empty remote, no Vercel project). Every Vercel-specific behaviour (headers, redirects, 404 status, Node patch, pnpm version, files outside the Root Directory) is unverified until the first preview passes the smoke test.

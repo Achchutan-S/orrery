@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example
+config/.release.json.bak
+.DS_Store
+test-results/

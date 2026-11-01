@@ -1,0 +1,11 @@
+---
+// Permanent leak-check fixture. Never promote. Every string here is a canary.
+import ExperienceRoot from '../../../platform/root/ExperienceRoot.astro';
+import Canary from '../Canary.tsx';
+---
+<ExperienceRoot experience="canary-draft" title="PU-CANARY-7f3a9c-TITLE">
+  <main>
+    <h1>PU-CANARY-7f3a9c-PAGE</h1>
+    <Canary client:load />
+  </main>
+</ExperienceRoot>

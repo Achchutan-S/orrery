@@ -1,0 +1,133 @@
+---
+// The discovery index: the platform's public entry point (blueprint 3.5a).
+// Platform-owned until the Phase 1 home experience takes over `/` (ADR-012).
+import { publicDiscoveryIndex, weightLine } from '../platform/discovery/index.ts';
+import { env, experiences, releaseState } from '../platform/release/index.ts';
+import Layout from './_PlatformLayout.astro';
+
+const entries = publicDiscoveryIndex(experiences, releaseState, env);
+---
+<Layout
+  title="Personal Universe"
+  description="An index of things built, written and still in progress, with what each one involves to open."
+>
+  <header class="masthead">
+    <h1 translate="no">Personal Universe</h1>
+    <p class="lede">Things built, written and still in progress. Each entry says what opening it involves.</p>
+  </header>
+  <main id="content">
+    {entries.length === 0 ? (
+      <p>Nothing is published here yet.</p>
+    ) : (
+      <ul class="index" role="list">
+        {entries.map((e) => (
+          <li class="entry" data-weight={e.weight}>
+            <h2>
+              <a href={e.href} aria-describedby={`${e.id}-weight`}>
+                {e.title}
+                {e.weight === 'external' && (
+                  <>
+                    <svg class="external" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                      <path d="M6 3H3v10h10v-3M9 3h4v4M13 3 7 9" fill="none" stroke="currentColor" stroke-width="1.6" />
+                    </svg>
+                    <span class="visually-hidden">(external site)</span>
+                  </>
+                )}
+              </a>
+            </h2>
+            <div class="text">
+              <p class="summary">{e.summary}</p>
+              <p class="weight" id={`${e.id}-weight`}>
+                {e.host ? (
+                  // Keep the host on one line: a break at its hyphen would misread the address.
+                  weightLine(e).split(e.host).map((part, i) => (i === 0 ? part : <><span class="host" translate="no">{e.host}</span>{part}</>))
+                ) : weightLine(e)}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </main>
+  <footer class="colophon">
+    <p>Static HTML; this page runs no JavaScript. Set in Atkinson Hyperlegible Next, a typeface designed for readers with low vision.</p>
+  </footer>
+</Layout>
+
+<style>
+  @layer experience {
+    .index {
+      display: grid;
+      gap: var(--pu-space-5);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .entry {
+      display: grid;
+      overflow-wrap: break-word;
+      gap: var(--pu-space-2) var(--pu-space-5);
+      align-content: start;
+    }
+
+    @media (min-width: 48rem) {
+      .entry {
+        grid-template-columns: minmax(12rem, 1fr) minmax(0, 2fr);
+        align-items: first baseline;
+      }
+
+      /* Title and text share one row, so their first lines share a baseline. */
+    }
+
+    h2 {
+      margin: 0;
+      text-wrap: balance;
+      font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+      line-height: 1.15;
+    }
+
+    /*
+     * Inline (not inline-block, whose baseline is its last line): vertical padding on an
+     * inline box grows the hit area past the 44px target without moving the layout.
+     */
+    h2 a {
+      padding-block: 0.6rem;
+      box-decoration-break: clone;
+      color: var(--ink);
+      text-decoration-color: var(--verdigris);
+    }
+
+    .external {
+      inline-size: 0.6em;
+      block-size: 0.6em;
+      margin-inline-start: 0.3em;
+      vertical-align: 0.1em;
+      color: var(--verdigris);
+    }
+
+    .text {
+      display: grid;
+      gap: var(--pu-space-2);
+    }
+
+    .summary,
+    .weight {
+      margin: 0;
+      max-inline-size: 62ch;
+    }
+
+    .weight {
+      color: var(--graphite);
+    }
+
+    .host {
+      white-space: nowrap;
+    }
+
+    /* External destinations are marked in words, by the icon and by a dashed underline. */
+    [data-weight='external'] h2 a {
+      text-decoration-style: dashed;
+    }
+  }
+</style>

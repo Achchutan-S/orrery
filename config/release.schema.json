@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "platform": {
+      "type": "object",
+      "properties": {
+        "flags": {
+          "default": {},
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "preview": {
+                "type": "boolean"
+              },
+              "production": {
+                "type": "boolean"
+              },
+              "audience": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "preview",
+              "production"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "experiences": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "lifecycle": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "alpha",
+              "beta",
+              "published",
+              "frozen",
+              "deprecated",
+              "archived"
+            ]
+          },
+          "access": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "public"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "signed-in"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "policy"
+                  },
+                  "policy": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "policy"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "owner"
+                  }
+                },
+                "required": [
+                  "kind"
+                ]
+              }
+            ]
+          },
+          "discoverability": {
+            "type": "string",
+            "enum": [
+              "listed",
+              "unlisted"
+            ]
+          },
+          "flags": {
+            "default": {},
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "preview": {
+                  "type": "boolean"
+                },
+                "production": {
+                  "type": "boolean"
+                },
+                "audience": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "preview",
+                "production"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "archivedTo": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "lifecycle",
+          "access",
+          "discoverability"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "platform",
+    "experiences"
+  ],
+  "additionalProperties": false
+}
