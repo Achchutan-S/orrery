@@ -6,6 +6,8 @@ tags: []
 
 # Platform identity (task 7)
 
+> Since task 14 the Index experience owns `/` and the platform owns the Beacon ([ADR-019](../adr/019-index-and-beacon.md)); this page records the task 7 design.
+
 The platform owns very little visible surface: accessibility tokens, the focus ring, the optional colophon, and, until the Phase 1 home experience exists, the discovery index at `/` and the 404 page. Everything else belongs to experiences. So the platform's identity has to be quiet enough to sit under any experience and still be recognisable on the few pages it owns.
 
 **Subject.** One engineer's growing body of work: interactive explanations, writing, visualisations, tools. **Audience.** Senior engineers and recruiters who judge craft quickly; curious visitors who browse. **Primary job of the index.** Help someone choose what to open, honestly.

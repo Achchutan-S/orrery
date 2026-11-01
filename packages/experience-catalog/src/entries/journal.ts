@@ -9,6 +9,8 @@ export default defineExperience({
   summary: 'The idea, architecture and evolution of a personal universe: how this platform was conceived, built, tested and deployed.',
   capabilities: ['content'],
   tags: ['architecture', 'history'],
+  section: 'thinking',
+  headline: 'plain',
   routes: [
     { pattern: '/journal', entrypoint: 'journal/routes/index.astro' },
     { pattern: '/journal/[chapter]', entrypoint: 'journal/routes/chapter.astro' },

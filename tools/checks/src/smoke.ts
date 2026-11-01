@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CANARY } from '@pu/experience-catalog';
 import { resolve, type Environment, type Experience, type ReleaseState } from '@pu/platform-schema';
-import { routeFiles } from './routes.ts';
+import { isFileRoute, routeFiles } from './routes.ts';
 import { isMain, loadPlatform, repoRoot, report, type Finding } from './repo.ts';
 
 export type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
@@ -40,7 +40,8 @@ export async function smoke(input: SmokeInput): Promise<Finding[]> {
     // Every 200 body is scanned for flags and canaries, including ones that should have been 404.
     if (res.status === 200) crawled.set(path, html);
     if (res.status !== expect) { fail(path, `status ${res.status}, expected ${expect} (${why})`); return undefined; }
-    if (!(res.headers.get('content-type') ?? '').startsWith('text/html')) fail(path, `content-type "${res.headers.get('content-type')}", expected text/html`);
+    // A file route (a PDF, an image) is served as what it is; every other 200 or 404 is a page.
+    if (!(expect === 200 && isFileRoute(path)) && !(res.headers.get('content-type') ?? '').startsWith('text/html')) fail(path, `content-type "${res.headers.get('content-type')}", expected text/html`);
     if (/immutable/.test(res.headers.get('cache-control') ?? '')) fail(path, 'an HTML response is cached as immutable');
     if (expect === 404 && !/<title>Not found<\/title>/.test(html)) fail(path, 'the 404 response is not the site\'s Not found page');
     return res;
@@ -73,7 +74,7 @@ export async function smoke(input: SmokeInput): Promise<Finding[]> {
       if (exact !== undefined) {
         const path = pattern;
         await page(path, r.mounted ? 200 : 404, r.mounted ? `"${e.id}" is mounted in ${env}` : `"${e.id}" is not released to ${env}`);
-        if (r.listed && !hrefs(crawled.get('/') ?? '').includes(path)) fail('/', `the index does not link listed "${e.id}" (${path})`);
+        if (r.listed && !isFileRoute(path) && !hrefs(crawled.get('/') ?? '').includes(path)) fail('/', `the index does not link listed "${e.id}" (${path})`);
       } else if (r.mounted) {
         // Enumerated views: follow the links the experience's own pages make into its subtree.
         const views = [...new Set([...crawled.values()].flatMap(hrefs).filter((h) => h.startsWith(`/${under}`)))];
@@ -91,8 +92,9 @@ export async function smoke(input: SmokeInput): Promise<Finding[]> {
   await page(MISSING, 404, 'an unknown path');
 
   // 4. Clean URLs and trailing slashes redirect permanently, keeping the query string.
+  // `/` has no `.html` or trailing-slash form of its own, so the first route below it is used.
   const entry = experiences.flatMap((e) => (e.kind === 'internal' && resolve(e, state, env).mounted
-    ? e.routes.filter((x) => !x.pattern.includes('[')).map((x) => x.pattern) : []))[0];
+    ? e.routes.filter((x) => !x.pattern.includes('[') && x.pattern !== '/').map((x) => x.pattern) : []))[0];
   if (entry) {
     for (const [from, to] of [[`${entry}.html`, entry], [`${entry}/`, entry], [`${entry}/?pu=1`, `${entry}?pu=1`]] as const) {
       const res = await get(from);

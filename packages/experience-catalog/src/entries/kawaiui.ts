@@ -10,5 +10,7 @@ export default defineExperience({
   summary: 'UI Lab, a museum of interface experiments in rooms: physics toys, motion, WebGL liquids, cursor tricks, games and a synth.',
   capabilities: ['interactive', 'multimedia', 'experimental'],
   tags: ['ui', 'motion', 'webgl', 'sound'],
+  section: 'labs',
+  headline: 'expressive',
   url: 'https://kawaiui.vercel.app/',
 });

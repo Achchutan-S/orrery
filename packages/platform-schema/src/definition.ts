@@ -26,6 +26,12 @@ const Base = z.object({
   capabilities: z.array(Capability).min(1),
   tags: z.array(z.string()).max(8).default([]),
   variantOf: z.string().optional(),
+  // How the Index presents the entry (task 14). Both optional: an entry without a section is
+  // listed under "Also here"; without a headline style its title is set in the platform face.
+  section: z.enum(['engineering', 'civic', 'thinking', 'labs', 'profile']).optional(),
+  // Echoes the experience's own typography on the Index without loading its fonts there:
+  // literary = book serif, technical = monospace, expressive = heavy display sans, plain = platform face.
+  headline: z.enum(['literary', 'technical', 'expressive', 'plain']).optional(),
 });
 
 export const InternalExperience = Base.extend({

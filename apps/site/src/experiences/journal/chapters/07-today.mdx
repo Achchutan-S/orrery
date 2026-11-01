@@ -11,13 +11,19 @@ import Inventory from '../components/Inventory.astro';
 
 ## Available now
 
-<Claim standing="deployed">
+<Claim standing="verified">
 
-The discovery index at [the front page](/), and every experience listed below. This list is not written by hand: it is generated from the catalog and the release file each time the site is built, so it cannot fall out of date.
+Every production build of this repository contains [the Index](/) at the front page and every experience listed below. This list is not written by hand: it is generated from the catalog and the release file each time the site is built, so it cannot fall out of date. The live site shows this version once it is deployed; until then it shows the earlier, plainer index.
 
 </Claim>
 
 <Inventory />
+
+<Claim standing="verified">
+
+The front page is the Index: a broadsheet that sets each experience's headline in a face echoing its own typography and files it under a section. On every page a small mark in the corner, the Beacon, leads back to it and opens a list of every public destination with ⌘K or Ctrl K. Both are built from the same public list as everything else, so nothing unreleased can appear in them. The Beacon's script is about one kilobyte; pages that had no JavaScript still have none of their own.
+
+</Claim>
 
 <Claim standing="verified">
 
@@ -33,17 +39,21 @@ Draft experiences, including the hostile stylesheet and the leak canary, are bui
 
 </Claim>
 
+<Claim standing="verified">
+
+The resume is one of those drafts. Its page, a one-page PDF and a link-preview image are generated from a single source file, and the PDF and image are served by the resume's own routes, so they exist only where the page does. It has been implemented and verified locally: its text is searchable in the PDF, the page ships no script but the Beacon, and production builds contain none of it. It has not been deployed and is not publicly accessible; it becomes public when the owner approves its content and changes its release entry.
+
+</Claim>
+
 ## Not built yet
 
 <Claim standing="planned">
 
-- The owner's Control Center screens. Its local server exists (chapter 8); the interface that uses it does not.
 - Owner sign-in, audiences, invitations and a full authorization system.
 - A publishing interface; today, publishing is an edit to the release file and a commit.
 - Private experiences and the private content store.
 - An audit history beyond Git, and usage analytics or dashboards.
-- The resume, the writing collection, search and feeds.
-- The Beacon: the platform's identity mark and command palette.
+- The writing collection, search and feeds.
 - A custom domain.
 
 </Claim>
@@ -55,7 +65,7 @@ Draft experiences, including the hostile stylesheet and the leak canary, are bui
 Each difference is recorded in an architecture decision record:
 
 - **Astro 7 instead of Astro 6** (ADR-011), because Astro 7 had been released and kept every routing guarantee.
-- **The front page is a platform page**, not yet the home experience the blueprint describes; the home experience replaces it in Phase 1 (ADR-012).
+- **The Beacon's palette is a small plain script**, not a React island, because React alone is four times the budget the blueprint sets for the Beacon (ADR-019).
 - **A small custom import checker** instead of ESLint with dependency-cruiser, because two of the rules need knowledge of the repository a linter cannot express (ADR-014).
 - **Browser tests run against local builds**, not against Vercel previews, so continuous integration needs no Vercel credentials; the live smoke test covers what only Vercel does (ADR-015, ADR-016).
 - **Link-preview images are not required yet**, although the foundation checklist asks for them; no page has one (ADR-014).

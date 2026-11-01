@@ -20,6 +20,14 @@
       "discoverability": "listed",
       "note": "Independent project at devxray-one.vercel.app; linked, never built here."
     },
+    "index": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "note": "The front page at /. Unpublishing it makes / a 404 in production."
+    },
     "journal": {
       "lifecycle": "published",
       "access": {
@@ -35,6 +43,14 @@
       },
       "discoverability": "listed",
       "note": "Independent project at kawaiui.vercel.app; linked, never built here."
+    },
+    "resume": {
+      "lifecycle": "draft",
+      "access": {
+        "kind": "owner"
+      },
+      "discoverability": "unlisted",
+      "note": "Draft until the owner approves the content (docs/resume.md). Built in development and preview only. To publish: published, public, listed."
     },
     "sample-app": {
       "lifecycle": "published",

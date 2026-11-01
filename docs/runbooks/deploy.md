@@ -120,3 +120,14 @@ Caching:
 
 - **This site:** add the domain to this project (Settings → Domains). `VERCEL_PROJECT_PRODUCTION_URL` then becomes the domain, so canonical URLs follow without a code change. Consider HSTS `preload` only after every subdomain serves HTTPS.
 - **KawaiUI and Dev X-Ray:** add `uilab.<domain>` and `devxray.<domain>` in *their own* Vercel projects (ADR-008); nothing is built or proxied here. Then change `url` in `packages/experience-catalog/src/entries/{kawaiui,devxray}.ts`, run `pnpm check`, and smoke-test with `--external`.
+
+  Status on 1 November 2026: no domain is owned (tracker decision 1), so no subdomain exists; the catalog keeps `https://kawaiui.vercel.app/` and `https://devxray-one.vercel.app/`, both answering 200. Steps once the domain exists, per project (KawaiUI shown):
+  1. In the KawaiUI Vercel project: Settings → Domains → Add `uilab.<domain>`.
+  2. At the DNS provider: the CNAME record Vercel shows for that name (usually `cname.vercel-dns.com`), or Vercel's nameservers for the whole domain.
+  3. Wait until Vercel shows the domain as valid with a certificate; `curl -I https://uilab.<domain>/` answers 200.
+  4. Here: set `url` in `entries/kawaiui.ts`, run `pnpm test` (the external-URL test pins the address) and `pnpm check`, commit, and after deploying run `pnpm smoke <url> --env production --external`.
+  Neither project's code changes.
+
+## Experience files (PDF, images)
+
+An experience's files (today the resume's PDF and link-preview image) are routes of that experience, so they deploy only with it (ADR-020). They are served with Vercel's default revalidating cache, like pages, because their paths are stable and their content changes when regenerated.

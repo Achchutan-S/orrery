@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./budgets": "./src/budgets.ts",
     "./leaks": "./src/leaks.ts",
     "./metadata": "./src/metadata.ts"
   },

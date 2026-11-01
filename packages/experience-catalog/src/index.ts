@@ -2,19 +2,23 @@
 import { validateCatalog, type ExperienceInput } from '@pu/platform-schema';
 import canaryDraft from './entries/canary-draft.ts';
 import devxray from './entries/devxray.ts';
+import frontPage from './entries/index.ts';
 import journal from './entries/journal.ts';
 import kawaiui from './entries/kawaiui.ts';
 import sampleApp from './entries/sample-app.ts';
 import sampleContent from './entries/sample-content.ts';
+import resume from './entries/resume.ts';
 import sampleHostile from './entries/sample-hostile.ts';
 
 // One line per experience. Order is the discovery order.
 export const catalog: readonly ExperienceInput[] = [
+  frontPage,
   journal,
   kawaiui,
   devxray,
   sampleContent,
   sampleApp,
+  resume,
   canaryDraft,
   sampleHostile,
 ];

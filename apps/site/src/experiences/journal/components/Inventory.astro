@@ -16,7 +16,7 @@ const entries = publicDiscoveryIndex(experiences, releaseState, env);
       <tr>
         <th scope="row"><a href={e.href}>{e.title}</a></th>
         <td>{e.host ? <>Separate site, <span class="host" translate="no">{e.host}</span></> : 'Hosted here'}</td>
-        <td>{e.host ? 'Leaves Personal Universe.' : weightLine(e)}</td>
+        <td>{e.host ? 'Leaves Orrery.' : weightLine(e)}</td>
       </tr>
     ))}
   </tbody>

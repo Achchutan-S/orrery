@@ -130,26 +130,29 @@ describe('axe (WCAG 2.2 A/AA rules) and screenshots', () => {
   });
 });
 
-describe('discovery index', () => {
-  test('keyboard: Tab reaches each entry in catalog order with a visible two-band focus ring', async () => {
+describe('The Index', () => {
+  const HEADLINES = ['/journal', '/sample-app', 'https://devxray-one.vercel.app/', '/sample-content', 'https://kawaiui.vercel.app/'];
+
+  test('keyboard: Tab reaches every headline in reading order, then the Beacon, with a visible two-band focus ring', async () => {
     const page = await open('/');
-    const order: string[] = [];
-    for (let i = 0; i < 5; i++) {
+    const order: { href: string | null; cls: string }[] = [];
+    for (let i = 0; i < 20; i++) {
       await page.keyboard.press('Tab');
       const focus = await page.evaluate(() => {
         const el = document.activeElement as HTMLElement;
         const s = getComputedStyle(el);
-        return { href: el.getAttribute('href'), outline: `${s.outlineStyle} ${s.outlineWidth}`, shadow: s.boxShadow };
+        return { href: el.getAttribute('href'), cls: el.className, headline: Boolean(el.closest('.headline')), outline: `${s.outlineStyle} ${s.outlineWidth}`, shadow: s.boxShadow };
       });
+      if (focus.cls === '' && focus.href === null) break;
       assert.equal(focus.outline, 'solid 3px', `${focus.href} outline`);
       assert.match(focus.shadow, /rgb\(242, 193, 78\)/, `${focus.href} inner band`);
-      order.push(focus.href!);
+      if (focus.headline) order.push({ href: focus.href, cls: 'headline' });
+      if (focus.cls.startsWith('pu-beacon')) order.push({ href: focus.href, cls: focus.cls });
+      if (focus.cls === 'pu-beacon-open') break;
     }
-    assert.deepEqual(order, ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']);
-    await page.keyboard.press('Shift+Tab');
+    assert.deepEqual(order.filter((o) => o.cls === 'headline').map((o) => o.href), HEADLINES);
+    assert.deepEqual(order.slice(-2).map((o) => o.cls), ['pu-beacon-mark', 'pu-beacon-open'], 'the Beacon comes last');
     await page.screenshot({ path: join(shots, 'index-focus-desktop.png') });
-    await page.keyboard.press('Enter');
-    await page.waitForURL(`${base.production}/sample-content`);
     await page.context().close();
   });
 
@@ -159,8 +162,8 @@ describe('discovery index', () => {
       const link = page.getByRole('link', { name: `${ext.title} (external site)`, exact: true });
       assert.equal(await link.getAttribute('href'), ext.href);
       assert.equal(await link.getAttribute('target'), null);
-      assert.equal(await link.evaluate((el) => document.getElementById(el.getAttribute('aria-describedby')!)?.textContent),
-        `Leaves Personal Universe for ${ext.host}.`);
+      assert.equal(await link.evaluate((el) => document.getElementById(el.getAttribute('aria-describedby')!)?.textContent?.trim()),
+        `Leaves Orrery for ${ext.host}.`);
       // Follow the link without depending on the live app: answer the request locally.
       await page.route(`${ext.href}**`, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>stub</title>' }));
       await link.click();
@@ -169,31 +172,67 @@ describe('discovery index', () => {
     });
   }
 
-  test('internal entries are not marked external', async () => {
+  test('every published experience is a headline; drafts and canaries are absent; hosted entries go to their routes', async () => {
     const page = await open('/');
-    for (const name of ['The Orrery Journal', 'How a page reaches you', 'Release lifecycle explorer']) {
-      assert.equal(await page.getByRole('link', { name, exact: true }).count(), 1, name);
-    }
-    assert.equal(await page.locator('[data-weight="external"]').count(), 2);
+    const res = await page.request.get(base.production + '/');
+    assert.equal(res.status(), 200);
+    assert.deepEqual(await page.locator('.headline a').evaluateAll((els) => els.map((e) => e.getAttribute('href'))), HEADLINES);
+    assert.equal(await page.locator('.story[data-weight="external"]').count(), 2);
+    const text = await page.locator('body').innerText();
+    for (const absent of ['Canary draft', 'Hostile stylesheet', 'PU-CANARY']) assert.ok(!text.includes(absent), absent);
+    await page.locator('.headline a', { hasText: 'How a page reaches you' }).click();
+    await page.waitForURL(`${base.production}/sample-content`);
+    await page.goBack();
+    await page.waitForURL(`${base.production}/`);
+    await page.goForward();
+    await page.waitForURL(`${base.production}/sample-content`);
     await page.context().close();
   });
 
-  test('desktop hangs titles left of summaries; mobile stacks them', async () => {
+  test('each headline keeps its own face: four different families, not one card repeated', async () => {
+    const page = await open('/');
+    const faces = await page.locator('.story').evaluateAll((els) => els.map((e) => [e.getAttribute('data-headline'), getComputedStyle(e.querySelector('.headline')!).fontFamily]));
+    assert.deepEqual(new Set(faces.map((f) => f[0])), new Set(['plain', 'expressive', 'technical', 'literary']));
+    assert.equal(new Set(faces.map((f) => f[1])).size, 4, JSON.stringify(faces));
+    await page.context().close();
+  });
+
+  test('desktop sets the lead beside the detour and sections as columns; phones stack them', async () => {
     for (const [name, vp] of Object.entries(VIEWPORTS)) {
       const page = await open('/', vp);
-      const title = (await page.locator('.entry h2').first().boundingBox())!;
-      const summary = (await page.locator('.entry .summary').first().boundingBox())!;
-      if (name === 'desktop') assert.ok(summary.x > title.x + title.width, 'summary right of title');
-      else assert.ok(summary.y >= title.y + title.height, 'summary below title');
+      const lead = (await page.locator('.lead').boundingBox())!;
+      const detour = (await page.locator('.detour').boundingBox())!;
+      const sections = await page.locator('.section').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().y));
+      if (name === 'desktop') {
+        assert.ok(detour.x >= lead.x + lead.width, 'detour right of the lead');
+        assert.equal(new Set(sections).size, 1, 'sections share a row');
+      } else {
+        assert.ok(detour.y >= lead.y + lead.height, 'detour below the lead');
+        assert.equal(new Set(sections).size, sections.length, 'sections stack');
+      }
       await page.context().close();
     }
   });
 
-  test('entry links meet the 44px target height on mobile', async () => {
+  test('headline links meet the 44px target height on mobile', async () => {
     const page = await open('/', VIEWPORTS.mobile);
-    for (const h of await page.locator('.entry h2 a').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) {
+    for (const h of await page.locator('.headline a').evaluateAll((els) => els.map((e) => e.getBoundingClientRect().height))) {
       assert.ok(h >= 44, `link height ${h}`);
     }
+    await page.context().close();
+  });
+
+  test('without JavaScript the Index is complete and navigable; only the palette trigger is absent', async () => {
+    const page = await (await newContext({ ...VIEWPORTS.desktop, javaScriptEnabled: false }, 'no-js')).newPage();
+    await page.goto(base.production + '/');
+    assert.deepEqual(await page.locator('.headline a').evaluateAll((els) => els.map((e) => e.getAttribute('href'))), HEADLINES);
+    assert.ok(await page.locator('.pu-beacon-mark').isVisible());
+    assert.ok(!(await page.locator('.pu-beacon-open').isVisible()), 'a button that cannot work is not shown');
+    assert.equal(await page.locator('dialog').count(), 0, 'the palette stays in its template');
+    await page.locator('.headline a', { hasText: 'The Orrery Journal' }).click();
+    await page.waitForURL(`${base.production}/journal`);
+    await page.locator('.pu-beacon-mark').click();
+    await page.waitForURL(`${base.production}/`);
     await page.context().close();
   });
 
@@ -224,7 +263,7 @@ describe('discovery index', () => {
 describe('The Orrery Journal', () => {
   test('opens from the index and reads front to back with the keyboard', async () => {
     const page = await open('/');
-    await page.getByRole('link', { name: 'The Orrery Journal', exact: true }).click();
+    await page.locator('.headline a', { hasText: 'The Orrery Journal' }).click();
     await page.waitForURL('**/journal');
     await page.getByRole('link', { name: 'The idea', exact: true }).click();
     await page.waitForURL('**/journal/idea');
@@ -268,13 +307,16 @@ describe('The Orrery Journal', () => {
 
 describe('JavaScript footprint (network)', () => {
   for (const [path, expectReact] of [['/', false], ['/journal', false], ['/journal/foundation', false], ['/sample-content', false], ['/sample-app', false], ['/sample-app/states', true]] as const) {
-    test(`${path} ${expectReact ? 'loads React' : 'loads no JavaScript'}`, async () => {
+    test(`${path} ${expectReact ? 'loads React' : 'loads no JavaScript file'}; its only inline script is the Beacon`, async () => {
       const page = await (await newContext({}, `js-footprint${path}`)).newPage();
       const scripts: string[] = [];
       page.on('request', (r) => { if (r.resourceType() === 'script') scripts.push(new URL(r.url()).pathname); });
       await page.goto(base.production + path, { waitUntil: 'networkidle' });
       if (expectReact) assert.ok(scripts.some((s) => /\/_astro\/client\..*\.js$/.test(s)), scripts.join(', '));
       else assert.deepEqual(scripts, []);
+      const inline = await page.locator('script:not([src])').evaluateAll((els) => els.map((e) => e.textContent!.includes('pu-palette-template')));
+      assert.equal(inline.filter(Boolean).length, 1, 'one Beacon script');
+      if (!expectReact) assert.deepEqual(inline, [true], 'and nothing else');
       await page.context().close();
     });
   }
@@ -394,6 +436,237 @@ describe('preview-only flag (inspector)', () => {
   });
 });
 
+describe('Beacon and palette', () => {
+  const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
+  const WINDOWS = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
+  const DESTINATIONS = ['/', '/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app'];
+  const palette = (page: Page) => page.getByRole('dialog', { name: 'Go to' });
+  const selected = (page: Page) => page.locator('[role="option"][aria-selected="true"]').getAttribute('href');
+
+  test('on every public page, the same, with the Index marked current only on the Index', async () => {
+    for (const path of ['/', '/journal', '/journal/today', '/sample-content', '/sample-app', '/sample-app/states', '/no-such-page']) {
+      const page = await open(path);
+      const beacon = page.getByRole('navigation', { name: 'Orrery' });
+      assert.ok(await beacon.isVisible(), path);
+      assert.equal(await beacon.getByRole('link').getAttribute('href'), '/');
+      assert.equal(await beacon.getByRole('link').getAttribute('aria-current'), path === '/' ? 'page' : null, path);
+      assert.ok(await beacon.getByRole('button', { name: /^Go to/ }).isVisible(), path);
+      const style = await beacon.evaluate((el) => { const s = getComputedStyle(el); return `${s.position} ${s.backgroundColor}`; });
+      assert.equal(style, 'fixed rgb(22, 32, 28)', path);
+      await page.context().close();
+    }
+  });
+
+  test('opens from its button with focus in the filter; lists exactly the public destinations; Escape returns focus', async () => {
+    const page = await open('/journal');
+    const trigger = page.getByRole('button', { name: /^Go to/ });
+    await trigger.click();
+    await palette(page).waitFor();
+    assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('role')), 'combobox');
+    assert.deepEqual(await page.getByRole('option').evaluateAll((els) => els.map((e) => e.getAttribute('href'))), DESTINATIONS);
+    const text = await palette(page).innerText();
+    for (const absent of ['Canary draft', 'Hostile stylesheet']) assert.ok(!text.includes(absent), absent);
+    assert.match(await page.getByRole('option', { name: /KawaiUI/ }).innerText(), /External · kawaiui\.vercel\.app/);
+    await page.screenshot({ path: join(shots, 'palette-open-desktop.png') });
+    await page.keyboard.press('Escape');
+    await palette(page).waitFor({ state: 'hidden' });
+    assert.equal(await page.evaluate(() => document.activeElement?.className), 'pu-beacon-open');
+    await page.context().close();
+  });
+
+  for (const [platform, ua, key, label] of [['macOS', MAC, 'Meta+k', '⌘K'], ['Windows', WINDOWS, 'Control+k', 'Ctrl K']] as const) {
+    test(`${platform}: ${key} opens and closes it; the trigger shows ${label}`, async () => {
+      const page = await (await newContext({ ...VIEWPORTS.desktop, userAgent: ua }, `palette-${platform}`)).newPage();
+      await page.goto(base.production + '/sample-content');
+      assert.equal(await page.locator('.pu-beacon-key').textContent(), label);
+      await page.keyboard.press(key);
+      await palette(page).waitFor();
+      await page.keyboard.press(key);
+      await palette(page).waitFor({ state: 'hidden' });
+      await page.waitForFunction(() => document.activeElement?.className === 'pu-beacon-open');
+      await page.context().close();
+    });
+  }
+
+  test('the shortcut is left alone while typing in a field, and with Shift or Alt', async () => {
+    const page = await open('/sample-content');
+    await page.evaluate(() => { const i = document.createElement('input'); i.id = 'typing'; document.querySelector('main')!.prepend(i); });
+    await page.locator('#typing').focus();
+    await page.keyboard.press('Control+k');
+    await page.keyboard.press('Meta+k');
+    await page.locator('body').focus();
+    await page.keyboard.press('Control+Shift+k');
+    await page.keyboard.press('Control+Alt+k');
+    assert.equal(await palette(page).count(), 0);
+    await page.context().close();
+  });
+
+  test('arrows move the selection (wrapping) and announce it; Enter follows the selected link; back and forward work', async () => {
+    const page = await open('/');
+    await page.keyboard.press('Control+k');
+    await palette(page).waitFor();
+    const input = page.getByRole('combobox');
+    assert.equal(await selected(page), '/');
+    await page.keyboard.press('ArrowDown');
+    assert.equal(await selected(page), '/journal');
+    assert.equal(await input.getAttribute('aria-activedescendant'), 'pu-palette-journal');
+    await page.keyboard.press('ArrowUp');
+    await page.keyboard.press('ArrowUp');
+    assert.equal(await selected(page), '/sample-app', 'wraps to the end');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('ArrowDown');
+    await page.keyboard.press('Enter');
+    await page.waitForURL(`${base.production}/journal`);
+    await page.goBack();
+    await page.waitForURL(`${base.production}/`);
+    assert.equal(await palette(page).isVisible().catch(() => false), false, 'no palette left open after Back');
+    await page.goForward();
+    await page.waitForURL(`${base.production}/journal`);
+    await page.context().close();
+  });
+
+  test('filtering by title, section, tag and kind; an empty result says so; external entries leave', async () => {
+    const page = await open('/');
+    await page.getByRole('button', { name: /^Go to/ }).click();
+    const input = page.getByRole('combobox');
+    const shown = () => page.getByRole('option').evaluateAll((els) => els.filter((e) => (e as HTMLElement).offsetParent !== null).map((e) => e.getAttribute('href')));
+    await input.fill('journal');
+    assert.deepEqual(await shown(), ['/journal']);
+    await input.fill('ARCH');
+    assert.deepEqual(await shown(), ['/journal', '/sample-content', '/sample-app']);
+    await input.fill('labs');
+    assert.deepEqual(await shown(), ['https://kawaiui.vercel.app/']);
+    await input.fill('external engineering');
+    assert.deepEqual(await shown(), ['https://devxray-one.vercel.app/']);
+    await input.fill('zzz');
+    assert.deepEqual(await shown(), []);
+    assert.ok(await page.getByText('No destination matches.', { exact: true }).first().isVisible());
+    assert.equal(await input.getAttribute('aria-activedescendant'), null);
+    await page.keyboard.press('Enter'); // nothing to open: stays put
+    assert.equal(page.url(), `${base.production}/`);
+    await page.screenshot({ path: join(shots, 'palette-empty-desktop.png') });
+    await input.fill('dev');
+    await page.route('https://devxray-one.vercel.app/**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<title>stub</title>' }));
+    await page.keyboard.press('Enter');
+    await page.waitForURL('https://devxray-one.vercel.app/');
+    await page.context().close();
+  });
+
+  test('a click on the backdrop closes it', async () => {
+    const page = await open('/', VIEWPORTS.mobile);
+    await page.getByRole('button', { name: /^Go to/ }).click();
+    await palette(page).waitFor();
+    await page.screenshot({ path: join(shots, 'palette-open-mobile.png') });
+    await page.mouse.click(5, 800);
+    await palette(page).waitFor({ state: 'hidden' });
+    await page.context().close();
+  });
+
+  test('axe with the palette open, desktop and mobile, light and dark', async () => {
+    for (const [name, vp] of Object.entries(VIEWPORTS)) {
+      for (const colorScheme of ['light', 'dark'] as const) {
+        const page = await open('/sample-content', { ...vp, colorScheme });
+        await page.getByRole('button', { name: /^Go to/ }).click();
+        await palette(page).waitFor();
+        await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+        const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+        assert.deepEqual(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`), [], `${name} ${colorScheme}`);
+        await page.context().close();
+      }
+    }
+  });
+
+  test('the hostile stylesheet cannot take the Beacon apart (preview)', async () => {
+    const page = await open('/sample-hostile', VIEWPORTS.desktop, 'preview');
+    const beacon = page.locator('.pu-beacon');
+    assert.equal(await beacon.evaluate((el) => getComputedStyle(el).position), 'fixed');
+    await page.getByRole('button', { name: /^Go to/ }).click();
+    await palette(page).waitFor();
+    await page.keyboard.press('Escape');
+    await palette(page).waitFor({ state: 'hidden' });
+    assert.equal(await page.locator('dialog.pu-palette').evaluate((d) => getComputedStyle(d).display), 'none', 'a closed palette stays hidden');
+    await page.context().close();
+  });
+});
+
+describe('Resume (a draft: preview only)', () => {
+  test('production does not have it: page, PDF and image are real 404s, and nothing links to it', async () => {
+    const page = await open('/');
+    for (const path of ['/resume', '/resume/resume.pdf', '/resume/og.png']) {
+      assert.equal((await page.request.get(base.production + path)).status(), 404, path);
+    }
+    assert.equal(await page.locator('a[href^="/resume"]').count(), 0);
+    await page.getByRole('button', { name: /^Go to/ }).click();
+    assert.equal(await page.getByRole('option', { name: /Resume/ }).count(), 0);
+    await page.context().close();
+  });
+
+  test('axe, light and dark, desktop and mobile; no horizontal scroll at 320, 375 and 390 px', async () => {
+    for (const [name, vp] of Object.entries(VIEWPORTS)) {
+      for (const colorScheme of ['light', 'dark'] as const) {
+        const page = await open('/resume', { ...vp, colorScheme }, 'preview');
+        const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+        assert.deepEqual(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`), [], `${name} ${colorScheme}`);
+        await page.screenshot({ path: join(shots, `resume-${name}-${colorScheme}.png`), fullPage: true });
+        await page.context().close();
+      }
+    }
+    for (const width of [320, 375, 390]) {
+      const page = await open('/resume', { viewport: { width, height: 800 }, isMobile: true, hasTouch: true }, 'preview');
+      assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${width}px`);
+      await page.context().close();
+    }
+  });
+
+  test('one heading outline, the download link named and typed, and the PDF it points to is real', async () => {
+    const page = await open('/resume', VIEWPORTS.desktop, 'preview');
+    assert.deepEqual(await page.getByRole('heading', { level: 2 }).allTextContents(), ['Summary', 'Experience', 'Selected projects', 'Skills', 'Education']);
+    assert.equal(await page.getByRole('heading', { level: 1 }).count(), 1);
+    const link = page.getByRole('link', { name: 'Download as PDF' });
+    assert.equal(await link.getAttribute('download'), 'Achchutan-S-Resume.pdf');
+    const res = await page.request.get(base.preview + (await link.getAttribute('href'))!);
+    assert.equal(res.status(), 200);
+    assert.equal((await res.body()).subarray(0, 5).toString(), '%PDF-');
+    const download = page.waitForEvent('download');
+    await link.click();
+    assert.equal((await download).suggestedFilename(), 'Achchutan-S-Resume.pdf');
+    await page.context().close();
+  });
+
+  test('keyboard: links, then the download, with the focus ring; the Beacon works here', async () => {
+    const page = await open('/resume', VIEWPORTS.desktop, 'preview');
+    const seen: string[] = [];
+    for (let i = 0; i < 3; i++) {
+      await page.keyboard.press('Tab');
+      seen.push(await page.evaluate(() => (document.activeElement as HTMLElement).innerText));
+      assert.equal(await page.evaluate(() => getComputedStyle(document.activeElement!).outlineStyle), 'solid');
+    }
+    assert.deepEqual(seen, ['github.com/Achchutan-S', 'orrery-teal.vercel.app', 'Download as PDF']);
+    await page.keyboard.press('Control+k');
+    await page.getByRole('dialog', { name: 'Go to' }).waitFor();
+    assert.equal(await page.getByRole('option', { name: /Resume/ }).count(), 0, 'unlisted: not offered even in preview');
+    await page.context().close();
+  });
+
+  test('no JavaScript of its own; complete without JavaScript; prints without the interactive parts', async () => {
+    const scripted = await (await newContext(VIEWPORTS.desktop, 'resume-js')).newPage();
+    const requests: string[] = [];
+    scripted.on('request', (r) => { if (r.resourceType() === 'script') requests.push(r.url()); });
+    await scripted.goto(base.preview + '/resume', { waitUntil: 'networkidle' });
+    assert.deepEqual(requests, []);
+    assert.deepEqual(await scripted.locator('script:not([src])').evaluateAll((els) => els.map((e) => e.textContent!.includes('pu-palette-template'))), [true]);
+    await scripted.emulateMedia({ media: 'print' });
+    for (const sel of ['.download', '.pu-colophon', '.pu-beacon']) assert.equal(await scripted.locator(sel).evaluate((el) => getComputedStyle(el).display), 'none', sel);
+    await scripted.context().close();
+
+    const plain = await (await newContext({ ...VIEWPORTS.mobile, javaScriptEnabled: false }, 'resume-nojs')).newPage();
+    await plain.goto(base.preview + '/resume');
+    assert.equal(await plain.getByRole('heading', { level: 2 }).count(), 5);
+    assert.ok(await plain.getByRole('link', { name: 'Download as PDF' }).isVisible());
+    await plain.context().close();
+  });
+});
+
 describe('CSS isolation (adversarial)', () => {
   // Computed styles that make up each experience's look, read from the live page.
   const PROBES: Record<string, Record<string, string[]>> = {
@@ -404,12 +677,14 @@ describe('CSS isolation (adversarial)', () => {
       'main a': ['color', 'text-decoration-line'],
       pre: ['background-color', 'padding-left', 'display'],
       '.pu-colophon': ['font-size', 'padding-top', 'max-width'],
+      '.pu-beacon-mark': ['color', 'font-family', 'text-decoration-line'],
     },
     '/sample-app/states': {
       body: ['font-family', 'color', 'background-color', '--sa-bg'],
       '.explorer': ['display', 'grid-template-columns'],
       table: ['border-collapse', 'font-variant-numeric'],
       'nav a': ['color', 'display', 'text-transform'],
+      '.pu-beacon-mark': ['color', 'font-family', 'text-decoration-line'],
     },
     '/journal/experiences': {
       body: ['font-family', 'color', 'background-color', '--j-ink'],
@@ -419,9 +694,10 @@ describe('CSS isolation (adversarial)', () => {
     },
     '/': {
       body: ['font-family', 'font-size', 'color', 'background-color'],
-      h1: ['font-size', 'font-weight'],
-      '.entry': ['display', 'grid-template-columns'],
-      '.entry h2 a': ['color', 'text-decoration-style', 'padding-top'],
+      '.nameplate': ['font-size', 'font-weight', 'font-family'],
+      '.sections': ['display', 'grid-template-columns'],
+      '.story[data-weight="external"] .headline a': ['color', 'text-decoration-style', 'padding-top'],
+      '.pu-beacon': ['position', 'background-color', 'font-family', 'border-radius'],
     },
   };
 
@@ -465,7 +741,7 @@ describe('CSS isolation (adversarial)', () => {
     '/sample-content': { 'h1 display': 'block', 'body font-family': /^"Iowan Old Style"/, 'main max-width': '608px', 'main a color': 'rgb(122, 52, 24)' },
     '/sample-app/states': { '.explorer display': 'grid', 'body background-color': 'rgb(16, 20, 28)', 'table border-collapse': 'collapse' },
     '/journal/experiences': { '.claim-body border-left-style': 'double', 'body background-color': 'rgb(238, 242, 239)' },
-    '/': { '.entry display': 'grid', 'body background-color': 'rgb(238, 242, 239)', '.entry h2 a padding-top': '9.6px' },
+    '/': { '.sections display': 'grid', 'body background-color': 'rgb(244, 241, 233)', '.nameplate font-weight': '700', '.pu-beacon position': 'fixed' },
   };
 
   test('after visiting the hostile page, other experiences render exactly as in a build without it', async () => {

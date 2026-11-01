@@ -1,0 +1,203 @@
+---
+// The Index's presentation: a broadsheet front page. Newsprint and one spot colour; the
+// nameplate and section heads are the Index's own, each headline borrows its experience's face.
+import { Font } from 'astro:assets';
+import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
+---
+<ExperienceRoot experience="index">
+  <Font slot="head" cssVariable="--font-platform" preload />
+  <slot />
+</ExperienceRoot>
+
+<style is:global>
+  @layer experience {
+    [data-experience='index'] {
+      --i-paper: light-dark(#f4f1e9, #141311);
+      --i-ink: light-dark(#1a1814, #ece6da);
+      --i-muted: light-dark(#59544b, #aaa293);
+      --i-rule: light-dark(#cfc8b8, #3a362f);
+      --i-spot: light-dark(#a3341d, #ff9a7a);
+      --i-serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif;
+      --i-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+      --i-gutter: clamp(1rem, 4vw, 3rem);
+      background: var(--i-paper);
+    }
+
+    [data-experience='index'] body {
+      color: var(--i-ink);
+      background: var(--i-paper);
+      font-family: var(--font-platform), system-ui, sans-serif;
+      font-size: 1.0625rem;
+      line-height: 1.5;
+      text-size-adjust: 100%;
+    }
+
+    [data-experience='index'] .sheet {
+      max-inline-size: 78rem;
+      margin-inline: auto;
+      padding-inline: var(--i-gutter);
+    }
+
+    /* ---- Masthead ---- */
+
+    [data-experience='index'] .masthead { padding-block: var(--pu-space-4) var(--pu-space-5); }
+
+    [data-experience='index'] .ears {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: var(--pu-space-1) var(--pu-space-4);
+      padding-block-end: var(--pu-space-2);
+      color: var(--i-muted);
+      font-size: 0.875rem;
+    }
+
+    [data-experience='index'] .ears p { margin: 0; }
+
+    [data-experience='index'] .nameplate {
+      margin: 0;
+      padding-block: 0.04em 0.2em;
+      border-block: 4px double var(--i-ink);
+      font-family: var(--i-serif);
+      font-size: clamp(4rem, 2rem + 11vw, 10rem);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.035em;
+      text-align: center;
+    }
+
+    [data-experience='index'] .tagline {
+      max-inline-size: 40rem;
+      margin: var(--pu-space-3) auto 0;
+      color: var(--i-muted);
+      font-family: var(--i-serif);
+      font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
+      font-style: italic;
+      line-height: 1.4;
+      text-align: center;
+      text-wrap: balance;
+    }
+
+    /* ---- Front ---- */
+
+    [data-experience='index'] .front { padding-block-end: var(--pu-space-5); }
+
+    [data-experience='index'] .above {
+      display: grid;
+      gap: var(--pu-space-4) var(--pu-space-5);
+      padding-block: var(--pu-space-4) var(--pu-space-5);
+      border-block-start: 1px solid var(--i-ink);
+    }
+
+    @media (min-width: 60rem) {
+      [data-experience='index'] .above { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+      [data-experience='index'] .detour { padding-inline-start: var(--pu-space-5); border-inline-start: 1px solid var(--i-rule); }
+    }
+
+    @media (max-width: 59.99rem) {
+      [data-experience='index'] .detour { padding-block-start: var(--pu-space-4); border-block-start: 1px solid var(--i-rule); }
+    }
+
+    [data-experience='index'] .rail {
+      margin: 0 0 var(--pu-space-3);
+      color: var(--i-spot);
+      font-family: var(--i-serif);
+      font-size: 1.125rem;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    /* Sections stand side by side like columns of a broadsheet, as many as fit. */
+    [data-experience='index'] .sections {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+      gap: 0 var(--pu-space-5);
+    }
+
+    [data-experience='index'] .section {
+      padding-block: var(--pu-space-3) var(--pu-space-5);
+      border-block-start: 2px solid var(--i-ink);
+    }
+
+    [data-experience='index'] .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0 var(--pu-space-3);
+      margin-block-end: var(--pu-space-3);
+    }
+
+    [data-experience='index'] .section-head h2 {
+      margin: 0;
+      color: var(--i-spot);
+      font-size: 1.125rem;
+      font-variant-caps: all-small-caps;
+      letter-spacing: 0.08em;
+    }
+
+    [data-experience='index'] .section-head p { margin: 0; color: var(--i-muted); font-size: 0.9375rem; }
+
+    [data-experience='index'] .stories {
+      display: grid;
+      gap: var(--pu-space-5);
+    }
+
+    /* ---- A story ---- */
+
+    [data-experience='index'] .story { display: grid; gap: var(--pu-space-2); align-content: start; overflow-wrap: break-word; }
+    [data-experience='index'] .story p { margin: 0; }
+    [data-experience='index'] .kicker { color: var(--i-spot); font-size: 0.875rem; }
+    [data-experience='index'] .dek { max-inline-size: 60ch; }
+    [data-experience='index'] .story[data-size='lead'] .dek { font-size: 1.25rem; line-height: 1.45; }
+    [data-experience='index'] .line { color: var(--i-muted); font-size: 0.9375rem; }
+    [data-experience='index'] .host { white-space: nowrap; }
+
+    [data-experience='index'] .margin {
+      padding-inline-start: var(--pu-space-2);
+      border-inline-start: 2px solid var(--i-rule);
+      color: var(--i-muted);
+      font-family: var(--i-serif);
+      font-size: 0.9375rem;
+    }
+
+    [data-experience='index'] .story a { color: inherit; text-decoration-color: var(--i-rule); text-decoration-thickness: 1px; text-underline-offset: 0.15em; }
+    [data-experience='index'] .story a:hover { text-decoration-color: var(--i-spot); text-decoration-thickness: 2px; }
+    [data-experience='index'] .story[data-weight='external'] .headline a { text-decoration-style: dashed; }
+
+    [data-experience='index'] .headline { margin: 0; text-wrap: balance; }
+    /* Inline links with vertical padding keep a 44px target without moving the layout. */
+    [data-experience='index'] .headline a { padding-block: max(0.3em, 12px); box-decoration-break: clone; }
+    [data-experience='index'] .story[data-size='lead'] .headline { font-size: clamp(2.5rem, 1.5rem + 4vw, 4.75rem); line-height: 1; }
+    [data-experience='index'] .story[data-size='detour'] .headline { font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.375rem); line-height: 1.08; }
+    [data-experience='index'] .story[data-size='brief'] .headline { font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem); line-height: 1.1; }
+
+    /* Headline faces, from each catalog entry's `headline`. System stacks: no font is downloaded for them. */
+    [data-experience='index'] [data-headline='plain'] .headline { font-family: var(--font-platform), system-ui, sans-serif; font-weight: 700; letter-spacing: -0.015em; }
+    [data-experience='index'] [data-headline='literary'] .headline { font-family: var(--i-serif); font-style: italic; font-weight: 500; letter-spacing: -0.01em; }
+    [data-experience='index'] [data-headline='technical'] .headline { font-family: var(--i-mono); font-weight: 600; letter-spacing: -0.02em; font-size-adjust: 0.52; }
+    [data-experience='index'] [data-headline='expressive'] .headline { font-family: system-ui, sans-serif; font-weight: 900; font-stretch: condensed; letter-spacing: -0.045em; line-height: 0.95; }
+
+    [data-experience='index'] .external { inline-size: 0.5em; block-size: 0.5em; margin-inline-start: 0.25em; vertical-align: 0.15em; color: var(--i-spot); }
+
+    [data-experience='index'] .empty { padding-block: var(--pu-space-5); color: var(--i-muted); }
+
+    /* The bottom padding keeps the last line clear of the floating Beacon. */
+    [data-experience='index'] .foot {
+      padding-block: var(--pu-space-4) calc(var(--pu-space-6) + 2rem);
+      border-block-start: 1px solid var(--i-ink);
+      color: var(--i-muted);
+      font-size: 0.9375rem;
+    }
+
+    [data-experience='index'] .foot p { max-inline-size: 62ch; margin: 0; }
+
+    [data-experience='index'] .visually-hidden {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+</style>

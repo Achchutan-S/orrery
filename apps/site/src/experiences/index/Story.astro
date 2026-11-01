@@ -1,0 +1,35 @@
+---
+// One entry on the front page. The headline is set in the face its catalog entry asks for
+// (`headline`), so each experience keeps a trace of its own typography here.
+import { weightLine, type DiscoveryEntry } from '../../platform/discovery/index.ts';
+import { sectionLabel } from './front-page.ts';
+
+interface Props {
+  entry: DiscoveryEntry;
+  level: 2 | 3;
+  size: 'lead' | 'detour' | 'brief';
+  related?: { tag: string; entries: DiscoveryEntry[] }[];
+}
+const { entry: e, level, size, related = [] } = Astro.props;
+const Heading = `h${level}` as 'h2' | 'h3';
+const line = weightLine(e);
+---
+<article class="story" data-size={size} data-headline={e.headline ?? 'plain'} data-weight={e.weight}>
+  {/* Under a section heading the section would be said twice; there only the kind is shown. */}
+  <p class="kicker">{size !== 'brief' && <>{sectionLabel(e)}<span aria-hidden="true"> · </span><span class="visually-hidden">, </span></>}{e.host ? 'External' : 'Hosted here'}</p>
+  <Heading class="headline">
+    <a href={e.href} aria-describedby={`${e.id}-line`}>{e.title}{e.host && (
+      <><svg class="external" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M6 3H3v10h10v-3M9 3h4v4M13 3 7 9" fill="none" stroke="currentColor" stroke-width="1.6" /></svg><span class="visually-hidden"> (external site)</span></>
+    )}</a>
+  </Heading>
+  <p class="dek">{e.summary}</p>
+  <p class="line" id={`${e.id}-line`}>
+    {e.host
+      // Keep the host on one line: a break at its hyphen would misread the address.
+      ? line.split(e.host).map((part, i) => (i === 0 ? part : <><span class="host" translate="no">{e.host}</span>{part}</>))
+      : line}
+  </p>
+  {related.map((r) => (
+    <p class="margin">Also on <em>{r.tag.replaceAll('-', ' ')}</em>: {r.entries.map((x, i) => <>{i > 0 && ', '}<a href={x.href}>{x.title}</a></>)}</p>
+  ))}
+</article>

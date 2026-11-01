@@ -9,6 +9,8 @@ export default defineExperience({
   summary: 'Step through the seven release states and see where each one is built. Sample interactive application.',
   capabilities: ['interactive'],
   tags: ['architecture'],
+  section: 'engineering',
+  headline: 'expressive',
   routes: [
     { pattern: '/sample-app', entrypoint: 'sample-app/routes/index.astro' },
     { pattern: '/sample-app/[...path]', entrypoint: 'sample-app/routes/app.astro' },

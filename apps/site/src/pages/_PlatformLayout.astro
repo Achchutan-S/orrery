@@ -1,8 +1,9 @@
 ---
-// Layout for the few pages the platform itself owns: the discovery index and 404.
+// Layout for the pages the platform itself owns: today only 404 (the Index is an experience).
 // The "_" prefix keeps it out of routing. Design: docs/design/platform-identity.md.
 import { Font } from 'astro:assets';
 import '../platform/tokens/platform.css';
+import Beacon from '../platform/beacon/Beacon.astro';
 import SeoHead from '../platform/root/SeoHead.astro';
 
 interface Props { title: string; description: string; listed?: boolean }
@@ -23,6 +24,7 @@ const { title, description, listed = true } = Astro.props;
     <div class="page">
       <slot />
     </div>
+    <Beacon />
   </body>
 </html>
 

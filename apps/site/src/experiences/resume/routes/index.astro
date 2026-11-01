@@ -1,0 +1,78 @@
+---
+// /resume. Everything comes from content.ts; the PDF linked here is this page, printed.
+import { pdfKb, pdfPages } from '../assets.ts';
+import { month, resume } from '../content.ts';
+import Layout from '../Layout.astro';
+
+const r = resume;
+const file = `${r.name.replace(/\s+/g, '-')}-Resume.pdf`;
+const description = `${r.name}, ${r.role.toLowerCase()}: experience, selected projects, skills and education. Also as a PDF.`;
+---
+<Layout title={`${r.name} · Resume`} description={description}>
+  <div class="dossier">
+    <header class="head">
+      <p class="kicker">Resume</p>
+      <h1>{r.name}</h1>
+      <p class="role">{r.role}</p>
+      <ul class="links" aria-label="Links">
+        {r.links.map((l) => <li><span class="label">{l.label}</span><a href={l.href}>{l.text}</a></li>)}
+      </ul>
+      <p class="download">
+        <a href="/resume/resume.pdf" download={file} type="application/pdf">Download as PDF</a>
+        <span class="meta">A4, {pdfPages} {pdfPages === 1 ? 'page' : 'pages'}, {pdfKb} KB. The same text as this page.</span>
+      </p>
+    </header>
+
+    <main id="resume">
+      <section class="part" aria-labelledby="summary-h">
+        <h2 id="summary-h">Summary</h2>
+        <div class="body"><p class="summary">{r.summary}</p></div>
+      </section>
+
+      <section class="part" aria-labelledby="experience-h">
+        <h2 id="experience-h">Experience</h2>
+        <ol class="body">
+          {r.experience.map((x) => (
+            <li class="entry">
+              <h3>{x.title}<span class="org">, {x.organisation}</span></h3>
+              <p class="when">
+                <time datetime={x.start}>{month(x.start)}</time> – {x.end ? <time datetime={x.end}>{month(x.end)}</time> : 'present'}
+              </p>
+              <ul class="points">{x.points.map((p) => <li>{p}</li>)}</ul>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section class="part" aria-labelledby="projects-h">
+        <h2 id="projects-h">Selected projects</h2>
+        <ul class="body">
+          {r.projects.map((p) => (
+            <li class="entry project">
+              <h3><a href={p.href}>{p.name}</a></h3>
+              <p class="kind">{p.kind} · <span class="host">{p.host}</span></p>
+              <p>{p.summary}</p>
+              {p.points && <ul class="points">{p.points.map((x) => <li>{x}</li>)}</ul>}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section class="part" aria-labelledby="skills-h">
+        <h2 id="skills-h">Skills</h2>
+        <div class="body">
+          <dl class="skills">
+            {r.skills.map((s) => <div><dt>{s.group}</dt><dd>{s.items.join(' · ')}</dd></div>)}
+          </dl>
+        </div>
+      </section>
+
+      <section class="part" aria-labelledby="education-h">
+        <h2 id="education-h">Education</h2>
+        <ul class="body">
+          {r.education.map((e) => <li class="entry"><h3>{e.institution}</h3><p>{e.field}</p></li>)}
+        </ul>
+      </section>
+    </main>
+  </div>
+</Layout>

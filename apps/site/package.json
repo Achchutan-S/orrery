@@ -9,6 +9,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
+    "resume:assets": "node scripts/resume-assets.ts",
     "test": "node --test --test-reporter=spec \"test/**/*.test.ts\"",
     "typecheck": "astro check",
     "test:browser": "mkdir -p test-results && node --test --test-concurrency=1 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=test-results/browser.junit.xml \"test-browser/**/*.test.ts\""

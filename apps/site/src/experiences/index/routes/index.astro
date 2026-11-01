@@ -1,0 +1,61 @@
+---
+// The front page at `/`. Everything on it comes from publicDiscoveryIndex(): listed,
+// public entries for this build's environment, in catalog order. Nothing else is read.
+import { publicDiscoveryIndex } from '../../../platform/discovery/index.ts';
+import { env, experiences, releaseState } from '../../../platform/release/index.ts';
+import { frontPage, related } from '../front-page.ts';
+import Layout from '../Layout.astro';
+import Story from '../Story.astro';
+
+const SELF = 'index';
+const entries = publicDiscoveryIndex(experiences, releaseState, env);
+const { lead, detour, sections, counts } = frontPage(entries, SELF);
+const n = (x: number, one: string, many: string) => `${x} ${x === 1 ? one : many}`;
+---
+<Layout>
+  <div class="sheet">
+    <header class="masthead">
+      <div class="ears">
+        <p>An index of independent work</p>
+        <p>{n(counts.total, 'experience', 'experiences')} · {counts.hosted} hosted here · {counts.external} elsewhere</p>
+      </div>
+      <h1 class="nameplate" translate="no">Orrery</h1>
+      <p class="tagline">Writing, tools and experiments, each built and set in its own way. Some live here; some are separate sites, and their links say so.</p>
+    </header>
+
+    <main class="front" id="front">
+      {counts.total === 0 ? (
+        <p class="empty">Nothing is published here yet.</p>
+      ) : (
+        <>
+          <div class="above">
+            {lead && <div class="lead"><Story entry={lead} level={2} size="lead" related={related(lead, entries, SELF)} /></div>}
+            {detour && (
+              <section class="detour" aria-labelledby="detour-h">
+                <h2 id="detour-h" class="rail">Worth the detour</h2>
+                <Story entry={detour} level={3} size="detour" related={related(detour, entries, SELF)} />
+              </section>
+            )}
+          </div>
+          <div class="sections">
+          {sections.map((s) => (
+            <section class="section" aria-labelledby={`section-${s.id}`}>
+              <header class="section-head">
+                <h2 id={`section-${s.id}`}>{s.label}</h2>
+                <p>{s.note}</p>
+              </header>
+              <div class="stories">
+                {s.entries.map((e) => <Story entry={e} level={3} size="brief" related={related(e, entries, SELF)} />)}
+              </div>
+            </section>
+          ))}
+          </div>
+        </>
+      )}
+    </main>
+
+    <footer class="foot">
+      <p>A static page. Its only script is the Beacon in the corner, which opens a list of every destination (⌘K or Ctrl K). Entries marked External leave for their own sites.</p>
+    </footer>
+  </div>
+</Layout>

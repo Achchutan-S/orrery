@@ -161,7 +161,7 @@ test('startup refuses in CI, on a taken port and on a bad port, with a reason', 
   t.after(s.close);
   const taken = main({ PU_CONTROL_PORT: String(s.port) });
   assert.equal(await taken.exit, 1);
-  assert.match(taken.output(), /not started: the port is already in use/);
+  assert.match(taken.output(), /not started: the port \d+ is already in use/);
   const bad = main({ PU_CONTROL_PORT: 'x' });
   assert.equal(await bad.exit, 1);
   assert.match(bad.output(), /PU_CONTROL_PORT must be/);

@@ -10,5 +10,7 @@ export default defineExperience({
   summary: 'Developer tools that run in the browser: format, decode and convert JSON, GraphQL, YAML, SQL, JWTs and more, with no account and no upload.',
   capabilities: ['interactive', 'data'],
   tags: ['developer-tools', 'privacy', 'json', 'graphql'],
+  section: 'engineering',
+  headline: 'technical',
   url: 'https://devxray-one.vercel.app/',
 });

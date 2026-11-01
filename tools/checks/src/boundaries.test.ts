@@ -130,3 +130,14 @@ test('the site and the Control Center stay apart; the Control Center uses only t
     'apps/control/server/bad.ts:2 [control-deps]',
   ]);
 });
+
+test('Control Center browser code reaches the server only through the API', () => {
+  assert.deepEqual(run(
+    f('apps/control/web/src/ok.tsx', "import { useState } from 'react';\nimport { canTransition } from '@pu/platform-schema';\nimport type { Catalog } from '../../server/app.ts';\nimport { x } from './api.ts';\n"),
+    f('apps/control/web/src/bad.tsx', "import { createApp } from '../../server/app.ts';\nimport { readFile } from 'node:fs';\nimport { catalog } from '@pu/experience-catalog';\n"),
+  ), [
+    'apps/control/web/src/bad.tsx:1 [control-web-client]',
+    'apps/control/web/src/bad.tsx:2 [control-web-client]',
+    'apps/control/web/src/bad.tsx:3 [control-web-client]',
+  ]);
+});

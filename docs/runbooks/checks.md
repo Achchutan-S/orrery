@@ -29,7 +29,7 @@ Against production output, using the catalog and `config/release.json`:
 - No exact summary of any experience that is not public in production; no title longer than three words (shorter titles are too generic to be signals).
 - No rendered `data-pu-flag="<experience>:<flag>"` marker for a flag that is off in production.
 - No `.map` file and no `sourceMappingURL` reference.
-- Every route of every published experience was built, and the index links every listed experience.
+- Every route of every published experience was built, and the index links every listed experience (the Index itself through the Beacon's link to `/`). A route ending in a file extension (`/resume/resume.pdf`) produces that file, not an `.html` page, and counts as the experience's output like its pages.
 
 Example failure (a preview build scanned as if it were production):
 
@@ -47,7 +47,8 @@ The table `BUDGETS` at the top of that file is the only place limits live; an ex
 
 - **Unit:** gzip level 9 bytes, 1 KB = 1024 bytes, for everything including fonts. No raw or brotli sizes.
 - **Per page, initial load:** inline `<script>` + referenced JS + their static imports (not `import()`); inline `<style>` + CSS files; fonts; transfer = HTML + external JS, CSS and fonts. A shared chunk counts on every page that loads it, because a first visit to any of them downloads it.
-- **Per experience:** the worst page for each metric is judged. Pages belong to the experience whose route made them; `index.html` and `404.html` to the platform.
+- **Beacon:** the Beacon's script is measured as its own metric, `beacon` (15 KB on every page, blueprint 3.12), not as the page's `js`. It is recognised by `BEACON_MARKER` (the palette template's selector), inline or as a file. Content pages therefore keep a 0 KB `js` budget with the Beacon on them.
+- **Per experience:** the worst page for each metric is judged. Pages belong to the experience whose route made them (`index.html` to the `index` experience); `404.html` to the platform.
 - Exactly at budget passes; one byte over fails.
 
 ## Metadata (`tools/checks/src/metadata.ts`)

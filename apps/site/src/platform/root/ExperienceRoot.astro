@@ -3,6 +3,7 @@
 // stylesheet and the chrome the catalog entry opts into. The experience owns
 // everything inside <body>: its landmarks, <main>, layout, fonts and styles.
 import '../tokens/platform.css';
+import Beacon from '../beacon/Beacon.astro';
 import Colophon from '../colophon/Colophon.astro';
 import { internalExperience, resolutionOf } from '../release/index.ts';
 import SeoHead from './SeoHead.astro';
@@ -14,8 +15,10 @@ interface Props {
   /** Defaults to the catalog summary. */
   description?: string;
   lang?: string;
+  /** Root-relative URL of a 1200×630 link-preview image the experience serves itself. */
+  image?: string;
 }
-const { experience, title, description, lang = 'en' } = Astro.props;
+const { experience, title, description, lang = 'en', image } = Astro.props;
 const meta = internalExperience(experience);
 if (meta.chrome === 'full') {
   // ponytail: no experience uses the shared header yet; build it with the first one that does.
@@ -34,11 +37,14 @@ const scheme = { light: 'light', dark: 'dark', 'light-dark': 'light dark', custo
       title={title ?? meta.title}
       description={description ?? meta.summary}
       listed={resolutionOf(experience).listed}
+      image={image}
     />
     <slot name="head" />
   </head>
   <body>
     <slot />
     {meta.chrome === 'minimal' && <Colophon experience={experience} />}
+    {/* Both remaining chrome levels include the Beacon (blueprint 3.9). Last in the document, so an experience's own skip link and landmarks come first. */}
+    <Beacon />
   </body>
 </html>

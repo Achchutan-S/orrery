@@ -1,0 +1,23 @@
+---
+noteId: "1dfbc8d0d61a11f1ae605f8c0e08bb6f"
+tags: []
+
+---
+
+# ADR-019 — The Index at `/` and the Beacon
+
+Status: accepted (1 November 2026) · Implements blueprint task 14; resolves ADR-012 choice 1. Reference: [architecture.md § Index and Beacon](../architecture.md#index-and-beacon).
+
+**Decision:** `/` is an experience (`index`, `apps/site/src/experiences/index/`) with a catalog entry and a release entry, like any other. The Beacon is platform chrome (`src/platform/beacon/`) rendered by `ExperienceRoot` for `minimal` and `beacon` chrome and by the 404 page. Both read only `publicDiscoveryIndex()`.
+
+1. **The Index is an experience, and it is listed.** Listed, because only listed pages get a canonical URL and are indexed (SeoHead), and because the Beacon then offers "Orrery · Index" without a special case. It never lists itself on its own page (`frontPage(entries, 'index')`). Unpublishing it makes `/` a 404, which its release note says. The platform's old `src/pages/index.astro` is deleted (ADR-012, "revisit when").
+2. **Two optional catalog fields, `section` and `headline`** (backward compatible; absent means "Also here" and the platform face). `section` places an entry under Engineering, Civic, Thinking or Labs. Nothing in the catalog stated this before, so each placement is an editorial choice the owner can change in one line. `headline` echoes the experience's own typography on the Index with system font stacks (literary serif, technical monospace, expressive heavy sans, plain platform face), so the Index loads no other experience's fonts.
+3. **Front-page rules are deterministic and documented in `front-page.ts`:** the lead is the first entry in catalog order; "Worth the detour" lifts the entry that would otherwise sit last, only when there are three or more; sections show only when non-empty; marginalia link entries that share a catalog tag, and nothing else. There is no "this week" dateline, because no reliable change dates exist: the edition line states counts only.
+4. **The palette is plain TypeScript, not a React island.** React's runtime alone (64 KB gzip on the explorer) is four times the blueprint's 15 KB Beacon budget and would put JavaScript on every content page. The script (1.0 KB gzip, inlined by Astro and hashed into the CSP) filters `<a role="option">` links that are already in the HTML. The palette markup lives in a `<template>`, so without JavaScript nothing of it renders and the trigger stays `hidden`; the mark is a plain link to `/`.
+5. **Accessible pattern:** native `<dialog>` (modal, focus contained, Escape closes) labelled "Go to"; an `<input role="combobox">` with `aria-activedescendant` over a `role="listbox"` of real links, so Enter and click are ordinary navigation and history works; a polite status line with the count. ⌘K or Ctrl+K toggles it, never with Alt or Shift, and never while the focus is in another field or editable region.
+6. **Beacon styles are `!important` in `platform.chrome`.** An experience's ordinary rules (`a { color }`, the hostile fixture's `all: unset`) otherwise restyle it, because the experience layer wins. Important declarations in an earlier layer beat later layers, the same mechanism as the focus ring. An experience that needs to minimise the Beacon (blueprint J) gets an explicit option when one exists.
+7. **The Beacon budget is measured separately**, as the blueprint states: `check:budgets` has a `beacon` metric (15 KB on every page), recognised by the palette template's selector, and the platform pages' own `js` limit falls from 15 KB to 0.
+8. **The public name is Orrery** (masthead, `og:site_name`, colophon, "Leaves Orrery for …"). "Personal Universe" stays the workspace's internal name.
+9. **A favicon** (`public/favicon.svg`, the Beacon mark): the missing `/favicon.ico` was the only Lighthouse best-practices deduction.
+
+**Not done:** link-preview images (still outstanding decision 4), search (Phase 2), resume, writing and colophon destinations (they do not exist yet).

@@ -4,9 +4,9 @@ tags: []
 
 ---
 
-# Control Center server (task 12)
+# Control Center (tasks 12 and 13)
 
-The owner's management API over `config/release.json`. It runs only on the owner's machine, on `127.0.0.1`, and is never deployed. The frontend is task 13 and does not exist yet. Design: blueprint §4 and [ADR-006](adr/006-control-center.md); where this differs from the blueprint, [ADR-017](adr/017-control-center-server.md).
+The owner's tool for `config/release.json`: a local API (task 12) and the interface that uses it (task 13). It runs only on the owner's machine, on `127.0.0.1`, and is never deployed. Design: blueprint §4 and [ADR-006](adr/006-control-center.md); where this differs from the blueprint, [ADR-017](adr/017-control-center-server.md) (server) and [ADR-018](adr/018-control-center-ui.md) (interface).
 
 ```
 apps/control/server/
@@ -15,6 +15,15 @@ apps/control/server/
   security.ts   Host/Origin policy, token generation and comparison, port parsing
   store.ts      ReleaseStore interface and FileReleaseStore
   *.test.ts     store, API contract and security, running server
+apps/control/web/
+  ui-config.ts  Vite settings: 127.0.0.1:4317, strict port, /api proxy, CORS off, CSP for the build
+  src/api.ts    the one API client (session renewal, typed failures)
+  src/state.tsx server state, polling, live announcements
+  src/model.ts  pure derivations: filters, sorting, availability words, change rows, impact sentences
+  src/App.tsx, Overview.tsx, Registry.tsx, Experience.tsx, Release.tsx, Pending.tsx, components.tsx
+  src/control.css
+apps/control/vite.config.ts               `pnpm control`: the UI plus the server in one process
+apps/control/test-browser/control.test.ts  Playwright and axe against the built UI and a temporary release file
 packages/platform-schema/src/control.ts   ReleasePatch, serializeRelease, request schemas, error codes, response types
 ```
 
@@ -23,15 +32,17 @@ Every rule comes from `@pu/platform-schema` (`applyPatch`, `canTransition`, `val
 ## Running it
 
 ```sh
-pnpm control:server                 # or: pnpm --filter @pu/control dev
-PU_CONTROL_PORT=4400 pnpm control:server
+pnpm control                        # build the UI, serve it on 127.0.0.1:4317, start the server on 127.0.0.1:4318
+pnpm control:server                 # the server alone (or: pnpm --filter @pu/control dev)
+pnpm --filter @pu/control dev:web   # UI with hot reload, for working on the UI itself (no CSP)
+PU_CONTROL_PORT=4400 pnpm control   # the server on another port; the UI stays on 4317
 ```
 
-Prints `Orrery Control Center server listening on http://127.0.0.1:4318 (loopback only). Press Ctrl+C to stop.` and one logfmt line per request. Ctrl+C or SIGTERM closes the server and exits 0.
+`pnpm control` runs `vite build && vite preview`. A Vite plugin (`vite.config.ts`) starts the server in the same process when the preview server starts and closes it with it, so one Ctrl+C stops both and nothing can be left running. It prints `Orrery Control Center: open http://127.0.0.1:4317 (server on 127.0.0.1:4318, loopback only). Press Ctrl+C to stop both.` Both ports are strict: if either is taken the command fails with the reason (`the port 4318 is already in use…`) instead of moving.
+
+`pnpm control:server` prints `Orrery Control Center server listening on http://127.0.0.1:4318 (loopback only). Press Ctrl+C to stop.` and one logfmt line per request. Ctrl+C or SIGTERM closes the server and exits 0.
 
 It refuses to start, with the reason, when: `CI` or `VERCEL` is set; `PU_CONTROL_PORT` is not 1024–65535 or is 4317 (the UI's port); the port is taken (it never tries another port or interface); `config/release.json` is missing, not JSON, not a regular file, or fails its schema. If the catalog itself fails validation the server starts read-only: writes return `CATALOG_INVALID`.
-
-`pnpm control` (server and UI together) arrives with task 13.
 
 ## Security model
 
@@ -135,11 +146,15 @@ logfmt on stdout: `ready`, `shutdown`, `request method= path= status= ms=`, `req
 
 ## Tests
 
-`pnpm --filter @pu/control test` (50 tests, part of `pnpm test` and CI). The real `config/release.json` is never written: each test works on a copy in a temporary directory and the suite asserts the real file is unchanged.
+`pnpm --filter @pu/control test` (part of `pnpm test` and CI) and `pnpm --filter @pu/control test:browser` (part of `pnpm test:browser` and CI). The real `config/release.json` is never written: every test works on a copy in a temporary directory and the suites assert the real file is unchanged.
 
-- `store.test.ts`: reads, revisions, missing/malformed/schema-invalid/symlinked files, canonical writes, file mode, stale revisions, simultaneous writes, two stores on one file, an editor saving mid-write, failure at the rename step, an unwritable directory, temporary-file cleanup.
-- `app.test.ts`: every endpoint and every error code; Host, Origin, session, content type and size rules; no CORS headers, no token in any response or log; envelope invariants checked on every response.
-- `server.test.ts`: binds to 127.0.0.1 only (LAN and `::1` refused), raw HTTP Host injection and duplicate Host headers, end-to-end session over real HTTP, restart invalidates sessions, port in use, CI refusal, startup output with no token, clean shutdown.
+- `server/store.test.ts`: reads, revisions, missing/malformed/schema-invalid/symlinked files, canonical writes, file mode, stale revisions, simultaneous writes, two stores on one file, an editor saving mid-write, failure at the rename step, an unwritable directory, temporary-file cleanup.
+- `server/app.test.ts`: every endpoint and every error code; Host, Origin, session, content type and size rules; no CORS headers, no token in any response or log; envelope invariants checked on every response.
+- `server/server.test.ts`: binds to 127.0.0.1 only (LAN and `::1` refused), raw HTTP Host injection and duplicate Host headers, end-to-end session over real HTTP, restart invalidates sessions, port in use, CI refusal, startup output with no token, clean shutdown.
+- `web/src/api.test.ts`: the client's request shapes, envelope parsing, unavailable server, one read retry after session renewal, no write replay.
+- `web/src/model.test.ts`: transitions equal `canTransition`, availability words, search, filters, sorting, change rows, production impact sentences.
+- `web/src/client.integration.test.ts`: the UI client against the real server, as a browser on the UI origin: session, reads, preview, write, stale write, pending, revert, server restart.
+- `test-browser/control.test.ts`: the built UI behind Vite preview and its proxy: overview, registry search/filter/sort and Back, detail and environment matrix, external entries, preview → confirm (Escape cancels, focus returns) → write, pending changes and revert, a stale write with no retry, rule violations at the controls, polling picks up editor edits, keyboard and focus, cookie unreachable from page scripts, no CORS and a strict CSP, axe (WCAG 2.2 AA) on every screen at desktop and phone widths in light and dark, no horizontal scroll on phones, server-unavailable screen and recovery. Screenshots in `apps/control/test-results/`.
 
 Mutation checks during task 12: removing the compare-and-swap, the pre-rename re-check, the write queue, the Host check, the Origin check, `HttpOnly`, or binding to `0.0.0.0` each made tests fail.
 
@@ -152,18 +167,46 @@ No Vercel project points at `apps/control`; the site project's Root Directory is
 - No owner identity: protection is loopback + Host + Origin + per-process session (above).
 - No cross-process write lock (one server per checkout).
 - Pending changes compare with the session baseline, not Git `HEAD`.
-- No content endpoint yet: there is no writing collection to list; task 13 adds it when one exists (blueprint 4.1 Content screen).
+- No Content screen and no content endpoint: there is no writing collection to list yet (blueprint 4.1); add both when one exists.
+- No Preview links screen (blueprint 4.1): the API has no source for branch preview URLs.
+- Platform-wide flags are not editable in the UI: none is declared anywhere, and inventing names in a form would bypass the catalog. `setFlag` with `scope: 'platform'` remains available through the API.
+- `archivedTo` cannot be set: no patch operation sets it, so archiving (which requires it) is refused by the rules until one exists.
+- The UI bundle includes zod (through `platform-schema`'s lifecycle model): about 107 KB gzip in total, loaded once from localhost.
 - Absolute-form request targets (`GET http://other/...` with a valid Host) are answered by path; browsers never send them to an origin server.
 - IPv6 loopback is not served.
 
-## Task 13 integration guide
+## The interface (task 13)
 
-1. **Run.** `pnpm control` should start this server (port 4318) and a Vite dev server on `127.0.0.1:4317` that proxies `/api` to `http://127.0.0.1:4318`. Keep the proxy's Host as sent (`changeOrigin: false`) or set it to `127.0.0.1:4318`; both are allowed. Set Vite's `server.host` to `127.0.0.1` and keep its `allowedHosts` default.
-2. **Session.** On load, `fetch('/api/session', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' })`. Same-origin requests carry the cookie automatically. On any `UNAUTHORIZED` (server restarted), call it again and retry once.
-3. **Registry.** `GET /api/registry`; table columns from `definition` (id, title, kind, performanceClass), `release` (lifecycle, access, discoverability), `channel`, and a validation badge from `issues`.
-4. **Experience detail.** `GET /api/experiences/:id`; environment matrix from `environments.development/preview/production` (`deployable`, `mounted`, `listed`, `flags`).
-5. **Edit or promote.** Keep `meta.revision` from the last read. `POST /api/release/preview` with `{ patch, baseRevision }` to show `issues` and `changes` (what production will look like), then `PATCH /api/release` with the same body. Promotion is `{ op: 'transition', experienceId, to }`.
-6. **Stale revisions.** On `STALE_REVISION` or `WRITE_CONFLICT`, replace local state with `error.current`, show that the file changed (for example an editor save), and ask the owner to redo the change. Never retry automatically with the new revision.
-7. **Validation errors.** `ILLEGAL_TRANSITION` and `VALIDATION_FAILED` carry `issues` with `path` (e.g. `experiences.journal.access`) and `rule`; show each at its field. `CATALOG_INVALID`: make the UI read-only and show `issues`. `STORE_UNAVAILABLE`: show the message and issues; the file needs a hand fix.
-8. **Pending changes.** `GET /api/release/pending`; show `entries` (before/after), `changes`, the suggested commit message and `commands` to copy. "Revert" is `POST /api/release/revert` with the current revision.
-9. **Freshness.** Poll `GET /api/release` every few seconds (blueprint 4.0) so editor changes appear; the server re-reads the file on every request.
+Five screens, reached from a header that also shows "Local session" (not a sign-in), whether the server answers, and the current revision.
+
+- **Overview:** the release file (revision, session baseline, counts by lifecycle, rule issues, pending changes); what each environment would build and list under the current file (the release model, not a live deployment); what needs attention; what changed this session.
+- **Experiences:** every catalog entry with kind, lifecycle, access and discovery, and its availability in each environment. Search by name or id, filters (all, published, draft, in production, external, with issues), sorting. Filters live in the address, so Back from a detail page returns to the same list. "Canary" is not a release concept, so there is no canary filter: the canary is a draft.
+- **Experience detail:** environment matrix (release allows it, built, listed, flags), release entry, catalog entry (read-only; it changes in code), issues, and the change form. External projects are marked as separate sites that are never built here.
+- **Release:** the same change form with an experience picker.
+- **Pending changes:** the structured diff against the session baseline, the effect on each environment, the commit commands exactly as the API gives them, and Restore baseline.
+
+**A change, step by step.** The form offers only what the release model allows: lifecycle moves from `canTransition`, access `public` or `owner`, discoverability, declared flags, the note. *Preview change* sends the patch with the revision the page was loaded at to `POST /api/release/preview` and shows the field-by-field change, whether every release rule passes, and the effect on each environment in plain sentences ("Production will no longer include this experience."), production first and marked when it changes. Any edit to the form discards the preview. *Apply change…* opens a confirmation dialog that repeats the production effect; *Write to release file* sends the same patch and revision to `PATCH /api/release`. Success is shown only after the server answers, with the new revision; then every view re-reads.
+
+**When it goes wrong.**
+- `STALE_REVISION` / `WRITE_CONFLICT`: "Nothing was written: the release file changed after it was loaded", the revision now on disk and what changed for this experience. *Load latest state* re-reads; nothing is retried.
+- `ILLEGAL_TRANSITION` / `VALIDATION_FAILED`: the issues appear at the form, linked with `aria-describedby`; Apply stays disabled for an invalid preview.
+- `CATALOG_INVALID`: editing turns off everywhere, with the issues.
+- Session expired (server restarted): reads renew the session and retry once; a write is not replayed: the owner sees "Nothing was written" and confirms again.
+- No answer during a write: "The server did not confirm the write", and *Re-read the release file* says whether the file changed.
+- Server down at start: a screen with the start command and *Try again*; down later: a banner, and editing pauses.
+
+**Polling.** `GET /api/release` every 5 seconds while the tab is visible, never overlapping. If the revision moved and no change form is open, every view re-reads and a polite announcement says so; while a form is open it only shows that the file changed, so nothing shifts under the owner.
+
+**Accessibility.** Semantic landmarks and one h1 per screen; a skip link; the heading takes focus after navigation (not on first load); native `<dialog>` (focus trapped, Escape cancels, Cancel first, focus returns); a polite live region for results and `role="alert"` for failures; states as text plus shape, never colour alone; the public site's two-band focus ring and 44 px targets; reduced motion. axe passes on every screen, both widths, both schemes. Not yet checked by hand: screen readers, zoom, forced colours.
+
+**Security in the browser.** The UI build is served with `Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'` plus no-frame, no-sniff, no-referrer and no-store headers. Vite's own CORS is off (its default reflects any localhost origin, on the `/api` proxy too). The proxy keeps `changeOrigin: false`, so the API sees the UI's Host and Origin and applies its checks unchanged. The session cookie is HttpOnly: no script, storage or URL ever holds the token.
+
+## How the UI uses the API
+
+1. **Run.** Vite preview on `127.0.0.1:4317` proxies `/api` to `127.0.0.1:4318` (`PU_CONTROL_PORT`).
+2. **Session.** On load, `POST /api/session` with `{}`. On `UNAUTHORIZED`, reads renew and retry once; writes renew and stop.
+3. **Reads.** `GET /api/registry`, `GET /api/release`, `GET /api/release/pending` together; `GET /api/experiences/:id` for a detail page, re-read whenever the revision moves.
+4. **Changes.** `POST /api/release/preview`, then after confirmation `PATCH /api/release`, both with the revision the page shows. Promotion is the `transition` patch.
+5. **Revert.** `POST /api/release/revert` with the current revision, after confirmation.
+
+Every call goes through `web/src/api.ts`; components never call `fetch`.

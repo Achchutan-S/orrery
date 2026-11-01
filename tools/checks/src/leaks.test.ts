@@ -7,7 +7,7 @@ import { loadPlatform, type DistFile } from './repo.ts';
 
 const { experiences, state } = loadPlatform();
 const file = (path: string, text = ''): DistFile => ({ path, bytes: Buffer.from(text), text });
-const INDEX = file('index.html', ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']
+const INDEX = file('index.html', ['/', '/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']
   .map((h) => `<a href="${h}">x</a>`).join(''));
 const clean = (): DistFile[] => [INDEX, file('404.html'), file('journal.html'), file('sample-content.html'), file('sample-app.html'), file('sample-app/states.html')];
 const scan = (files: DistFile[]) => scanLeaks(files, experiences, state!).map((f) => `${f.file}: ${f.reason}`);
@@ -20,6 +20,14 @@ test('route files map exactly; dynamic patterns cover their subtree', () => {
   assert.deepEqual(routeFiles('/'), { exact: 'index.html' });
   assert.deepEqual(routeFiles('/a/b'), { exact: 'a/b.html' });
   assert.deepEqual(routeFiles('/a/[...path]'), { under: 'a/' });
+  assert.deepEqual(routeFiles('/resume/resume.pdf'), { exact: 'resume/resume.pdf' }, 'a file route keeps its name');
+});
+
+test('an unreleased experience\'s files (a PDF, an image) fail like its pages', () => {
+  const out = scan([...clean(), file('resume.html'), file('resume/resume.pdf'), file('resume/og.png')]);
+  for (const f of ['resume.html', 'resume/resume.pdf', 'resume/og.png']) {
+    assert.ok(out.some((l) => l.startsWith(`${f}: route /${f.replace(/\.html$/, '')} of "resume" is not released to production`)), f);
+  }
 });
 
 test('unreleased routes fail, named by file and experience', () => {

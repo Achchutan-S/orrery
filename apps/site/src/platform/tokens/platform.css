@@ -75,7 +75,8 @@
 
 @layer platform.chrome {
   .pu-colophon {
-    padding: var(--pu-space-5) clamp(1rem, 4vw, 3rem);
+    /* Extra room at the end so the floating Beacon never covers the colophon's last line. */
+    padding: var(--pu-space-5) clamp(1rem, 4vw, 3rem) calc(var(--pu-space-5) + 3.5rem);
     font-size: 1rem;
     line-height: 1.45;
   }
@@ -88,5 +89,247 @@
   .pu-colophon a {
     color: inherit;
     text-underline-offset: 0.2em;
+  }
+}
+
+/*
+ * The Beacon and its palette (blueprint 3.9). Self-contained colours, so they read on any
+ * experience background; system fonts, so no page loads a font for them.
+ * Every declaration is !important: an important declaration in an earlier layer beats the
+ * experience layer, so an experience's ordinary `a`, `button` or `*` rules (or the hostile
+ * fixture's `all: unset`) cannot break the Beacon, as with the focus ring. An experience that
+ * needs to minimise it (blueprint J, immersive work) gets an explicit option when one exists.
+ */
+@layer platform.chrome {
+  /* First, so the specific rules below win: nothing inherits the page's type or colour. */
+  .pu-beacon *,
+  .pu-palette * {
+    box-sizing: border-box !important;
+    color: inherit !important;
+    font: inherit !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .pu-palette:not([open]) {
+    display: none !important;
+  }
+
+  .pu-palette :where(ul, li, p) {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .pu-beacon {
+    --pu-beacon-ink: #f1f4f2 !important;
+    --pu-beacon-ground: #16201c !important;
+    --pu-beacon-line: #46544e !important;
+    --pu-beacon-accent: #8fd3c1 !important;
+
+    position: fixed !important;
+    inset-block-end: max(0.75rem, env(safe-area-inset-bottom)) !important;
+    inset-inline-end: max(0.75rem, env(safe-area-inset-right)) !important;
+    z-index: 2147483000 !important;
+    display: flex !important;
+    align-items: stretch !important;
+    border: 1px solid var(--pu-beacon-line) !important;
+    border-radius: 999px !important;
+    background: var(--pu-beacon-ground) !important;
+    box-shadow: 0 2px 12px rgb(0 0 0 / 0.2) !important;
+    color: var(--pu-beacon-ink) !important;
+    font: 500 0.9375rem/1.2 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important;
+  }
+
+  .pu-beacon [hidden],
+  .pu-palette [hidden] {
+    display: none !important;
+  }
+
+  .pu-beacon-mark,
+  .pu-beacon-open {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    min-block-size: var(--pu-target-min) !important;
+    margin: 0 !important;
+    padding: 0 0.95rem !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: none !important;
+    color: inherit !important;
+    font: inherit !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+  }
+
+  .pu-beacon-open {
+    border-start-start-radius: 0 !important;
+    border-end-start-radius: 0 !important;
+    border-inline-start: 1px solid var(--pu-beacon-line) !important;
+  }
+
+  .pu-beacon-mark svg {
+    inline-size: 1.25rem !important;
+    block-size: 1.25rem !important;
+    fill: var(--pu-beacon-accent) !important;
+    stroke: var(--pu-beacon-accent) !important;
+    stroke-width: 1.5 !important;
+  }
+
+  /* On the Index itself the mark says so: underlined, not coloured. */
+  .pu-beacon-mark[aria-current='page'] span {
+    text-decoration: underline !important;
+    text-decoration-thickness: 2px !important;
+    text-underline-offset: 0.3em !important;
+  }
+
+  .pu-beacon-mark:hover,
+  .pu-beacon-open:hover {
+    background: rgb(255 255 255 / 0.08) !important;
+  }
+
+  .pu-beacon kbd,
+  .pu-palette kbd {
+    padding: 0.15rem 0.35rem !important;
+    border: 1px solid currentcolor !important;
+    border-radius: 4px !important;
+    font: 600 0.75rem/1 ui-monospace, 'SF Mono', Menlo, Consolas, monospace !important;
+  }
+
+  .pu-palette {
+    --pu-p-paper: light-dark(#fbfaf7, #161b19) !important;
+    --pu-p-ink: light-dark(#16201c, #e8ece9) !important;
+    --pu-p-muted: light-dark(#4f5b57, #a7b2ad) !important;
+    --pu-p-line: light-dark(#c6ccc8, #36423d) !important;
+    --pu-p-select: light-dark(#e1ebe6, #23302b) !important;
+    --pu-p-accent: light-dark(#1f6656, #7cc7b4) !important;
+
+    color-scheme: light dark !important;
+    inline-size: min(34rem, calc(100vw - 2rem)) !important;
+    max-block-size: min(34rem, calc(100dvh - 4rem)) !important;
+    margin-block-start: 12vh !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid var(--pu-p-line) !important;
+    border-block-start: 3px solid var(--pu-p-ink) !important;
+    border-radius: 6px !important;
+    background: var(--pu-p-paper) !important;
+    box-shadow: 0 12px 40px rgb(0 0 0 / 0.25) !important;
+    color: var(--pu-p-ink) !important;
+    font: 1rem/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif !important;
+  }
+
+  .pu-palette[open] {
+    display: flex !important;
+    flex-direction: column !important;
+    animation: pu-palette-in var(--pu-duration) ease-out !important;
+  }
+
+  .pu-palette::backdrop {
+    background: rgb(10 14 12 / 0.5) !important;
+  }
+
+  .pu-palette-head {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 0.25rem 1rem !important;
+    padding: 0.9rem 1rem 0 !important;
+  }
+
+  .pu-palette-head label {
+    font-size: 1.125rem !important;
+    font-weight: 700 !important;
+  }
+
+  .pu-palette-hint {
+    margin: 0 !important;
+    color: var(--pu-p-muted) !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .pu-palette-input {
+    min-block-size: var(--pu-target-min) !important;
+    margin: 0.6rem 1rem 0.75rem !important;
+    padding: 0.55rem 0.75rem !important;
+    border: 1px solid var(--pu-p-muted) !important;
+    border-radius: 4px !important;
+    background: var(--pu-p-paper) !important;
+    color: var(--pu-p-ink) !important;
+    font: inherit !important;
+    font-size: 1.0625rem !important;
+  }
+
+  .pu-palette-list {
+    margin: 0 !important;
+    padding: 0 0.5rem 0.5rem !important;
+    overflow-y: auto !important;
+    list-style: none !important;
+  }
+
+  .pu-palette-list a {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: baseline !important;
+    justify-content: space-between !important;
+    gap: 0.15rem 1rem !important;
+    min-block-size: var(--pu-target-min) !important;
+    padding: 0.6rem 0.75rem !important;
+    border-radius: 4px !important;
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+
+  .pu-palette-list a[aria-selected='true'] {
+    background: var(--pu-p-select) !important;
+    box-shadow: inset 4px 0 0 var(--pu-p-accent) !important;
+  }
+
+  .pu-palette-name {
+    font-weight: 600 !important;
+  }
+
+  .pu-palette-kind {
+    color: var(--pu-p-muted) !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .pu-palette-empty {
+    margin: 0 !important;
+    padding: 0.5rem 1.25rem 1.25rem !important;
+    color: var(--pu-p-muted) !important;
+  }
+
+  .pu-visually-hidden {
+    position: absolute !important;
+    inline-size: 1px !important;
+    block-size: 1px !important;
+    overflow: hidden !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+  }
+
+  @keyframes pu-palette-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  @media print {
+    .pu-beacon {
+      display: none !important;
+    }
+  }
+}
+
+@layer platform.chrome {
+  /* Touch screens have no ⌘K: the trigger reads "Go to", the palette hint is not shown. */
+  @media (pointer: coarse) {
+    .pu-beacon kbd,
+    .pu-palette-hint {
+      display: none !important;
+    }
   }
 }

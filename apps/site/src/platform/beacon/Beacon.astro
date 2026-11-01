@@ -1,0 +1,53 @@
+---
+// The Beacon (blueprint 2, 3.9): the identity mark and a navigation palette, on every page
+// whose catalog chrome is `minimal` or `beacon`, and on platform pages. Destinations come
+// only from publicDiscoveryIndex(), so nothing unlisted can appear in it. The palette markup
+// sits in a <template>: inert and unrendered until the script opens it, whatever the page's CSS.
+import { publicDiscoveryIndex } from '../discovery/index.ts';
+import { env, experiences, releaseState } from '../release/index.ts';
+
+const SECTION: Record<string, string> = { engineering: 'Engineering', civic: 'Civic', thinking: 'Thinking', labs: 'Labs', profile: 'Profile' };
+const here = Astro.url.pathname.replace(/\.html$/, '').replace(/\/index$/, '/') || '/';
+const destinations = publicDiscoveryIndex(experiences, releaseState, env).map((e) => {
+  const kind = e.href === '/' ? 'Index' : e.host ? 'External' : 'Hosted here';
+  const section = e.section ? SECTION[e.section] : undefined;
+  const where = e.host ?? section;
+  return { ...e, label: where && kind !== 'Index' ? `${kind} · ${where}` : kind, terms: [e.title, e.id, kind, section ?? '', e.host ?? '', ...e.tags].join(' ').toLowerCase() };
+});
+---
+<nav class="pu-beacon" aria-label="Orrery">
+  <a class="pu-beacon-mark" href="/" aria-current={here === '/' ? 'page' : undefined}>
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3" /><circle cx="12" cy="12" r="9" fill="none" /><circle cx="19.8" cy="7.5" r="1.8" /></svg>
+    <span translate="no">Orrery</span>
+  </a>
+  <button type="button" class="pu-beacon-open" aria-haspopup="dialog" aria-keyshortcuts="Meta+K Control+K" hidden>
+    Go to <kbd class="pu-beacon-key">Ctrl K</kbd>
+  </button>
+  <template class="pu-palette-template">
+    <dialog class="pu-palette" aria-labelledby="pu-palette-title">
+      <div class="pu-palette-head">
+        <label id="pu-palette-title" for="pu-palette-input">Go to</label>
+        <p class="pu-palette-hint" id="pu-palette-hint"><kbd>↑</kbd> <kbd>↓</kbd> choose · <kbd>Enter</kbd> open · <kbd>Esc</kbd> close</p>
+      </div>
+      <input id="pu-palette-input" class="pu-palette-input" type="text" role="combobox" aria-expanded="true" aria-controls="pu-palette-list"
+        aria-autocomplete="list" aria-describedby="pu-palette-hint" autocomplete="off" spellcheck="false" placeholder="Filter by name, section or tag" />
+      <ul id="pu-palette-list" class="pu-palette-list" role="listbox" aria-label="Destinations">
+        {destinations.map((d) => (
+          <li role="presentation">
+            <a role="option" id={`pu-palette-${d.id}`} href={d.href} tabindex="-1" aria-selected="false" data-terms={d.terms}>
+              <span class="pu-palette-name">{d.title}</span>
+              <span class="pu-palette-kind">{d.label}{d.host && <span class="pu-visually-hidden"> (leaves Orrery)</span>}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="pu-palette-empty" hidden>No destination matches.</p>
+      <p class="pu-visually-hidden" aria-live="polite" data-pu-palette-status></p>
+    </dialog>
+  </template>
+</nav>
+
+<script>
+  import { mountBeacon } from './palette.ts';
+  mountBeacon(document, navigator);
+</script>

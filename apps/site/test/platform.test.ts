@@ -23,6 +23,7 @@ const edit = (id: string, patch: Partial<ReleaseState['experiences'][string]>) =
 test('discovery lists public, listed experiences in catalog order, internal and external', () => {
   const entries = publicDiscoveryIndex(experiences, release, 'production');
   assert.deepEqual(entries.map((e) => [e.id, e.href, e.weight, e.host]), [
+    ['index', '/', 'static', undefined],
     ['journal', '/journal', 'static', undefined],
     ['kawaiui', 'https://kawaiui.vercel.app/', 'external', 'kawaiui.vercel.app'],
     ['devxray', 'https://devxray-one.vercel.app/', 'external', 'devxray-one.vercel.app'],
@@ -54,7 +55,7 @@ test('discovery excludes unlisted and deprecated experiences', () => {
 
 test('weight lines say what opening an entry involves; externals name their host', () => {
   assert.equal(weightLine({ weight: 'static' }), 'Static page. No JavaScript of its own.');
-  assert.equal(weightLine({ weight: 'external', host: 'devxray-one.vercel.app' }), 'Leaves Personal Universe for devxray-one.vercel.app.');
+  assert.equal(weightLine({ weight: 'external', host: 'devxray-one.vercel.app' }), 'Leaves Orrery for devxray-one.vercel.app.');
 });
 
 test('track() is a no-op: no network, no storage, no return value', () => {

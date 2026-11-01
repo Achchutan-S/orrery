@@ -120,6 +120,8 @@ jobs:
       # Builds production and preview output, serves each with `astro preview` (awaited
       # until listening, stopped in after()), then runs axe, keyboard, routing, flag,
       # CSS isolation and external-link tests. PU_TRACE records a Playwright trace per context.
+      # Then the Control Center UI: its build, Vite preview and the real server on a temporary
+      # copy of config/release.json (apps/control/test-browser).
       - name: Browser tests
         run: pnpm test:browser
         env:
@@ -130,6 +132,8 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: browser-results
-          path: apps/site/test-results
+          path: |
+            apps/site/test-results
+            apps/control/test-results
           if-no-files-found: ignore
           retention-days: 14

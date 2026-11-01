@@ -165,6 +165,11 @@ export function checkBoundaries(files: SourceFile[], experiences: readonly Exper
       if (file.path.startsWith('apps/control/') && r.path && !/^(apps\/control|packages\/(platform-schema|experience-catalog))\//.test(r.path)) {
         fail('control-deps', 'the Control Center may import only @pu/platform-schema, @pu/experience-catalog and its own files');
       }
+      // The Control Center UI runs in the browser: it gets data from the API, never from the server's modules.
+      if (file.path.startsWith('apps/control/web/src/') && !imp.typeOnly
+        && (r.pkg?.startsWith('node:') || (r.path && !/^(apps\/control\/web\/src|packages\/platform-schema)\//.test(r.path)))) {
+        fail('control-web-client', 'Control Center browser code may import only @pu/platform-schema, npm packages and its own files');
+      }
       // Packages owned by one experience (catalog exclusiveImports).
       const owner = r.pkg && exclusive.get(r.pkg);
       if (owner && own !== owner) fail('exclusive-imports', `${r.pkg} is exclusive to "${owner}"`);
@@ -179,7 +184,7 @@ export function checkBoundaries(files: SourceFile[], experiences: readonly Exper
   return findings;
 }
 
-const SCAN = ['apps/site/src', 'apps/site/integrations', 'apps/control/server', 'packages/platform-schema/src', 'packages/experience-catalog/src', 'tools/checks/src', 'config'];
+const SCAN = ['apps/site/src', 'apps/site/integrations', 'apps/control/server', 'apps/control/web/src', 'packages/platform-schema/src', 'packages/experience-catalog/src', 'tools/checks/src', 'config'];
 
 export function readSources(root: string): SourceFile[] {
   return SCAN.flatMap((dir) => readdirSync(posix.join(root, dir), { recursive: true }).map(String)

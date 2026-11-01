@@ -24,15 +24,15 @@ test('config/release.json parses and is coherent with the catalog', () => {
 });
 
 test('production mounts the public samples and lists them with the external projects', () => {
-  assert.deepEqual(ids('production', 'mounted'), ['journal', 'sample-content', 'sample-app']);
-  assert.deepEqual(ids('production', 'listed'), ['journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app']);
+  assert.deepEqual(ids('production', 'mounted'), ['index', 'journal', 'sample-content', 'sample-app']);
+  assert.deepEqual(ids('production', 'listed'), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app']);
   assert.deepEqual(mountedRoutes(experiences, load(), 'production').map((r) => r.pattern),
-    ['/journal', '/journal/[chapter]', '/sample-content', '/sample-app', '/sample-app/[...path]']);
+    ['/', '/journal', '/journal/[chapter]', '/sample-content', '/sample-app', '/sample-app/[...path]']);
 });
 
 test('preview and development also mount the two draft fixtures, but never list them', () => {
   for (const env of ['development', 'preview'] as const) {
-    assert.deepEqual(ids(env, 'mounted'), ['journal', 'sample-content', 'sample-app', 'canary-draft', 'sample-hostile']);
+    assert.deepEqual(ids(env, 'mounted'), ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'canary-draft', 'sample-hostile']);
     assert.ok(!ids(env, 'listed').some((id) => id === 'canary-draft' || id === 'sample-hostile'));
   }
 });
@@ -93,4 +93,26 @@ test('the Journal is withdrawn by editing its release entry alone, never by dele
     assert.equal(ids('production', 'listed', s).includes('journal'), listed, JSON.stringify(change));
     assert.equal(mountedRoutes(experiences, s, 'production').some((r) => r.id === 'journal'), mounted);
   }
+});
+
+test('the resume is an owner-only draft until approved: built in development and preview, never listed, absent from production', () => {
+  assert.deepEqual([...ids('production', 'mounted'), ...ids('production', 'listed')].filter((id) => id === 'resume'), []);
+  for (const env of ['development', 'preview'] as const) {
+    assert.ok(ids(env, 'mounted').includes('resume'), env);
+    assert.ok(!ids(env, 'listed').includes('resume'), env);
+  }
+  assert.ok(!mountedRoutes(experiences, load(), 'production').some((r) => r.id === 'resume'));
+  // Publishing is one release edit; the PDF and image routes go with the page.
+  const published = structuredClone(load());
+  published.experiences.resume = { ...published.experiences.resume!, lifecycle: 'published', access: { kind: 'public' }, discoverability: 'listed' };
+  assert.ok(ids('production', 'listed', published).includes('resume'));
+  assert.deepEqual(mountedRoutes(experiences, published, 'production').filter((r) => r.id === 'resume').map((r) => r.pattern), ['/resume', '/resume/resume.pdf', '/resume/og.png']);
+});
+
+test('external experiences: one entry each, https, at their verified addresses', () => {
+  const externals = experiences.filter((e) => e.kind === 'external');
+  assert.deepEqual(externals.map((e) => [e.id, e.kind === 'external' && e.url]), [['kawaiui', 'https://kawaiui.vercel.app/'], ['devxray', 'https://devxray-one.vercel.app/']]);
+  const urls = externals.map((e) => (e.kind === 'external' ? e.url : ''));
+  assert.equal(new Set(urls).size, urls.length, 'no two entries for one site');
+  assert.equal(new Set(experiences.map((e) => e.title.toLowerCase())).size, experiences.length, 'no duplicate titles');
 });

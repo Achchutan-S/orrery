@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { ExperienceDefinition, type Experience } from '@pu/platform-schema';
-import { BUDGETS, evaluate, limitsFor, measure, measurePage, type PageSize } from './budgets.ts';
+import { BEACON_MARKER, BUDGETS, evaluate, limitsFor, measure, measurePage, type PageSize } from './budgets.ts';
 import { gzipBytes, type DistFile } from './repo.ts';
 
 const file = (path: string, text: string): DistFile => ({ path, bytes: Buffer.from(text), text });
@@ -35,7 +35,7 @@ test('pages are attributed by route; unknown pages belong to the platform', () =
   ]);
 });
 
-const page = (js: number): PageSize => ({ page: 'app.html', owner: 'app', budgetClass: 'interactive', js, css: 0, fonts: 0, transfer: js });
+const page = (js: number): PageSize => ({ page: 'app.html', owner: 'app', budgetClass: 'interactive', js, beacon: 0, css: 0, fonts: 0, transfer: js });
 const jsLimit = BUDGETS.interactive.js * 1024;
 
 test('under budget passes and reports headroom', () => {
@@ -67,4 +67,20 @@ test('catalog budgetOverrides replace the class limits', () => {
 test('content experiences have a zero-JavaScript budget', () => {
   const content = { ...page(1), budgetClass: 'content' as const, owner: 'notes' };
   assert.equal(evaluate([content], []).findings.length, 1);
+});
+
+test('the Beacon script has its own budget: not counted as the page\'s js, inline or as a file', () => {
+  const beaconCode = `document.querySelector(".${BEACON_MARKER}")`;
+  const files = [
+    file('essay.html', `<script type="module">${beaconCode}</script>`),
+    file('app.html', `<script>boot()</script><script type="module" src="/_astro/beacon.js"></script>`),
+    file('_astro/beacon.js', beaconCode),
+  ];
+  const byPath = new Map(files.map((f) => [f.path, f]));
+  const essay = measurePage(files[0]!, byPath);
+  assert.deepEqual([essay.js, essay.beacon], [0, gzipBytes(beaconCode)]);
+  const app = measurePage(files[1]!, byPath);
+  assert.deepEqual([app.js, app.beacon], [gzipBytes('boot()'), gzipBytes(beaconCode)]);
+  const heavy: PageSize = { page: 'essay.html', owner: 'essay', budgetClass: 'content', js: 0, beacon: BUDGETS.content.beacon * 1024 + 1, css: 0, fonts: 0, transfer: 0 };
+  assert.match(evaluate([heavy], []).findings[0]!.reason, /essay \(content\) beacon is 15\.0 KB gzip, over its 15 KB budget by 1 bytes/);
 });

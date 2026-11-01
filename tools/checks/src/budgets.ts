@@ -8,6 +8,9 @@
 //   js        inline <script> + every /_astro/*.js the page references, plus the chunks
 //             those import statically (`import ... from "./x.js"`). Dynamic import() is
 //             lazy and not counted. Island components count in full (conservative).
+//             The Beacon's script is not counted here but in `beacon`.
+//   beacon    the Beacon and palette script (blueprint 3.12: its own 15 KB budget, on every
+//             page that shows it). Recognised by BEACON_MARKER, inline or as a file.
 //   css       inline <style> + referenced .css files.
 //   fonts     referenced font files (preload links and @font-face URLs).
 //   transfer  the HTML document (inline JS/CSS included once) + external js, css, fonts.
@@ -21,13 +24,18 @@ import type { Experience } from '@pu/platform-schema';
 import { ownerOf, productionOwners } from './routes.ts';
 import { distArg, gzipBytes, isMain, loadPlatform, readDist, report, type DistFile, type Finding } from './repo.ts';
 
-export type Metric = 'js' | 'css' | 'fonts' | 'transfer';
+export type Metric = 'js' | 'beacon' | 'css' | 'fonts' | 'transfer';
+export const METRICS: readonly Metric[] = ['js', 'beacon', 'css', 'fonts', 'transfer'];
+
+/** A string only the Beacon's script contains: the selector of its palette template. */
+export const BEACON_MARKER = 'pu-palette-template';
 export type BudgetClass = 'platform' | 'content' | 'interactive' | 'immersive';
 
 /**
  * THE budget table. KB, gzip. Sources:
  * - js and css for content, interactive, immersive: blueprint 3.12 (content 0 KB JS).
- * - platform js 15 KB: the blueprint's Beacon budget (Phase 1). Today the platform pages run none.
+ * - beacon 15 KB on every page: the blueprint's Beacon and palette budget. Platform pages (404)
+ *   run no other script, so their js budget is 0.
  * - fonts and transfer are not in the blueprint. Set from the 1 November 2026 build:
  *   platform pages measure ~36 KB (one 33 KB font); an interactive view ~75 KB
  *   (React 64 KB). Content and interactive allow three ~35 KB font files; transfer =
@@ -35,10 +43,10 @@ export type BudgetClass = 'platform' | 'content' | 'interactive' | 'immersive';
  * An experience may raise its own limits with `budgetOverrides` in its catalog entry.
  */
 export const BUDGETS: Record<BudgetClass, Record<Metric, number>> = {
-  platform: { js: 15, css: 30, fonts: 60, transfer: 120 },
-  content: { js: 0, css: 30, fonts: 110, transfer: 160 },
-  interactive: { js: 150, css: 50, fonts: 110, transfer: 330 },
-  immersive: { js: 250, css: 50, fonts: 110, transfer: 430 },
+  platform: { js: 0, beacon: 15, css: 30, fonts: 60, transfer: 120 },
+  content: { js: 0, beacon: 15, css: 30, fonts: 110, transfer: 160 },
+  interactive: { js: 150, beacon: 15, css: 50, fonts: 110, transfer: 330 },
+  immersive: { js: 250, beacon: 15, css: 50, fonts: 110, transfer: 430 },
 };
 
 const FONT = /\.(woff2?|ttf|otf)$/;
@@ -48,8 +56,9 @@ export type PageSize = { page: string; owner: string; budgetClass: BudgetClass }
 /** Measures one page's initial load in gzip bytes. */
 export function measurePage(html: DistFile, byPath: Map<string, DistFile>): Record<Metric, number> {
   const text = html.text ?? '';
-  const inline = (tag: string) => [...text.matchAll(new RegExp(`<${tag}(?![^>]*\\ssrc=)[^>]*>([^]*?)</${tag}>`, 'g'))]
-    .map((m) => m[1]).join('\n');
+  const inlineAll = (tag: string) => [...text.matchAll(new RegExp(`<${tag}(?![^>]*\\ssrc=)[^>]*>([^]*?)</${tag}>`, 'g'))].map((m) => m[1]!);
+  const inline = (tag: string) => inlineAll(tag).join('\n');
+  const isBeacon = (code: string) => code.includes(BEACON_MARKER);
   const files = new Set<string>();
   const visit = (path: string) => {
     if (files.has(path) || !byPath.has(path)) return;
@@ -63,11 +72,14 @@ export function measurePage(html: DistFile, byPath: Map<string, DistFile>): Reco
   for (const m of text.matchAll(/\/(_astro\/[^"')\s]+)/g)) visit(m[1]!);
   const sum = (pred: (p: string) => boolean) =>
     [...files].filter(pred).reduce((n, p) => n + gzipBytes(byPath.get(p)!.bytes), 0);
-  const js = gzipBytes(inline('script')) + sum((p) => p.endsWith('.js'));
+  const scripts = inlineAll('script');
+  const beaconFile = (p: string) => p.endsWith('.js') && isBeacon(byPath.get(p)!.text ?? '');
+  const js = gzipBytes(scripts.filter((c) => !isBeacon(c)).join('\n')) + sum((p) => p.endsWith('.js') && !beaconFile(p));
+  const beacon = gzipBytes(scripts.filter(isBeacon).join('\n')) + sum(beaconFile);
   const css = gzipBytes(inline('style')) + sum((p) => p.endsWith('.css'));
   const fonts = sum((p) => FONT.test(p));
   const transfer = gzipBytes(html.bytes) + sum((p) => p.endsWith('.js') || p.endsWith('.css') || FONT.test(p));
-  return { js, css, fonts, transfer };
+  return { js, beacon, css, fonts, transfer };
 }
 
 export function measure(files: DistFile[], experiences: readonly Experience[]): PageSize[] {
@@ -98,7 +110,7 @@ export function evaluate(pages: PageSize[], experiences: readonly Experience[]):
   for (const owner of [...new Set(pages.map((p) => p.owner))]) {
     const own = pages.filter((p) => p.owner === owner);
     const limits = limitsFor(owner, own[0]!.budgetClass, experiences);
-    for (const metric of ['js', 'css', 'fonts', 'transfer'] as const) {
+    for (const metric of METRICS) {
       const worst = own.reduce((a, b) => (b[metric] > a[metric] ? b : a));
       rows.push({ owner, budgetClass: worst.budgetClass, metric, bytes: worst[metric], budgetKb: limits[metric], page: worst.page });
     }

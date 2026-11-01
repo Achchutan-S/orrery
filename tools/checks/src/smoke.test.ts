@@ -15,7 +15,7 @@ const STATES = ['draft', 'alpha', 'beta', 'published', 'frozen', 'deprecated', '
 /** A fixture deployment behaving as a correct Vercel deployment of this site should. */
 function site(env: 'production' | 'preview') {
   const files = new Map<string, string>([
-    ['index.html', html('Personal Universe', ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app'].map((h) => `<a href="${h}">x</a>`).join(''))],
+    ['index.html', html('Orrery', ['/', '/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app'].map((h) => `<a href="${h}">x</a>`).join(''))],
     ['404.html', html('Not found')],
     ['journal.html', html('The Orrery Journal', '<a href="/journal/idea">1</a><a href="/journal/ahead">8</a>')],
     ['journal/idea.html', html('The idea')],
@@ -30,6 +30,9 @@ function site(env: 'production' | 'preview') {
   if (env === 'preview') {
     files.set('canary-draft.html', html(`${CANARY}-PAGE`));
     files.set('sample-hostile.html', html('Hostile'));
+    files.set('resume.html', html('Resume', '<a href="/resume/resume.pdf">PDF</a>'));
+    files.set('resume/resume.pdf', '%PDF-1.4');
+    files.set('resume/og.png', 'png');
   }
   return files;
 }
@@ -51,9 +54,11 @@ function deployment(env: 'production' | 'preview', m: Mutate = {}): Fetch {
       headers.set('cache-control', m.mutableAssets ? 'public, max-age=0, must-revalidate' : 'public, max-age=31536000, immutable');
       return new Response(files.get(p.slice(1)), { status: 200, headers });
     }
-    headers.set('content-type', 'text/html; charset=utf-8');
+    const file = /\.(pdf|png)$/.test(p);
+    headers.set('content-type', file ? (p.endsWith('.pdf') ? 'application/pdf' : 'image/png') : 'text/html; charset=utf-8');
     headers.set('cache-control', 'public, max-age=0, must-revalidate');
-    const body = files.get(p === '/' ? 'index.html' : `${p.slice(1)}.html`);
+    const body = files.get(p === '/' ? 'index.html' : file ? p.slice(1) : `${p.slice(1)}.html`);
+    if (file && body === undefined) headers.set('content-type', 'text/html; charset=utf-8');
     if (body !== undefined) return new Response(body, { status: 200, headers });
     return m.spaFallback ? new Response(files.get('index.html'), { status: 200, headers }) : new Response(files.get('404.html'), { status: 404, headers });
   };
@@ -112,4 +117,12 @@ test('missing clean-URL and trailing-slash redirects fail', async () => {
 test('hashed assets that are not immutable fail', async () => {
   const out = await run('production', { mutableAssets: true });
   assert.ok(out.includes('/_astro/App.js: cache-control "public, max-age=0, must-revalidate", expected a year and immutable'));
+});
+
+test('a preview serves the draft resume\'s page, PDF and image; production 404s all three', async () => {
+  assert.deepEqual(await run('preview'), []);
+  const out = await run('production', { files: (f) => f.set('resume/resume.pdf', '%PDF-1.4') });
+  assert.ok(out.includes('/resume/resume.pdf: status 200, expected 404 ("resume" is not released to production)'));
+  const missing = await run('preview', { files: (f) => f.delete('resume/og.png') });
+  assert.ok(missing.includes('/resume/og.png: status 404, expected 200 ("resume" is mounted in preview)'));
 });

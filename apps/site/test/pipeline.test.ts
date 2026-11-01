@@ -14,6 +14,8 @@ import { planMount } from '../integrations/mount-experiences.ts';
 import { views } from '../src/experiences/sample-app/views.ts';
 import { scanLeaks } from '@pu/checks/leaks';
 import { pageFindings, productionOwners } from '@pu/checks/metadata';
+import { BEACON_MARKER, evaluate, measure } from '@pu/checks/budgets';
+import { publicDiscoveryIndex } from '../src/platform/discovery/index.ts';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const astroBin = join(root, 'node_modules/astro/bin/astro.mjs');
@@ -48,16 +50,19 @@ const distFiles = (o: Output) => o.files.map((path) => {
 const journalPages = ['journal.html', ...readdirSync(new URL('../src/experiences/journal/chapters/', import.meta.url))
   .map((f) => `journal/${f.replace(/^\d+-/, '').replace(/\.mdx$/, '.html')}`)];
 const appPages = views.map((v) => `sample-app/${v.path}.html`);
+/** The Beacon's script, recognised by the marker the budget check uses; every other script on a page. */
+const scripts = (html: string) => [...html.matchAll(/<script\b[^>]*>([^]*?)<\/script>/g)].map((m) => m[0]);
+const isBeacon = (script: string) => script.includes(BEACON_MARKER);
 const htmlOf = (o: Output) => o.files.filter((f) => f.endsWith('.html'));
 
 describe('planMount (pure)', () => {
-  const folders = ['journal', 'sample-content', 'sample-app', 'canary-draft', 'sample-hostile'];
+  const folders = ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'canary-draft', 'sample-hostile'];
   const input = { catalog, release, folders, fileExists: () => true };
 
   test('production plans only the public internal experiences; externals are never mounted', () => {
     const { routes, issues } = planMount({ ...input, env: 'production' });
     assert.deepEqual(issues, []);
-    assert.deepEqual([...new Set(routes.map((r) => r.id))], ['journal', 'sample-content', 'sample-app']);
+    assert.deepEqual([...new Set(routes.map((r) => r.id))], ['index', 'journal', 'sample-content', 'sample-app']);
     assert.deepEqual(planMount({ ...input, env: 'preview' }).routes.map((r) => r.id).filter((id) => id === 'kawaiui' || id === 'devxray'), []);
   });
 
@@ -87,8 +92,9 @@ describe('production build', () => {
     }
   });
 
-  test('React and any script load only on pages with a React island', () => {
-    const withScript = htmlOf(out).filter((f) => /<script/.test(out.text(f))).sort();
+  test('every page runs exactly one Beacon script; React and any other script only with a React island', () => {
+    for (const f of htmlOf(out)) assert.equal(scripts(out.text(f)).filter(isBeacon).length, 1, f);
+    const withScript = htmlOf(out).filter((f) => scripts(out.text(f)).some((s) => !isBeacon(s))).sort();
     assert.deepEqual(withScript, [...appPages].sort());
     for (const f of withScript) assert.match(out.text(f), /<astro-island/);
   });
@@ -98,14 +104,20 @@ describe('production build', () => {
     assert.match(out.text('sample-app/states.html'), /<caption>Built in each environment with (<!-- -->)?public/);
   });
 
-  test('the discovery index links listed experiences; external projects are marked as leaving', () => {
+  test('the Index headlines every other listed experience once; external projects are marked as leaving', () => {
     const html = out.text('index.html');
-    const links = [...html.matchAll(/<h2[^>]*><a href="([^"]+)"/g)].map((m) => m[1]);
-    assert.deepEqual(links, ['/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app']);
+    const { experiences } = parseCatalog();
+    const listed = publicDiscoveryIndex(experiences, parseRelease(release).state!, 'production').filter((e) => e.id !== 'index');
+    const headlines = [...html.matchAll(/<h[23] class="headline"[^>]*><a href="([^"]+)"/g)].map((m) => m[1]);
+    assert.deepEqual([...headlines].sort(), listed.map((e) => e.href).sort());
+    assert.equal(headlines[0], '/journal', 'the lead is the first entry in catalog order');
     assert.equal(html.match(/\(external site\)/g)?.length, 2);
-    assert.match(html, /Leaves Personal Universe for <span[^>]*translate="no"[^>]*>kawaiui\.vercel\.app<\/span>\./);
-    assert.match(html, /Leaves Personal Universe for <span[^>]*translate="no"[^>]*>devxray-one\.vercel\.app<\/span>\./);
-    assert.match(html, /aria-describedby="kawaiui-weight"/);
+    assert.match(html, /Leaves Orrery for <span[^>]*translate="no"[^>]*>kawaiui\.vercel\.app<\/span>\./);
+    assert.match(html, /Leaves Orrery for <span[^>]*translate="no"[^>]*>devxray-one\.vercel\.app<\/span>\./);
+    assert.match(html, /aria-describedby="kawaiui-line"/);
+    for (const draft of ['Canary draft', 'Hostile stylesheet', CANARY]) assert.ok(!html.includes(draft), draft);
+    assert.match(html, /<title>Orrery<\/title>/);
+    assert.match(html, /<link rel="canonical" href="http:\/\/localhost:4321\/">/);
   });
 
   test('every page has the head tags its release state requires (tools/checks metadata)', () => {
@@ -142,10 +154,10 @@ describe('production build', () => {
     assert.deepEqual(withFont, ['404.html', 'index.html', ...journalPages].sort());
   });
 
-  test('Journal: a cover and one page per chapter file, no scripts, canonical URLs', () => {
+  test('Journal: a cover and one page per chapter file, no scripts but the Beacon, canonical URLs', () => {
     for (const f of journalPages) {
       assert.ok(out.files.includes(f), f);
-      assert.doesNotMatch(out.text(f), /<script/, f);
+      assert.deepEqual(scripts(out.text(f)).filter((s) => !isBeacon(s)), [], f);
       const path = `/${f.replace(/\.html$/, '')}`;
       assert.match(out.text(f), new RegExp(`<link rel="canonical" href="http://localhost:4321${path}">`), f);
     }
@@ -179,7 +191,7 @@ describe('production build', () => {
   test('leak scan (tools/checks): nothing unreleased, no source maps, every listed entry linked', () => {
     const { experiences } = parseCatalog();
     const state = parseRelease(release).state!;
-    assert.deepEqual(resolveAll(experiences, state, 'production').filter((r) => !r.deployable).map((r) => r.id), ['canary-draft', 'sample-hostile']);
+    assert.deepEqual(resolveAll(experiences, state, 'production').filter((r) => !r.deployable).map((r) => r.id), ['resume', 'canary-draft', 'sample-hostile']);
     assert.deepEqual(scanLeaks(distFiles(out), experiences, state), []);
     assert.ok(!out.files.some((f) => /^(kawaiui|devxray)/.test(f)), 'external experiences have no pages');
   });
@@ -200,6 +212,33 @@ describe('production build', () => {
 });
 
 describe('preview build', () => {
+  test('the draft resume: page, PDF and image built in preview only; one Beacon script; within the content budget', () => {
+    const preview = built('preview');
+    const html = preview.text('resume.html');
+    for (const h of ['Summary', 'Experience', 'Selected projects', 'Skills', 'Education']) assert.match(html, new RegExp(`<h2 id="[a-z]+-h">${h}</h2>`), h);
+    assert.match(html, /<a href="\/resume\/resume\.pdf" download="Achchutan-S-Resume\.pdf" type="application\/pdf">Download as PDF<\/a>/);
+    assert.match(html, /A4, 1 page, \d+ KB\./);
+    assert.match(html, /<title>Achchutan S · Resume<\/title>/);
+    assert.match(html, /<meta property="og:image" content="http:\/\/localhost:4321\/resume\/og\.png">/);
+    assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
+    // Unlisted while a draft: noindex, no canonical. A published resume gets both (docs/resume.md).
+    assert.match(html, /<meta name="robots" content="noindex">/);
+    assert.doesNotMatch(html, /rel="canonical"/);
+    assert.deepEqual(scripts(html).filter((s) => !isBeacon(s)), []);
+    assert.equal(scripts(html).filter(isBeacon).length, 1);
+    assert.deepEqual(readFileSync(join(preview.dir, 'resume/resume.pdf')), readFileSync(new URL('../src/experiences/resume/assets/resume.pdf', import.meta.url)));
+    assert.equal(readFileSync(join(preview.dir, 'resume/og.png')).readUInt32BE(16), 1200);
+    // The production build from the describe above.
+    const production = readdirSync(join(tmp, 'production'), { recursive: true }).map(String);
+    for (const f of ['resume.html', 'resume/resume.pdf', 'resume/og.png']) assert.ok(!production.includes(f), `production must not contain ${f}`);
+    assert.ok(!production.filter((f) => f.endsWith('.html')).some((f) => readFileSync(join(tmp, 'production', f), 'utf8').includes('Achchutan S')), 'no production page names it');
+    const { experiences } = parseCatalog();
+    const pages = measure(distFiles(preview).filter((f) => f.path === 'resume.html' || f.path.startsWith('_astro/')), experiences);
+    const { rows, findings } = evaluate(pages.filter((p) => p.owner === 'resume'), experiences);
+    assert.deepEqual(findings, []);
+    assert.equal(rows.find((r) => r.metric === 'js')!.bytes, 0);
+  });
+
   test('mounts both draft fixtures and turns the inspector on, but lists and indexes neither draft', () => {
     const out = built('preview');
     const page = out.text('canary-draft.html');

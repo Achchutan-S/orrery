@@ -33,10 +33,10 @@ export function loadCatalog(): Catalog {
  * Reads the session baseline, creates a fresh session token and listens on 127.0.0.1:port.
  * Rejects (never falls back to another port or interface) if the port is taken.
  */
-export async function start(o: { store: ReleaseStore; catalog: Catalog; port: number; log: Log }) {
+export async function start(o: { store: ReleaseStore; catalog: Catalog; port: number; log: Log; uiPort?: number }) {
   const baseline = await o.store.read();
   const server = createAdaptorServer({
-    fetch: createApp({ ...o, baseline, token: newToken(), policy: policy(o.port) }).fetch,
+    fetch: createApp({ ...o, baseline, token: newToken(), policy: policy(o.port, o.uiPort) }).fetch,
   });
   await new Promise<void>((done, failed) => {
     server.once('error', failed);
@@ -49,19 +49,36 @@ export async function start(o: { store: ReleaseStore; catalog: Catalog; port: nu
   return { address: server.address() as AddressInfo, close };
 }
 
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const refusal = refuseToStart(process.env);
-  if (refusal) {
-    console.error(`Control Center server not started: ${refusal}`);
-    process.exit(1);
-  }
+/**
+ * The repository's own server: refuses in CI and on Vercel, validates PU_CONTROL_PORT, serves
+ * config/release.json. Used by `pnpm control:server` and by the UI's `pnpm control`.
+ * Throws with an owner-readable message instead of starting.
+ */
+export async function startLocal(env: Readonly<Record<string, string | undefined>>) {
+  const refusal = refuseToStart(env);
+  if (refusal) throw new Error(refusal);
+  const port = portFrom(env.PU_CONTROL_PORT);
+  const loaded = loadCatalog();
+  let server;
   try {
-    const port = portFrom(process.env.PU_CONTROL_PORT);
-    const loaded = loadCatalog();
-    const { address, close } = await start({ store: new FileReleaseStore(join(repoRoot, 'config/release.json')), catalog: loaded, port, log: logfmt });
-    logfmt('ready', { service: 'orrery-control', url: `http://${address.address}:${address.port}`, catalogIssues: loaded.issues.length });
+    server = await start({ store: new FileReleaseStore(join(repoRoot, 'config/release.json')), catalog: loaded, port, log: logfmt });
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    throw new Error(code === 'EADDRINUSE'
+      ? `the port ${port} is already in use. Stop the other process (another \`pnpm control\`?) or set PU_CONTROL_PORT.`
+      : error instanceof StoreError ? `${error.message}${error.issues ? `\n${error.issues.map((i) => `  ${i.path}: ${i.message}`).join('\n')}` : ''}`
+      : (error as Error).message, { cause: error });
+  }
+  const { address } = server;
+  logfmt('ready', { service: 'orrery-control', url: `http://${address.address}:${address.port}`, catalogIssues: loaded.issues.length });
+  if (loaded.issues.length > 0) console.log('The catalog has validation issues, so writes are disabled. Run `pnpm check:metadata` for details.');
+  return server;
+}
+
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    const { address, close } = await startLocal(process.env);
     console.log(`Orrery Control Center server listening on http://${address.address}:${address.port} (loopback only). Press Ctrl+C to stop.`);
-    if (loaded.issues.length > 0) console.log('The catalog has validation issues, so writes are disabled. Run `pnpm check:metadata` for details.');
     for (const signal of ['SIGINT', 'SIGTERM'] as const) {
       process.once(signal, () => {
         logfmt('shutdown', { signal });
@@ -69,12 +86,7 @@ if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.a
       });
     }
   } catch (error) {
-    const code = (error as { code?: string }).code;
-    const reason = code === 'EADDRINUSE'
-      ? 'the port is already in use. Stop the other process or set PU_CONTROL_PORT.'
-      : error instanceof StoreError ? `${error.message}${error.issues ? `\n${error.issues.map((i) => `  ${i.path}: ${i.message}`).join('\n')}` : ''}`
-      : (error as Error).message;
-    console.error(`Control Center server not started: ${reason}`);
+    console.error(`Control Center server not started: ${(error as Error).message}`);
     process.exit(1);
   }
 }

@@ -23,12 +23,13 @@ const imageUrl = image && Astro.site ? new URL(image, Astro.site).href : image;
 ---
 <style is:inline set:html={LAYER_ORDER}></style>
 <title>{title}</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 <meta name="description" content={description} />
 {canonical && <link rel="canonical" href={canonical} />}
 {!listed && <meta name="robots" content="noindex" />}
 {!listed && <meta name="referrer" content="no-referrer" />}
 <meta property="og:type" content="website" />
-<meta property="og:site_name" content="Personal Universe" />
+<meta property="og:site_name" content="Orrery" />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={description} />
 {canonical && <meta property="og:url" content={canonical} />}

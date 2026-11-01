@@ -8,6 +8,8 @@ export default defineExperience({
   summary: 'A short essay on how this site decides what gets built and published. Sample static content.',
   capabilities: ['content'],
   tags: ['architecture'],
+  section: 'thinking',
+  headline: 'literary',
   routes: [{ pattern: '/sample-content', entrypoint: 'sample-content/routes/index.astro' }],
   performanceClass: 'content',
 });
