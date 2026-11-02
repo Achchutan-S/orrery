@@ -215,9 +215,9 @@ describe('preview build', () => {
   test('the draft resume: page, PDF and image built in preview only; one Beacon script; within the content budget', () => {
     const preview = built('preview');
     const html = preview.text('resume.html');
-    for (const h of ['Summary', 'Experience', 'Selected projects', 'Skills', 'Education']) assert.match(html, new RegExp(`<h2 id="[a-z]+-h">${h}</h2>`), h);
+    for (const h of ['Summary', 'Experience', 'Projects', 'Skills', 'Education', 'Recognition and learning']) assert.match(html, new RegExp(`<h2 id="[a-z]+-h">${h}</h2>`), h);
     assert.match(html, /<a href="\/resume\/resume\.pdf" download="Achchutan-S-Resume\.pdf" type="application\/pdf">Download as PDF<\/a>/);
-    assert.match(html, /A4, 1 page, \d+ KB\./);
+    assert.match(html, /A4, [12] pages?, \d+ KB\./);
     assert.match(html, /<title>Achchutan S · Resume<\/title>/);
     assert.match(html, /<meta property="og:image" content="http:\/\/localhost:4321\/resume\/og\.png">/);
     assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);

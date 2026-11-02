@@ -51,6 +51,12 @@ The table `BUDGETS` at the top of that file is the only place limits live; an ex
 - **Per experience:** the worst page for each metric is judged. Pages belong to the experience whose route made them (`index.html` to the `index` experience); `404.html` to the platform.
 - Exactly at budget passes; one byte over fails.
 
+## Resume content and assets (`apps/site/test/resume.test.ts`)
+
+The resume's PDF and link-preview image are committed, generated from `content.ts` (docs/resume.md). The tests fail when `source.sha256` no longer matches `content.ts`, when any statement in `content.ts` is missing from the PDF's extracted text, when an e-mail other than the approved one, a phone number, an internal Verizon name or the internal performance rating appears, when a link leaves the verified list, or when prototype work is listed as production. Fix by editing `content.ts` and running `pnpm --filter @pu/site resume:assets`.
+
+Last full verification (task 15.1, 2 November 2026, Node 22.23.4, local): typecheck 0 errors; tests schema 40, catalog 16, checks 50, Control Center 71, site 48; browser site 52, Control Center 11; `pnpm check` boundaries, metadata, leaks and budgets passed; the production build contains no resume file and no file naming the owner; `config/release.json` unchanged (resume still `draft`, `owner`, `unlisted`).
+
 ## Metadata (`tools/checks/src/metadata.ts`)
 
 1. `validatePlatform()` from `platform-schema`, the same function the site build runs: schema (ids, non-blank title and summary, https external URLs, routes, capabilities), cross-entry rules, lifecycle and access rules, and folder coverage.

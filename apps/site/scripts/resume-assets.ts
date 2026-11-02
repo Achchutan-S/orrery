@@ -34,13 +34,14 @@ function card(fontUrl: string): string {
     .mark svg { width: 40px; height: 40px; fill: #1d4e89; stroke: #1d4e89; stroke-width: 1.5; }
     main { align-self: center; }
     .kicker { color: #1d4e89; font-size: 30px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
-    h1 { font-size: 112px; line-height: 1; letter-spacing: -0.02em; margin-top: 18px; }
+    h1 { font-size: 104px; line-height: 1; letter-spacing: -0.02em; margin-top: 14px; }
     .role { font-size: 44px; color: #50565c; margin-top: 18px; }
+    .focus { font-size: 30px; color: #50565c; margin-top: 8px; }
     footer { display: flex; justify-content: space-between; font-size: 28px; color: #50565c; border-top: 2px solid #14171a; padding-top: 22px; }
   </style></head><body>
     <div class="mark"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" fill="none"/><circle cx="19.8" cy="7.5" r="1.8"/></svg>Orrery</div>
-    <main><p class="kicker">Resume</p><h1>${escape(resume.name)}</h1><p class="role">${escape(resume.role)}</p></main>
-    <footer><span>Experience · Projects · Skills · Education</span><span>PDF available</span></footer>
+    <main><p class="kicker">Resume</p><h1>${escape(resume.name)}</h1><p class="role">${escape(resume.role)}</p><p class="focus">${resume.focus.map(escape).join(' · ')}</p></main>
+    <footer><span>Experience · Projects · Skills · Education</span><span>${escape(resume.location)}</span></footer>
   </body></html>`;
 }
 

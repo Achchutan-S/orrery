@@ -6,15 +6,17 @@ import Layout from '../Layout.astro';
 
 const r = resume;
 const file = `${r.name.replace(/\s+/g, '-')}-Resume.pdf`;
-const description = `${r.name}, ${r.role.toLowerCase()}: experience, selected projects, skills and education. Also as a PDF.`;
+const description = `${r.name}, ${r.role.toLowerCase()} (${r.focus.join('; ')}): experience, projects, skills, education and recognition. Also as a PDF.`;
 ---
 <Layout title={`${r.name} · Resume`} description={description}>
   <div class="dossier">
     <header class="head">
       <p class="kicker">Resume</p>
       <h1>{r.name}</h1>
-      <p class="role">{r.role}</p>
-      <ul class="links" aria-label="Links">
+      <p class="role">{r.role}<span class="focus">{r.focus.map((f) => <><span aria-hidden="true"> · </span><span class="visually-hidden">, </span>{f}</>)}</span></p>
+      <ul class="links" aria-label="Contact and links">
+        <li><span class="label">Location</span>{r.location}</li>
+        <li><span class="label">Email</span><a href={`mailto:${r.email}`}>{r.email}</a></li>
         {r.links.map((l) => <li><span class="label">{l.label}</span><a href={l.href}>{l.text}</a></li>)}
       </ul>
       <p class="download">
@@ -36,26 +38,36 @@ const description = `${r.name}, ${r.role.toLowerCase()}: experience, selected pr
             <li class="entry">
               <h3>{x.title}<span class="org">, {x.organisation}</span></h3>
               <p class="when">
-                <time datetime={x.start}>{month(x.start)}</time> – {x.end ? <time datetime={x.end}>{month(x.end)}</time> : 'present'}
+                <time datetime={x.start}>{month(x.start)}</time> – {x.end ? <time datetime={x.end}>{month(x.end)}</time> : 'present'} · {x.place}
               </p>
-              <ul class="points">{x.points.map((p) => <li>{p}</li>)}</ul>
+              <ul class="points">{x.points.map((p) => <li><strong>{p.lead}</strong> {p.text}</li>)}</ul>
+              {x.prototypes && (
+                <>
+                  <h4>Prototypes and proofs of concept</h4>
+                  <ul class="points">{x.prototypes.map((p) => <li>{p}</li>)}</ul>
+                </>
+              )}
             </li>
           ))}
         </ol>
       </section>
 
       <section class="part" aria-labelledby="projects-h">
-        <h2 id="projects-h">Selected projects</h2>
-        <ul class="body">
-          {r.projects.map((p) => (
-            <li class="entry project">
-              <h3><a href={p.href}>{p.name}</a></h3>
-              <p class="kind">{p.kind} · <span class="host">{p.host}</span></p>
-              <p>{p.summary}</p>
-              {p.points && <ul class="points">{p.points.map((x) => <li>{x}</li>)}</ul>}
-            </li>
-          ))}
-        </ul>
+        <h2 id="projects-h">Projects</h2>
+        <div class="body">
+          <ul class="stack">
+            {r.projects.map((p) => (
+              <li class="entry project">
+                <h3>{p.name}</h3>
+                <p class="kind">{p.kind} · {p.stack.join(', ')}</p>
+                <p class="project-links">{p.links.map((l, i) => <>{i > 0 && <span aria-hidden="true"> · </span>}<span class="label">{l.label}</span> <a href={l.href}>{l.text}</a></>)}</p>
+                <p>{p.summary}</p>
+                {p.points && <ul class="points">{p.points.map((x) => <li>{x}</li>)}</ul>}
+              </li>
+            ))}
+          </ul>
+          <p class="earlier">{r.earlierWork}</p>
+        </div>
       </section>
 
       <section class="part" aria-labelledby="skills-h">
@@ -70,8 +82,25 @@ const description = `${r.name}, ${r.role.toLowerCase()}: experience, selected pr
       <section class="part" aria-labelledby="education-h">
         <h2 id="education-h">Education</h2>
         <ul class="body">
-          {r.education.map((e) => <li class="entry"><h3>{e.institution}</h3><p>{e.field}</p></li>)}
+          {r.education.map((e) => (
+            <li class="entry">
+              <h3>{e.degree}</h3>
+              <p>{e.institution}, {e.place}</p>
+              <p class="when"><time datetime={e.end}>{month(e.end)}</time> · {e.grade}</p>
+            </li>
+          ))}
         </ul>
+      </section>
+
+      <section class="part" aria-labelledby="recognition-h">
+        <h2 id="recognition-h">Recognition and learning</h2>
+        <div class="body">
+          <dl class="skills">
+            <div><dt>Recognition</dt><dd><ul class="plain">{r.recognition.map((x) => <li>{x}</li>)}</ul></dd></div>
+            <div><dt>Certification</dt><dd><ul class="plain">{r.certifications.map((x) => <li>{x}</li>)}</ul></dd></div>
+            <div><dt>Courses and learning paths</dt><dd><ul class="plain">{r.learning.map((x) => <li>{x}</li>)}</ul></dd></div>
+          </dl>
+        </div>
       </section>
     </main>
   </div>

@@ -78,11 +78,21 @@ interface Props { title: string; description: string }
     }
 
     [data-experience='resume'] .role { color: var(--r-muted); font-size: 1.25rem; }
+    [data-experience='resume'] .focus { font-size: 1rem; }
+
+    [data-experience='resume'] .visually-hidden {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
 
     [data-experience='resume'] .links {
       display: flex;
       flex-wrap: wrap;
-      gap: var(--pu-space-1) var(--pu-space-4);
+      gap: 0 var(--pu-space-4);
       margin-block-start: var(--pu-space-2);
     }
 
@@ -90,7 +100,7 @@ interface Props { title: string; description: string }
 
     /* Inline links get vertical padding: a 44px target without moving the layout. */
     [data-experience='resume'] .links a,
-    [data-experience='resume'] .project h3 a {
+    [data-experience='resume'] .project-links a {
       padding-block: max(0.3em, 10px);
       box-decoration-break: clone;
     }
@@ -140,6 +150,7 @@ interface Props { title: string; description: string }
     }
 
     [data-experience='resume'] .body { display: grid; gap: var(--pu-space-4); max-inline-size: 40rem; }
+    [data-experience='resume'] .stack { display: grid; gap: var(--pu-space-4); }
     [data-experience='resume'] .summary { font-size: 1.0625rem; }
 
     [data-experience='resume'] .entry { display: grid; gap: var(--pu-space-1); }
@@ -159,6 +170,13 @@ interface Props { title: string; description: string }
       block-size: 1px;
       background: var(--r-muted);
     }
+
+    [data-experience='resume'] h4 { margin: var(--pu-space-2) 0 0; font-size: 0.9375rem; color: var(--r-muted); }
+    [data-experience='resume'] .points strong { font-weight: 700; }
+    [data-experience='resume'] .project-links { font-size: 0.9375rem; }
+    [data-experience='resume'] .project-links .label { color: var(--r-muted); }
+    [data-experience='resume'] .earlier { color: var(--r-muted); font-size: 0.9375rem; }
+    [data-experience='resume'] .plain { display: grid; gap: 0.15rem; }
 
     [data-experience='resume'] .skills { display: grid; gap: var(--pu-space-2); margin: 0; }
     [data-experience='resume'] .skills div { display: grid; gap: 0.1rem; }
@@ -180,11 +198,11 @@ interface Props { title: string; description: string }
         --r-muted: #444;
         --r-rule: #bbb;
         --r-accent: #1d4e89;
-        --r-margin: 7.5rem;
+        --r-margin: 6.2rem;
         color-scheme: light;
       }
 
-      [data-experience='resume'] body { font-size: 9pt; line-height: 1.38; }
+      [data-experience='resume'] body { font-size: 8.8pt; line-height: 1.33; }
       [data-experience='resume'] .summary { font-size: 9.5pt; }
       [data-experience='resume'] h3 { font-size: 10.5pt; }
       [data-experience='resume'] .when,
@@ -199,15 +217,43 @@ interface Props { title: string; description: string }
       [data-experience='resume'] .dossier { max-inline-size: none; padding: 0; }
       [data-experience='resume'] .download,
       [data-experience='resume'] .pu-colophon { display: none; }
-      [data-experience='resume'] h1 { font-size: 22pt; }
+      [data-experience='resume'] h1 { font-size: 20pt; }
       [data-experience='resume'] .role { font-size: 11pt; }
       [data-experience='resume'] .head { padding-block-end: 8pt; }
-      [data-experience='resume'] .part { grid-template-columns: var(--r-margin) minmax(0, 1fr); padding-block: 7pt; gap: 3pt 12pt; }
-      [data-experience='resume'] .body { max-inline-size: none; gap: 6pt; }
+      [data-experience='resume'] .part { grid-template-columns: var(--r-margin) minmax(0, 1fr); padding-block: 6pt; gap: 2pt 10pt; }
+      /* Block flow, not grid, inside sections: Chromium can overlap grid items split across pages. */
+      [data-experience='resume'] .body,
+      [data-experience='resume'] .stack,
+      [data-experience='resume'] .entry,
+      [data-experience='resume'] .points,
+      [data-experience='resume'] .skills,
+      [data-experience='resume'] .skills div,
+      [data-experience='resume'] .plain { display: block; }
+      [data-experience='resume'] .body { max-inline-size: none; }
+      [data-experience='resume'] .body > * + *,
+      [data-experience='resume'] .stack > * + *,
+      [data-experience='resume'] .skills > * + * { margin-block-start: 5pt; }
+      [data-experience='resume'] .entry > * + * { margin-block-start: 1pt; }
+      [data-experience='resume'] .points li + li { margin-block-start: 1pt; }
       [data-experience='resume'] .links a,
-      [data-experience='resume'] .project h3 a { padding-block: 0; }
+      [data-experience='resume'] .project-links a { padding-block: 0; }
+      [data-experience='resume'] .focus,
+      [data-experience='resume'] .project-links,
+      [data-experience='resume'] .earlier { font-size: 8.5pt; }
+      [data-experience='resume'] h4 { font-size: 8.5pt; margin-block-start: 3pt; }
+      [data-experience='resume'] .plain { gap: 0; }
+      /* Skills: label and items on one run of text, as a print resume does. */
+      [data-experience='resume'] .skills dt { display: inline; color: var(--r-ink); font-weight: 700; }
+      [data-experience='resume'] .skills dt::after { content: ': '; }
+      [data-experience='resume'] .skills dd { display: inline; }
+      [data-experience='resume'] .skills > * + * { margin-block-start: 2pt; }
       [data-experience='resume'] h2 { break-after: avoid; }
-      [data-experience='resume'] .entry { break-inside: avoid; }
+      /* Long entries may break across pages; a bullet, a heading with its first line, may not. */
+      [data-experience='resume'] .points li,
+      [data-experience='resume'] .project { break-inside: avoid; }
+      [data-experience='resume'] h3,
+      [data-experience='resume'] h4,
+      [data-experience='resume'] .when { break-after: avoid; }
     }
   }
 </style>

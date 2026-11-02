@@ -620,7 +620,7 @@ describe('Resume (a draft: preview only)', () => {
 
   test('one heading outline, the download link named and typed, and the PDF it points to is real', async () => {
     const page = await open('/resume', VIEWPORTS.desktop, 'preview');
-    assert.deepEqual(await page.getByRole('heading', { level: 2 }).allTextContents(), ['Summary', 'Experience', 'Selected projects', 'Skills', 'Education']);
+    assert.deepEqual(await page.getByRole('heading', { level: 2 }).allTextContents(), ['Summary', 'Experience', 'Projects', 'Skills', 'Education', 'Recognition and learning']);
     assert.equal(await page.getByRole('heading', { level: 1 }).count(), 1);
     const link = page.getByRole('link', { name: 'Download as PDF' });
     assert.equal(await link.getAttribute('download'), 'Achchutan-S-Resume.pdf');
@@ -636,12 +636,12 @@ describe('Resume (a draft: preview only)', () => {
   test('keyboard: links, then the download, with the focus ring; the Beacon works here', async () => {
     const page = await open('/resume', VIEWPORTS.desktop, 'preview');
     const seen: string[] = [];
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 6; i++) {
       await page.keyboard.press('Tab');
       seen.push(await page.evaluate(() => (document.activeElement as HTMLElement).innerText));
       assert.equal(await page.evaluate(() => getComputedStyle(document.activeElement!).outlineStyle), 'solid');
     }
-    assert.deepEqual(seen, ['github.com/Achchutan-S', 'orrery-teal.vercel.app', 'Download as PDF']);
+    assert.deepEqual(seen, ['achchutansrinivasan26@gmail.com', 'github.com/Achchutan-S', 'linkedin.com/in/achchutan-s-5390251b5', 'leetcode.com/u/achchutan26', 'orrery-teal.vercel.app', 'Download as PDF']);
     await page.keyboard.press('Control+k');
     await page.getByRole('dialog', { name: 'Go to' }).waitFor();
     assert.equal(await page.getByRole('option', { name: /Resume/ }).count(), 0, 'unlisted: not offered even in preview');
@@ -661,7 +661,7 @@ describe('Resume (a draft: preview only)', () => {
 
     const plain = await (await newContext({ ...VIEWPORTS.mobile, javaScriptEnabled: false }, 'resume-nojs')).newPage();
     await plain.goto(base.preview + '/resume');
-    assert.equal(await plain.getByRole('heading', { level: 2 }).count(), 5);
+    assert.equal(await plain.getByRole('heading', { level: 2 }).count(), 6);
     assert.ok(await plain.getByRole('link', { name: 'Download as PDF' }).isVisible());
     await plain.context().close();
   });

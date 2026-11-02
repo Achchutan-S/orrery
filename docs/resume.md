@@ -6,7 +6,7 @@ tags: []
 
 # Resume (`/resume`, task 15)
 
-Status: **draft awaiting the owner's approval.** Release entry `draft`, `owner`, `unlisted`: built in development and preview builds only, never in production, never listed on the Index or in the Beacon palette. Nothing here is live.
+Status: **draft awaiting the owner's approval.** Content finalised from the owner's V3 resume on 2 November 2026 (task 15.1), with the owner's editorial decisions applied (task 15.2). Release entry `draft`, `owner`, `unlisted`: built in development and preview builds only, never in production, never listed on the Index or in the Beacon palette. Nothing here is live.
 
 ## One source, three outputs
 
@@ -15,7 +15,7 @@ Status: **draft awaiting the owner's approval.** Release entry `draft`, `owner`,
 | Output | Made by | When it changes |
 | --- | --- | --- |
 | `/resume` page | `routes/index.astro` renders `content.ts` | every build |
-| `/resume/resume.pdf` | the page, printed to A4 by Chromium | when you run the command below |
+| `/resume/resume.pdf` | the page, printed to A4 by Chromium (currently 2 pages) | when you run the command below |
 | `/resume/og.png` (1200×630 link preview) | a card set in the same font, screenshotted by Chromium | when you run the command below |
 
 The PDF and image are committed in `src/experiences/resume/assets/` and served by the experience's own routes (`routes/pdf.ts`, `routes/og.ts`). Like its pages, they are built only where the resume is released, so a draft cannot leak them into production (ADR-020).
@@ -30,35 +30,49 @@ It builds a preview, serves it locally, prints `/resume` and screenshots the car
 
 **Fonts.** Everything is set in Atkinson Hyperlegible Next, which the site self-hosts, so the PDF looks the same whichever machine generates it. Chromium embeds this variable font as Type 3 glyphs with ToUnicode maps: text is selectable and searchable (the test extracts it). Glyph rendering is unhinted at very small sizes in some viewers.
 
-## Facts used, and where each comes from
+## Content provenance (task 15.1, 2 November 2026)
 
-| Statement | Source |
+Primary source: the owner's resume **Achchutan_S_ResumeV3.pdf** (dated September 2026), plus the owner's task 15.1 brief. Where the two differ, the brief's more careful wording is used and the difference is listed below.
+
+| Section | Source and treatment |
 | --- | --- |
-| Name "Achchutan S" | git author name `Achchutan_S` and GitHub account `Achchutan-S`; **confirm spelling and form** |
-| Computer Science, SASTRA University | owner (task 15 brief) |
-| Verizon internship, February to July 2024 | owner |
-| Software Engineer I at Verizon from 17 July 2024 | owner (shown as "Jul 2024 – present") |
-| Internship: React homepage redesign on existing APIs, global navigation (GNav) and search; demos to senior stakeholders | owner; "GNav" generalised to "global navigation" |
-| Spring Boot APIs, JUnit and Mockito tests, API exploration, reactive services, GraphQL, data-grid migration work, customer journeys, assisted-sales flows | owner; "DataGrid" generalised |
-| AI-related projects: lead scoring, OCR, voice bot with Twilio and Gemini | owner ("project exposure"); worded as "involved in" |
-| Orrery and its engineering points | this repository |
-| KawaiUI and Dev X-Ray are personal projects | their repositories are `Achchutan-S/kawaiui` and `Achchutan-S/devxray`; descriptions from their catalog entries |
-| GitHub link | the repository's remote owner |
-| Skills | split into "used at work" (owner's brief) and "used in personal projects" (this repository); no proficiency levels |
+| Name, descriptor, email, location | V3 header and brief. Name shown as "Achchutan S" (V3 sets it in letter-spaced capitals; mixed case reads better and is spelled correctly by screen readers). |
+| GitHub, LinkedIn, LeetCode | link targets inside the V3 PDF: `github.com/Achchutan-S`, `linkedin.com/in/achchutan-s-5390251b5`, `leetcode.com/u/achchutan26`. GitHub answered 200; LeetCode answers 403 to scripted requests (bot protection), so it is taken from the PDF, not re-verified. |
+| Summary | V3 summary, rewritten in the site's voice; keeps 2+ years, Java 17 and Spring Boot, REST and GraphQL, reactive modernisation, React and TypeScript, Python and FastAPI GenAI tooling, and the ~60 s → under 5 s result. |
+| Engineer I, Software Development (Jul 2024 – present) | V3 bullets. Production work and prototypes are separate lists. |
+| Student Intern (Feb – Jul 2024) | V3. |
+| Projects | V3 for syllabus-agent, Dev X-Ray, Exam Helper and earlier ML work; Orrery retained from task 15. Checked read-only against the owner's local repositories: syllabus-agent collects 101 tests (`pytest --collect-only`, not run) and has SSRF-guard and redaction code; Dev X-Ray has 24 tool tabs, PWA configuration and a separate GraphQL package; Exam Helper (`let-me-study`) uses OpenCV, pytesseract and Gemini. All four repository URLs answered 200. |
+| Skills | V3 taxonomy in the brief's groups; Docker, Kubernetes and GCP only under "Exposure only". |
+| Education | V3: "B.Tech, Computer Science & Engineering", SASTRA Deemed University, Thanjavur, June 2024, CGPA 8.47. |
+| Recognition and learning | V3, split into recognition, certification and "courses and learning paths"; the Cloud Engineer item is labelled a learning path. Google Cloud Generative AI Leader: owner's statement (task 15.2) that the exam was passed on 20 October 2026; shown as "exam passed October 2026", with no credential ID, score or issue date. |
+| Earlier ML work | owner's clarification (task 15.2): academic deep-learning project, 6th semester; reported accuracy improved from 82% to 89% during experimentation; not clinically validated. |
 
-Wording describes participation ("worked on", "contributed to", "involved in"), never sole ownership, scale or impact. No internal names, URLs, customers or figures.
+### Generalised or left out, and why
 
-## Open questions for the owner (nothing below is published)
+- **Internal names:** "APIGraph" → "legacy APIs"; "Service Hive" → "an internal service-status monitoring tool"; "Digital Service team" → "another product team"; the consolidation programme for business and consumer rep-facing applications is not described. Tests fail if these names appear.
+- **Internal context:** the Copilot licensing change that prompted the knowledge graph, and the ~800K-line size of the graph.
+- **"Exceeding Performance Rating (2025)":** an internal performance rating; not published (brief). Tests fail if it appears.
+- **"while working full-time"** after GATE: GATE 2024 was taken during the internship, so the phrase is not accurate for both years.
+- **"permanently resolved"** → "resolved"; **"Embedded … into the team's daily workflow"** → "use … in daily engineering work" (brief's wording).
+- **Regex capped at 2.5 s** (Dev X-Ray): not found in the code on a quick read; omitted rather than unverified.
+- **KawaiUI:** no longer on the resume (not in V3, not in the brief's project list). It stays an external experience on the site.
 
-1. **Name** as it should appear (currently "Achchutan S").
-2. **Contact:** an email address and/or LinkedIn to show, or none. None is shown now.
-3. **Internship title** (shown as "Intern").
-4. **Degree and years:** degree name (for example B.Tech) and graduation year for SASTRA University.
-5. **AI projects:** your role, and whether each was production work or a prototype. Shown as "Involved in AI-related projects".
-6. **Certifications or achievements** to list. None is shown.
-7. **Location**, if you want one shown.
-8. **"Built with AI coding assistance"** in the Orrery project description: keep, reword or remove.
-9. **Section on the Index:** the resume is filed under a new "Profile" section, but as the last entry in catalog order the Index's documented rule makes it "Worth the detour". Move it earlier in `packages/experience-catalog/src/index.ts` if you prefer.
+## Owner decisions (task 15.2, 2 November 2026)
+
+1. Name: "Achchutan S", title case.
+2. KawaiUI: not on the resume; unchanged as an Orrery experience.
+3. The four approval flows shipped in August 2026, and the release-documentation generator adopted by principal architects: kept as worded.
+4. "Google AI Professional Certificate": kept exactly as in V3.
+5. Google Cloud Generative AI Leader: added as a passed certification (October 2026). **To confirm:** the title is shown as "Google Cloud Certified – Generative AI Leader", Google Cloud's naming for this certification; check it against your credential.
+6. Earlier ML work: academic project wording applied, from the owner's clarification.
+7. Orrery: "built with AI coding assistance" removed; described by its platform and engineering.
+8. Index placement: unchanged (catalog position and "Worth the detour" rule).
+
+Remaining before publication: confirm the certification title in item 5, then approve publishing.
+
+## Length
+
+Two A4 pages at 8.8 pt. One page would need text below 8 pt with no margin column; readability was preferred. The web page is not affected.
 
 ## Publishing, once approved
 
