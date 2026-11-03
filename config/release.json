@@ -45,12 +45,12 @@
       "note": "Independent project at kawaiui.vercel.app; linked, never built here."
     },
     "resume": {
-      "lifecycle": "draft",
+      "lifecycle": "published",
       "access": {
-        "kind": "owner"
+        "kind": "public"
       },
-      "discoverability": "unlisted",
-      "note": "Draft until the owner approves the content (docs/resume.md). Built in development and preview only. To publish: published, public, listed."
+      "discoverability": "listed",
+      "note": "Published by the owner on 3 November 2026 (docs/resume.md)."
     },
     "sample-app": {
       "lifecycle": "published",
