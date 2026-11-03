@@ -6,7 +6,7 @@ tags: []
 
 # ADR-012 — Shared platform layer (task 7)
 
-Status: accepted (1 November 2026); choice 1 resolved by [ADR-019](019-index-and-beacon.md) · Implements blueprint §2 "Shell versus experience boundary", 3.5a, 3.9 and ADR-007.
+Status: accepted (1 November 2026); choice 1 resolved by [ADR-019](019-index-and-beacon.md); choices 4 and 7 superseded by [ADR-021](021-platform-integrity.md) · Implements blueprint §2 "Shell versus experience boundary", 3.5a, 3.9 and ADR-007.
 
 **Decision:** the kernel lives in `apps/site/src/platform/` (no new package). Design rationale: [`docs/design/platform-identity.md`](../design/platform-identity.md).
 

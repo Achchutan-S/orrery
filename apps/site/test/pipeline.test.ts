@@ -9,10 +9,12 @@ import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { dev, preview } from 'astro';
 import { CANARY, catalog, parseCatalog } from '@pu/experience-catalog';
+import { fixtureRelease } from '@pu/experience-catalog/fixture-release';
 import { parseRelease, resolveAll } from '@pu/platform-schema';
 import { planMount } from '../integrations/mount-experiences.ts';
 import { views } from '../src/experiences/sample-app/views.ts';
 import { scanLeaks } from '@pu/checks/leaks';
+import { readSources } from '@pu/checks/repo';
 import { pageFindings, productionOwners } from '@pu/checks/metadata';
 import { BEACON_MARKER, evaluate, measure } from '@pu/checks/budgets';
 import { publicDiscoveryIndex } from '../src/platform/discovery/index.ts';
@@ -55,6 +57,19 @@ const scripts = (html: string) => [...html.matchAll(/<script\b[^>]*>([^]*?)<\/sc
 const isBeacon = (script: string) => script.includes(BEACON_MARKER);
 const htmlOf = (o: Output) => o.files.filter((f) => f.endsWith('.html'));
 
+// The builds read the real config/release.json, so what they must contain is derived from it:
+// these tests hold whatever the release state is (the resume a draft or published).
+const realState = parseRelease(release).state!;
+const resolution = (id: string, env: 'production' | 'preview') => resolveAll(parseCatalog().experiences, realState, env).find((r) => r.id === id)!;
+const mounted = (env: 'production' | 'preview') => resolveAll(parseCatalog().experiences, realState, env).filter((r) => r.mounted).map((r) => r.id);
+/** The pages each experience builds (code, not release state). */
+const PAGES: Record<string, string[]> = {
+  index: ['index.html'], journal: journalPages, 'sample-content': ['sample-content.html'], 'sample-app': ['sample-app.html', ...appPages],
+  resume: ['resume.html'], 'canary-draft': ['canary-draft.html'], 'sample-hostile': ['sample-hostile.html'],
+};
+/** Experiences that load the platform font (opt in), besides the platform's own pages. */
+const FONT = new Set(['index', 'journal', 'resume']);
+
 describe('planMount (pure)', () => {
   const folders = ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'canary-draft', 'sample-hostile'];
   const input = { catalog, release, folders, fileExists: () => true };
@@ -62,7 +77,9 @@ describe('planMount (pure)', () => {
   test('production plans only the public internal experiences; externals are never mounted', () => {
     const { routes, issues } = planMount({ ...input, env: 'production' });
     assert.deepEqual(issues, []);
-    assert.deepEqual([...new Set(routes.map((r) => r.id))], ['index', 'journal', 'sample-content', 'sample-app']);
+    assert.deepEqual([...new Set(routes.map((r) => r.id))], mounted('production'), 'the real release file');
+    assert.deepEqual([...new Set(planMount({ ...input, release: fixtureRelease(), env: 'production' }).routes.map((r) => r.id))],
+      ['index', 'journal', 'sample-content', 'sample-app'], 'the fixture state');
     assert.deepEqual(planMount({ ...input, env: 'preview' }).routes.map((r) => r.id).filter((id) => id === 'kawaiui' || id === 'devxray'), []);
   });
 
@@ -76,6 +93,15 @@ describe('planMount (pure)', () => {
     assert.ok(badRelease.issues.every((i) => i.rule === 'schema'));
     assert.deepEqual(badRelease.routes, []);
   });
+
+  test('the audit reproducer (F01): a public experience cannot mount a draft\'s file through ".."', () => {
+    const reproducer = catalog.map((e) => (e.id === 'sample-content' && e.kind === 'internal'
+      ? { ...e, routes: [...e.routes, { pattern: '/sample-content/notes.pdf', entrypoint: 'sample-content/../resume/routes/pdf.ts' }] }
+      : e));
+    const plan = planMount({ ...input, catalog: reproducer, env: 'production' });
+    assert.deepEqual(plan.routes, [], 'nothing is mounted, so the build fails before compiling any route');
+    assert.ok(plan.issues.some((i) => i.rule === 'schema' && /routes\.1\.entrypoint$/.test(i.path)), JSON.stringify(plan.issues));
+  });
 });
 
 describe('production build', () => {
@@ -83,7 +109,7 @@ describe('production build', () => {
   before(() => { out = built('production'); });
 
   test('mounts every public route; Astro emits exactly the views the React router knows', () => {
-    assert.deepEqual(htmlOf(out).sort(), ['404.html', 'index.html', ...journalPages, 'sample-app.html', ...appPages, 'sample-content.html'].sort());
+    assert.deepEqual(htmlOf(out).sort(), ['404.html', ...mounted('production').flatMap((id) => PAGES[id]!)].sort());
   });
 
   test('each view has its own title', () => {
@@ -95,7 +121,7 @@ describe('production build', () => {
   test('every page runs exactly one Beacon script; React and any other script only with a React island', () => {
     for (const f of htmlOf(out)) assert.equal(scripts(out.text(f)).filter(isBeacon).length, 1, f);
     const withScript = htmlOf(out).filter((f) => scripts(out.text(f)).some((s) => !isBeacon(s))).sort();
-    assert.deepEqual(withScript, [...appPages].sort());
+    assert.deepEqual(withScript, mounted('production').includes('sample-app') ? [...appPages].sort() : []);
     for (const f of withScript) assert.match(out.text(f), /<astro-island/);
   });
 
@@ -149,9 +175,33 @@ describe('production build', () => {
     }
   });
 
+  test('the platform font is the committed file, served locally; nothing refers to Google Fonts (F15)', () => {
+    const fonts = out.files.filter((f) => f.endsWith('.woff2'));
+    assert.equal(fonts.length, 1);
+    assert.deepEqual(readFileSync(join(out.dir, fonts[0]!)), readFileSync(new URL('../src/platform/fonts/atkinson-hyperlegible-next-latin.woff2', import.meta.url)));
+    for (const f of out.files.filter((x) => /\.(html|css|js)$/.test(x))) assert.doesNotMatch(out.text(f), /fonts\.(googleapis|gstatic)\.com/, f);
+    assert.equal(out.text('index.html').match(/@font-face\{font-family:"Atkinson Hyperlegible Next-[^"]+";src:url\("\/_astro\/fonts\/[0-9a-f]{16}\.woff2"\)/g)?.length, 2, 'weights 400 and 700');
+  });
+
+  test('link previews: every page names its catalog ogImage, else the platform card, as an absolute URL to a built PNG (F08)', () => {
+    const { experiences } = parseCatalog();
+    assert.ok(out.files.includes('og.png'), 'the platform card ships');
+    assert.deepEqual(readFileSync(join(out.dir, 'og.png')), readFileSync(new URL('../public/og.png', import.meta.url)));
+    for (const id of mounted('production')) {
+      const e = experiences.find((x) => x.id === id)!;
+      const image = (e.kind === 'internal' && e.ogImage) || '/og.png';
+      assert.ok(out.files.includes(image.slice(1)), `${id}: ${image} is built`);
+      for (const f of PAGES[id]!) {
+        assert.match(out.text(f), new RegExp(`<meta property="og:image" content="http://localhost:4321${image}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">`), f);
+      }
+    }
+    // An experience that is not mounted contributes no image, whatever its catalog entry says.
+    for (const e of experiences) if (e.kind === 'internal' && e.ogImage && !mounted('production').includes(e.id)) assert.ok(!out.files.includes(e.ogImage.slice(1)), e.ogImage);
+  });
+
   test('the platform font loads only on platform pages and the Journal, which opts in', () => {
     const withFont = htmlOf(out).filter((f) => /\.woff2/.test(out.text(f))).sort();
-    assert.deepEqual(withFont, ['404.html', 'index.html', ...journalPages].sort());
+    assert.deepEqual(withFont, ['404.html', ...mounted('production').filter((id) => FONT.has(id)).flatMap((id) => PAGES[id]!)].sort());
   });
 
   test('Journal: a cover and one page per chapter file, no scripts but the Beacon, canonical URLs', () => {
@@ -191,8 +241,8 @@ describe('production build', () => {
   test('leak scan (tools/checks): nothing unreleased, no source maps, every listed entry linked', () => {
     const { experiences } = parseCatalog();
     const state = parseRelease(release).state!;
-    assert.deepEqual(resolveAll(experiences, state, 'production').filter((r) => !r.deployable).map((r) => r.id), ['resume', 'canary-draft', 'sample-hostile']);
-    assert.deepEqual(scanLeaks(distFiles(out), experiences, state), []);
+    for (const id of ['canary-draft', 'sample-hostile']) assert.ok(!mounted('production').includes(id), `${id} is never promoted`);
+    assert.deepEqual(scanLeaks(distFiles(out), experiences, state, readSources()), []);
     assert.ok(!out.files.some((f) => /^(kawaiui|devxray)/.test(f)), 'external experiences have no pages');
   });
 
@@ -212,7 +262,7 @@ describe('production build', () => {
 });
 
 describe('preview build', () => {
-  test('the draft resume: page, PDF and image built in preview only; one Beacon script; within the content budget', () => {
+  test('the resume: page, PDF and image in preview; in production exactly when its release entry allows; one Beacon script; within the content budget', () => {
     const preview = built('preview');
     const html = preview.text('resume.html');
     for (const h of ['Summary', 'Experience', 'Projects', 'Skills', 'Education', 'Recognition and learning']) assert.match(html, new RegExp(`<h2 id="[a-z]+-h">${h}</h2>`), h);
@@ -221,17 +271,23 @@ describe('preview build', () => {
     assert.match(html, /<title>Achchutan S · Resume<\/title>/);
     assert.match(html, /<meta property="og:image" content="http:\/\/localhost:4321\/resume\/og\.png">/);
     assert.match(html, /<meta name="twitter:card" content="summary_large_image">/);
-    // Unlisted while a draft: noindex, no canonical. A published resume gets both (docs/resume.md).
-    assert.match(html, /<meta name="robots" content="noindex">/);
-    assert.doesNotMatch(html, /rel="canonical"/);
+    // Unlisted (a draft): noindex, no canonical. Listed (published): a canonical, indexable (docs/resume.md).
+    if (resolution('resume', 'preview').listed) {
+      assert.match(html, /<link rel="canonical" href="http:\/\/localhost:4321\/resume">/);
+      assert.doesNotMatch(html, /noindex/);
+    } else {
+      assert.match(html, /<meta name="robots" content="noindex">/);
+      assert.doesNotMatch(html, /rel="canonical"/);
+    }
     assert.deepEqual(scripts(html).filter((s) => !isBeacon(s)), []);
     assert.equal(scripts(html).filter(isBeacon).length, 1);
     assert.deepEqual(readFileSync(join(preview.dir, 'resume/resume.pdf')), readFileSync(new URL('../src/experiences/resume/assets/resume.pdf', import.meta.url)));
     assert.equal(readFileSync(join(preview.dir, 'resume/og.png')).readUInt32BE(16), 1200);
     // The production build from the describe above.
     const production = readdirSync(join(tmp, 'production'), { recursive: true }).map(String);
-    for (const f of ['resume.html', 'resume/resume.pdf', 'resume/og.png']) assert.ok(!production.includes(f), `production must not contain ${f}`);
-    assert.ok(!production.filter((f) => f.endsWith('.html')).some((f) => readFileSync(join(tmp, 'production', f), 'utf8').includes('Achchutan S')), 'no production page names it');
+    const released = resolution('resume', 'production').mounted;
+    for (const f of ['resume.html', 'resume/resume.pdf', 'resume/og.png']) assert.equal(production.includes(f), released, `production ${released ? 'must' : 'must not'} contain ${f}`);
+    if (!released) assert.ok(!production.filter((f) => f.endsWith('.html')).some((f) => readFileSync(join(tmp, 'production', f), 'utf8').includes('Achchutan S')), 'no production page names it');
     const { experiences } = parseCatalog();
     const pages = measure(distFiles(preview).filter((f) => f.path === 'resume.html' || f.path.startsWith('_astro/')), experiences);
     const { rows, findings } = evaluate(pages.filter((p) => p.owner === 'resume'), experiences);
@@ -252,10 +308,15 @@ describe('preview build', () => {
     // The hostile rule ships only in its own document.
     assert.deepEqual(out.files.filter((f) => out.text(f).includes('all:unset')), ['sample-hostile.html']);
     // The standalone leak scan rejects this output as production: it sees every draft.
-    const reasons = scanLeaks(distFiles(out), parseCatalog().experiences, parseRelease(release).state!).map((x) => `${x.file}: ${x.reason}`);
+    const reasons = scanLeaks(distFiles(out), parseCatalog().experiences, parseRelease(release).state!, readSources()).map((x) => `${x.file}: ${x.reason}`);
     assert.ok(reasons.some((r) => r.startsWith('canary-draft.html: route /canary-draft')));
     assert.ok(reasons.some((r) => r.startsWith('sample-hostile.html: route /sample-hostile')));
     assert.ok(reasons.some((r) => r.startsWith('sample-app/states.html: renders UI for build flag sample-app:inspector')));
+    // Drafts without a canary are found by their content, not only by their routes (the hostile fixture has none).
+    assert.ok(reasons.includes('sample-hostile.html: contains content of apps/site/src/experiences/sample-hostile/routes/index.astro, which belongs to "sample-hostile" (not released to production)'));
+    if (!resolution('resume', 'production').mounted) {
+      assert.ok(reasons.includes('resume/resume.pdf: is a copy of apps/site/src/experiences/resume/assets/resume.pdf, which belongs to "resume" (not released to production)'));
+    }
   });
 });
 

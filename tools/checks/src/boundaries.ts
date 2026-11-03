@@ -2,17 +2,21 @@
 // checker rather than ESLint + dependency-cruiser; see ADR-014.
 //   pnpm check:boundaries
 //
-// Reads static imports, `export ... from`, side-effect imports and dynamic import() in
-// .ts/.tsx/.astro/.mdx files (Astro: frontmatter and <script> blocks; MDX: top-level ESM lines). Resolves relative paths
-// and @pu/* workspace packages. The repository uses no tsconfig `paths` aliases; add them
-// to `resolve()` if that changes. Test files are not checked.
-import { readdirSync, readFileSync } from 'node:fs';
+// Reads static imports, `export ... from`, side-effect imports, dynamic import() and the
+// static prefix of import.meta.glob() patterns in .ts/.tsx/.astro/.mdx files (Astro:
+// frontmatter and <script> blocks; MDX: top-level ESM lines), and CSS @import and url()
+// in .css files and Astro <style> blocks. Resolves relative and root-relative ('/src/…')
+// paths, backslashes and query suffixes ('?inline'), and @pu/* workspace packages. The
+// repository uses no tsconfig `paths` or Vite aliases; add them to `resolve()` if that
+// changes. Test files are not checked. docs/runbooks/checks.md § Boundaries lists the limits.
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { posix } from 'node:path';
 import type { Experience } from '@pu/platform-schema';
 import { isMain, loadPlatform, repoRoot, report, type Finding } from './repo.ts';
 
 export type SourceFile = { path: string; text: string };
-export type Import = { spec: string; line: number; typeOnly: boolean };
+/** `glob`: the spec is the static directory prefix of an import.meta.glob() pattern. */
+export type Import = { spec: string; line: number; typeOnly: boolean; glob?: boolean };
 
 const WORKSPACE: Record<string, string> = {
   '@pu/platform-schema': 'packages/platform-schema',
@@ -20,7 +24,7 @@ const WORKSPACE: Record<string, string> = {
   '@pu/checks': 'tools/checks',
 };
 const EXPERIENCES = 'apps/site/src/experiences/';
-const SOURCE = /\.(ts|tsx|astro|mdx)$/;
+const SOURCE = /\.(ts|tsx|astro|mdx|css)$/;
 const isTest = (p: string) => /\.test\.tsx?$/.test(p) || /\/(test|test-browser)\//.test(p);
 
 const frontmatter = (text: string) => text.match(/^---\n([^]*?)\n---/)?.[1] ?? '';
@@ -50,27 +54,67 @@ function code(file: SourceFile, part: 'all' | 'scripts'): string {
     for (const [a, b] of keep.sort((x, y) => x[0] - y[0])) { out += blank(text.slice(pos, a)) + text.slice(a, b); pos = b; }
     text = out + blank(text.slice(pos));
   }
-  return text.replace(/\/\*[^]*?\*\//g, blank).replace(/(^|[^:'"`\\])\/\/.*$/gm, (m, pre: string) => pre + blank(m.slice(pre.length)));
+  // Strings are skipped while finding block comments: '../x/**/*.ts' is a glob, not a comment.
+  return text.replace(/(['"])(?:\\.|(?!\1)[^\\\n])*\1|`(?:\\.|[^\\`])*`|\/\*[^]*?\*\//g, (m) => (m.startsWith('/*') ? blank(m) : m)).replace(/(^|[^:'"`\\])\/\/.*$/gm, (m, pre: string) => pre + blank(m.slice(pre.length)));
 }
 
-export function importsOf(file: SourceFile, part: 'all' | 'scripts' = 'all'): Import[] {
-  const src = code(file, part);
-  const lineAt = (i: number) => src.slice(0, i).split('\n').length;
+const lineIn = (text: string) => (i: number) => text.slice(0, i).split('\n').length;
+
+/** CSS dependencies: `@import "x"`, `@import url(x)` and relative `url(x)` (fonts, images). */
+function cssImports(css: string): Import[] {
+  const src = css.replace(/\/\*[^]*?\*\//g, blank);
+  const lineAt = lineIn(src);
   const out: Import[] = [];
+  for (const m of src.matchAll(/@import\s+(?:url\(\s*)?['"]?([^'")\s;]+)|\burl\(\s*['"]?([^'")\s]+)/g)) {
+    const spec = (m[1] ?? m[2])!;
+    if (m[1] || !/^(data:|https?:|#|\/\/)/.test(spec)) out.push({ spec, line: lineAt(m.index), typeOnly: false });
+  }
+  return out;
+}
+
+/** The directory part of a glob pattern before its first wildcard: './chapters/*.mdx' -> './chapters/'. */
+const globPrefix = (pattern: string) => pattern.slice(0, pattern.slice(0, pattern.search(/[*?{[]|$/)).lastIndexOf('/') + 1) || './';
+
+/** A glob whose argument is not string literals cannot be checked; Vite rejects it too. */
+export const NON_LITERAL_GLOB = '<non-literal import.meta.glob>';
+
+export function importsOf(file: SourceFile, part: 'all' | 'scripts' = 'all'): Import[] {
+  if (file.path.endsWith('.css')) return part === 'all' ? cssImports(file.text) : [];
+  const src = code(file, part);
+  const lineAt = lineIn(src);
+  const out: Import[] = [];
+  if (file.path.endsWith('.astro') && part === 'all') {
+    // <style> blocks, at their original lines.
+    for (const m of file.text.matchAll(/(<style[^>]*>)([^]*?)<\/style>/g)) {
+      const before = lineIn(file.text)(m.index + m[1]!.length) - 1;
+      out.push(...cssImports(m[2]!).map((i) => ({ ...i, line: i.line + before })));
+    }
+  }
   for (const m of src.matchAll(/\b(import|export)\s+(type\s+)?(?:[^'";]*?\sfrom\s*)?['"]([^'"]+)['"]/g)) {
     out.push({ spec: m[3]!, line: lineAt(m.index), typeOnly: Boolean(m[2]) });
   }
   for (const m of src.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g)) {
     out.push({ spec: m[1]!, line: lineAt(m.index), typeOnly: false });
   }
-  return out;
+  for (const m of src.matchAll(/\bimport\.meta\.glob\b(?:\s*<[^>]*>)?\s*\((?!\s*\))\s*(\[[^\]]*\]|'[^']*'|"[^"]*"|`[^`$]*`)?/g)) {
+    const patterns = m[1] ? [...m[1].matchAll(/['"`]([^'"`]*)['"`]/g)].map((x) => x[1]!) : [];
+    const line = lineAt(m.index);
+    if (!m[1] || (m[1].startsWith('[') && patterns.length === 0)) out.push({ spec: NON_LITERAL_GLOB, line, typeOnly: false, glob: true });
+    // Negative patterns ('!…') only remove matches.
+    for (const p of patterns.filter((x) => !x.startsWith('!'))) out.push({ spec: globPrefix(p), line, typeOnly: false, glob: true });
+  }
+  return out.sort((a, b) => a.line - b.line);
 }
 
 /** A repository path, a `node:` builtin, or an npm package name. */
-export function resolve(from: string, spec: string, known: Set<string>): { path?: string; pkg?: string } {
-  if (spec.startsWith('node:')) return { pkg: spec };
+export function resolve(from: string, raw: string, known: Set<string>): { path?: string; pkg?: string } {
+  if (raw.startsWith('node:')) return { pkg: raw };
+  // Equivalent spellings resolve alike: backslashes, and query or hash suffixes ('x.pdf?inline').
+  const spec = raw.replace(/\\/g, '/').replace(/[?#].*$/, '');
   let base: string | undefined;
   if (spec.startsWith('.')) base = posix.normalize(posix.join(posix.dirname(from), spec));
+  // Root-relative ('/src/…'): Vite resolves it from the app's root (apps/<app>/).
+  else if (spec.startsWith('/')) base = posix.normalize(posix.join(from.split('/').slice(0, 2).join('/'), spec));
   else {
     const name = spec.startsWith('@') ? spec.split('/').slice(0, 2).join('/') : spec.split('/')[0]!;
     const root = WORKSPACE[name];
@@ -81,7 +125,9 @@ export function resolve(from: string, spec: string, known: Set<string>): { path?
   return { path: base }; // unknown file: still useful for location rules
 }
 
-const experienceOf = (p: string) => (p.startsWith(EXPERIENCES) ? p.slice(EXPERIENCES.length).split('/')[0] : undefined);
+const experienceOf = (p: string) => (p.startsWith(EXPERIENCES) ? p.slice(EXPERIENCES.length).split('/')[0] || undefined : undefined);
+/** Platform code: the kernel, platform pages, the build integration and the Astro config. */
+const isPlatform = (p: string) => /^apps\/site\/(src\/platform\/|src\/pages\/|integrations\/|astro\.config\.ts$)/.test(p);
 const packageOf = (p: string) => Object.values(WORKSPACE).find((root) => p.startsWith(`${root}/`));
 
 /** Server-only modules: their data is not public, so client code may not import them. */
@@ -111,8 +157,9 @@ export function clientFiles(files: SourceFile[], known: Set<string>): Map<string
       if (r && byPath.has(r) && !isServerOnlyFile(r)) queue.push([r, via]);
     }
   };
-  for (const f of files.filter((x) => x.path.endsWith('.astro'))) {
-    const fm = frontmatter(f.text);
+  for (const f of files.filter((x) => x.path.endsWith('.astro') || x.path.endsWith('.mdx'))) {
+    // Where the component names are imported: Astro frontmatter, or MDX's top-level ESM lines.
+    const fm = f.path.endsWith('.mdx') ? code(f, 'all') : frontmatter(f.text);
     for (const m of f.text.matchAll(/<([A-Z][\w.]*)\b[^>]*\sclient:(?:load|idle|visible|media|only)\b/g)) {
       const name = m[1]!.split('.')[0]!;
       const spec = fm.match(new RegExp(`import\\s+(?:${name}|\\{[^}]*\\b${name}\\b[^}]*\\})\\s+from\\s*['"]([^'"]+)['"]`))?.[1];
@@ -155,11 +202,18 @@ export function checkBoundaries(files: SourceFile[], experiences: readonly Exper
       if (pkg === 'packages/experience-catalog' && (r.pkg || !(r.path?.startsWith(`${pkg}/`) || r.path?.startsWith('packages/platform-schema/')))) {
         fail('catalog-deps', 'the catalog is data only: it may import only @pu/platform-schema and its own files');
       }
-      // An experience never imports another experience.
-      const target = r.path && experienceOf(r.path);
-      if (own && target && target !== own) fail('experience-isolation', `"${own}" may not import code of experience "${target}"`);
-      // The kernel does not depend on any experience.
-      if (file.path.startsWith('apps/site/src/platform/') && target) fail('kernel-independence', `the platform kernel may not depend on experience "${target}"`);
+      if (imp.spec === NON_LITERAL_GLOB) {
+        findings.push({ file: at, reason: '[glob-literal] import.meta.glob() needs string-literal patterns, so its reach can be checked' });
+        continue;
+      }
+      // An experience never imports another experience. A glob whose prefix contains
+      // src/experiences/ itself (or an ancestor) can match every experience.
+      const spansAll = imp.glob && r.path !== undefined && `${EXPERIENCES}`.startsWith(r.path.endsWith('/') ? r.path : `${r.path}/`);
+      const target = spansAll ? 'every experience (the glob spans src/experiences/)' : r.path && experienceOf(r.path);
+      const named = spansAll ? target : `experience "${target}"`;
+      if (own && target && target !== own) fail('experience-isolation', `"${own}" may not import code of ${named}`);
+      // Platform code (kernel, platform pages, integration, Astro config) does not depend on any experience.
+      if (isPlatform(file.path) && target) fail('kernel-independence', `platform code may not depend on ${named}`);
       if (file.path.startsWith('apps/site/') && r.path?.startsWith('apps/control/')) fail('site-control', 'the public site never imports the Control Center');
       // The Control Center shares only the two packages with the rest of the repository (blueprint §5).
       if (file.path.startsWith('apps/control/') && r.path && !/^(apps\/control|packages\/(platform-schema|experience-catalog))\//.test(r.path)) {
@@ -184,11 +238,16 @@ export function checkBoundaries(files: SourceFile[], experiences: readonly Exper
   return findings;
 }
 
-const SCAN = ['apps/site/src', 'apps/site/integrations', 'apps/control/server', 'apps/control/web/src', 'packages/platform-schema/src', 'packages/experience-catalog/src', 'tools/checks/src', 'config'];
+// Directories and single files. Scripts and configs are included: they can import code too.
+const SCAN = [
+  'apps/site/src', 'apps/site/integrations', 'apps/site/scripts', 'apps/site/astro.config.ts',
+  'apps/control/server', 'apps/control/web/src', 'apps/control/web/ui-config.ts', 'apps/control/vite.config.ts',
+  'packages/platform-schema/src', 'packages/experience-catalog/src', 'tools/checks/src', 'config',
+];
 
 export function readSources(root: string): SourceFile[] {
-  return SCAN.flatMap((dir) => readdirSync(posix.join(root, dir), { recursive: true }).map(String)
-    .map((p) => posix.join(dir, p.split('\\').join('/')))
+  return SCAN.flatMap((dir) => (statSync(posix.join(root, dir)).isFile() ? [dir] : readdirSync(posix.join(root, dir), { recursive: true }).map(String)
+    .map((p) => posix.join(dir, p.split('\\').join('/'))))
     .filter((p) => SOURCE.test(p) || p.endsWith('.json'))
     .map((p) => ({ path: p, text: SOURCE.test(p) ? readFileSync(posix.join(root, p), 'utf8') : '' })));
 }

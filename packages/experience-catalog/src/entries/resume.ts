@@ -17,5 +17,6 @@ export default defineExperience({
     { pattern: '/resume/resume.pdf', entrypoint: 'resume/routes/pdf.ts' },
     { pattern: '/resume/og.png', entrypoint: 'resume/routes/og.ts' },
   ],
+  ogImage: '/resume/og.png',
   performanceClass: 'content',
 });

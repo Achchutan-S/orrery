@@ -6,7 +6,9 @@ tags: []
 
 # Resume (`/resume`, task 15)
 
-Status: **draft awaiting the owner's approval.** Content finalised from the owner's V3 resume on 2 November 2026 (task 15.1), with the owner's editorial decisions applied (task 15.2). Release entry `draft`, `owner`, `unlisted`: built in development and preview builds only, never in production, never listed on the Index or in the Beacon palette. Nothing here is live.
+Status: **draft awaiting the owner's approval.** Content finalised from the owner's V3 resume on 2 November 2026 (task 15.1), with the owner's editorial decisions applied (task 15.2). Release entry `draft`, `owner`, `unlisted`: built in development and preview builds only, never in production, never listed on the Index or in the Beacon palette.
+
+**Not on the website, but not private.** The release entry keeps the resume off the deployed site: production answers `/resume`, `/resume/resume.pdf` and `/resume/og.png` with 404. It does not hide the files in this repository, which is public: `content.ts`, the committed PDF and image, and this document can be read on GitHub (raw file URLs included), and earlier versions remain in the Git history. Preview deployments also contain the resume. The Control Center lists it on the owner's machine only. See [ADR-022](adr/022-link-previews-smoke-and-public-repository.md) for the four layers.
 
 ## One source, three outputs
 
@@ -18,7 +20,7 @@ Status: **draft awaiting the owner's approval.** Content finalised from the owne
 | `/resume/resume.pdf` | the page, printed to A4 by Chromium (currently 2 pages) | when you run the command below |
 | `/resume/og.png` (1200×630 link preview) | a card set in the same font, screenshotted by Chromium | when you run the command below |
 
-The PDF and image are committed in `src/experiences/resume/assets/` and served by the experience's own routes (`routes/pdf.ts`, `routes/og.ts`). Like its pages, they are built only where the resume is released, so a draft cannot leak them into production (ADR-020).
+The PDF and image are committed in `src/experiences/resume/assets/` and served by the experience's own routes (`routes/pdf.ts`, `routes/og.ts`). Like its pages, they are built only where the resume is released, so a draft cannot leak them into the production site (ADR-020); the committed files themselves are in the public repository. The link-preview image is the catalog entry's `ogImage` (`/resume/og.png`), which is one of these routes, so it too exists only where the resume is built (ADR-022).
 
 **After any change to `content.ts`** (or to the resume's styles):
 
@@ -49,13 +51,22 @@ Primary source: the owner's resume **Achchutan_S_ResumeV3.pdf** (dated September
 
 ### Generalised or left out, and why
 
-- **Internal names:** "APIGraph" → "legacy APIs"; "Service Hive" → "an internal service-status monitoring tool"; "Digital Service team" → "another product team"; the consolidation programme for business and consumer rep-facing applications is not described. Tests fail if these names appear.
-- **Internal context:** the Copilot licensing change that prompted the knowledge graph, and the ~800K-line size of the graph.
-- **"Exceeding Performance Rating (2025)":** an internal performance rating; not published (brief). Tests fail if it appears.
+- **Internal names:** internal product, tool, team and programme names are replaced by generic descriptions ("legacy APIs", "an internal service-status monitoring tool", "another product team"), and one internal programme is not described at all. The names themselves are kept out of this repository too (see [Privacy check](#privacy-check)).
+- **Internal context:** the internal reason the knowledge graph was built, and its size, are not described.
+- **Internal performance rating:** not published (brief). Tests fail if the word "rating" appears.
 - **"while working full-time"** after GATE: GATE 2024 was taken during the internship, so the phrase is not accurate for both years.
 - **"permanently resolved"** → "resolved"; **"Embedded … into the team's daily workflow"** → "use … in daily engineering work" (brief's wording).
 - **Regex capped at 2.5 s** (Dev X-Ray): not found in the code on a quick read; omitted rather than unverified.
 - **KawaiUI:** no longer on the resume (not in V3, not in the brief's project list). It stays an external experience on the site.
+
+## Privacy check
+
+This repository is public, so it never names what the resume leaves out. `apps/site/test/resume.test.ts` checks `content.ts` and the PDF in two ways:
+
+- **Generic patterns, always:** internal e-mail domains and hosts, `localhost`, and the words salary, CTC, appraisal and rating.
+- **The owner's private term list, locally:** keep the specific internal names in a plain-text file outside the repository, one per line (`#` starts a comment), and run `PU_PRIVATE_TERMS=/path/to/terms.txt pnpm --filter @pu/site test`. The test reports only a count, never a term. Without the variable the test is skipped (shown as skipped, not passed), which is the case in CI.
+
+The pushed commit `9b5fe81` (2 November 2026) still contains the specific names in this file and in the test. History has not been rewritten; that, or making the repository private, is the owner's decision.
 
 ## Owner decisions (task 15.2, 2 November 2026)
 

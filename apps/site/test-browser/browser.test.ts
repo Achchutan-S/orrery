@@ -4,7 +4,7 @@
 // Screenshots land in apps/site/test-results/ for manual review.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, test } from 'node:test';
@@ -12,7 +12,18 @@ import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import { preview } from 'astro';
 import { chromium, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from 'playwright';
+import { parseCatalog } from '@pu/experience-catalog';
+import { parseRelease, resolveAll } from '@pu/platform-schema';
+import { frontPage } from '../src/experiences/index/front-page.ts';
+import { publicDiscoveryIndex } from '../src/platform/discovery/index.ts';
 import { views } from '../src/experiences/sample-app/views.ts';
+
+// The servers build from the real config/release.json, so lists of destinations are derived from
+// it rather than written out: these tests hold whatever is published (docs/runbooks/checks.md).
+const { experiences } = parseCatalog();
+const realState = parseRelease(JSON.parse(readFileSync(new URL('../../../config/release.json', import.meta.url), 'utf8'))).state!;
+const discovery = publicDiscoveryIndex(experiences, realState, 'production');
+const resumeIn = (env: 'production' | 'preview') => resolveAll(experiences, realState, env).find((r) => r.id === 'resume')!;
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const shots = join(root, 'test-results');
@@ -131,7 +142,9 @@ describe('axe (WCAG 2.2 A/AA rules) and screenshots', () => {
 });
 
 describe('The Index', () => {
-  const HEADLINES = ['/journal', '/sample-app', 'https://devxray-one.vercel.app/', '/sample-content', 'https://kawaiui.vercel.app/'];
+  // Reading order: lead, detour, then the sections in order (front-page.ts).
+  const layout = frontPage(discovery, 'index');
+  const HEADLINES = [layout.lead, layout.detour, ...layout.sections.flatMap((s) => s.entries)].filter((e) => e !== undefined).map((e) => e.href);
 
   test('keyboard: Tab reaches every headline in reading order, then the Beacon, with a visible two-band focus ring', async () => {
     const page = await open('/');
@@ -420,6 +433,64 @@ describe('in-app routing (production build)', () => {
   });
 });
 
+describe('island error boundary (sample-app)', () => {
+  const palette = (page: Page) => page.getByRole('dialog', { name: 'Go to' });
+  /** Serves the page with the island's `facts` prop removed: hydration then throws while rendering. */
+  async function openBroken(path: string) {
+    const page = await (await newContext(VIEWPORTS.desktop, `broken${path}`)).newPage();
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    await page.route(`${base.production}${path}`, async (route) => {
+      const response = await route.fetch();
+      const html = await response.text();
+      const body = html.replace('&quot;facts&quot;:', '&quot;removed&quot;:');
+      assert.notEqual(body, html, 'the island props were found');
+      await route.fulfill({ response, body });
+    });
+    await page.goto(base.production + path);
+    return { page, errors };
+  }
+
+  test('normal rendering shows the explorer, no fallback', async () => {
+    const page = await open('/sample-app/states');
+    assert.equal(await page.getByRole('alert').count(), 0);
+    assert.equal(await h1(page), 'Lifecycle states');
+    await page.context().close();
+  });
+
+  test('a render error shows an accessible fallback with no error details; the page around it keeps working', async () => {
+    const { page, errors } = await openBroken('/sample-app/states');
+    const alert = page.getByRole('alert');
+    await alert.waitFor();
+    assert.equal(await h1(page), 'The explorer stopped working');
+    const text = await alert.innerText();
+    assert.doesNotMatch(text, /TypeError|undefined|\.tsx|_astro|at \w+ \(|stack/i, 'no message, stack or path');
+    assert.equal(await page.getByRole('navigation', { name: 'Lifecycle states' }).count(), 0, 'the failed explorer is gone');
+    assert.deepEqual(errors, [], 'contained: nothing reached window as an uncaught error');
+    const { violations } = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
+    assert.deepEqual(violations.map((v) => v.id), []);
+    await page.screenshot({ path: join(shots, 'sample-app-error-fallback-desktop.png'), fullPage: true });
+    // Keyboard: the retry button and the link are reachable; the Beacon still opens the palette.
+    const retry = page.getByRole('button', { name: 'Try again' });
+    assert.ok((await retry.boundingBox())!.height >= 44, '44px target');
+    assert.equal(await page.getByRole('link', { name: 'start from all states' }).getAttribute('href'), '/sample-app/states');
+    await page.getByRole('button', { name: /^Go to/ }).click();
+    await palette(page).waitFor();
+    await page.keyboard.press('Escape');
+    await palette(page).waitFor({ state: 'hidden' });
+    await page.context().close();
+  });
+
+  test('Try again renders the explorer again; a persistent error returns to the fallback with focus on it', async () => {
+    const { page } = await openBroken('/sample-app/states');
+    await page.getByRole('alert').waitFor();
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await page.getByRole('alert').waitFor();
+    assert.equal(await page.evaluate(() => document.activeElement?.textContent), 'The explorer stopped working');
+    await page.context().close();
+  });
+});
+
 describe('preview-only flag (inspector)', () => {
   test('preview shows the inspector and it follows in-app navigation; production has none', async () => {
     const page = await open('/sample-app/states', VIEWPORTS.desktop, 'preview');
@@ -439,7 +510,7 @@ describe('preview-only flag (inspector)', () => {
 describe('Beacon and palette', () => {
   const MAC = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
   const WINDOWS = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36';
-  const DESTINATIONS = ['/', '/journal', 'https://kawaiui.vercel.app/', 'https://devxray-one.vercel.app/', '/sample-content', '/sample-app'];
+  const DESTINATIONS = discovery.map((e) => e.href);
   const palette = (page: Page) => page.getByRole('dialog', { name: 'Go to' });
   const selected = (page: Page) => page.locator('[role="option"][aria-selected="true"]').getAttribute('href');
 
@@ -512,7 +583,7 @@ describe('Beacon and palette', () => {
     assert.equal(await input.getAttribute('aria-activedescendant'), 'pu-palette-journal');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('ArrowUp');
-    assert.equal(await selected(page), '/sample-app', 'wraps to the end');
+    assert.equal(await selected(page), DESTINATIONS.at(-1), 'wraps to the end');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Enter');
@@ -589,15 +660,16 @@ describe('Beacon and palette', () => {
   });
 });
 
-describe('Resume (a draft: preview only)', () => {
-  test('production does not have it: page, PDF and image are real 404s, and nothing links to it', async () => {
+describe('Resume (in preview; in production only when config/release.json releases it)', () => {
+  test('production serves page, PDF and image exactly when released, and links it exactly when listed', async () => {
     const page = await open('/');
+    const { mounted, listed } = resumeIn('production');
     for (const path of ['/resume', '/resume/resume.pdf', '/resume/og.png']) {
-      assert.equal((await page.request.get(base.production + path)).status(), 404, path);
+      assert.equal((await page.request.get(base.production + path)).status(), mounted ? 200 : 404, path);
     }
-    assert.equal(await page.locator('a[href^="/resume"]').count(), 0);
+    assert.equal(await page.locator('a[href="/resume"]').count() > 0, listed);
     await page.getByRole('button', { name: /^Go to/ }).click();
-    assert.equal(await page.getByRole('option', { name: /Resume/ }).count(), 0);
+    assert.equal(await page.getByRole('option', { name: /Resume/ }).count(), listed ? 1 : 0);
     await page.context().close();
   });
 
@@ -644,7 +716,7 @@ describe('Resume (a draft: preview only)', () => {
     assert.deepEqual(seen, ['achchutansrinivasan26@gmail.com', 'github.com/Achchutan-S', 'linkedin.com/in/achchutan-s-5390251b5', 'leetcode.com/u/achchutan26', 'orrery-teal.vercel.app', 'Download as PDF']);
     await page.keyboard.press('Control+k');
     await page.getByRole('dialog', { name: 'Go to' }).waitFor();
-    assert.equal(await page.getByRole('option', { name: /Resume/ }).count(), 0, 'unlisted: not offered even in preview');
+    assert.equal(await page.getByRole('option', { name: /Resume/ }).count(), resumeIn('preview').listed ? 1 : 0, 'offered in the palette only when listed, even in preview');
     await page.context().close();
   });
 

@@ -2,6 +2,8 @@ packages:
   - apps/*
   - packages/*
   - tools/*
+# Node policy (ADR-021): installing with a Node outside every package's engines.node fails.
+engineStrict: true
 onlyBuiltDependencies:
   - esbuild
   - sharp

@@ -74,6 +74,9 @@ export function validateCatalog(
         issues.push({ path: `${at}.flags.${flag}`, rule: 'request-flag-on-demand', message: 'Request flags are allowed only on experiences with on-demand routes' });
       }
     }
+    if (e.ogImage !== undefined && !e.routes.some((r) => r.pattern === e.ogImage && /\.(png|jpe?g)$/.test(r.pattern))) {
+      issues.push({ path: `${at}.ogImage`, rule: 'og-image-route', message: `ogImage ${e.ogImage} must be the pattern of one of this experience's own .png or .jpg routes, so the image is built only where the experience is` });
+    }
     for (const pkg of e.exclusiveImports) {
       const owner = importOwners.get(pkg);
       if (owner) issues.push({ path: `${at}.exclusiveImports`, rule: 'exclusive-import-owner', message: `${pkg} is already exclusive to "${owner}"` });
@@ -102,10 +105,13 @@ export function validateCoverage(
   for (const e of experiences) {
     if (e.kind !== 'internal') continue;
     for (const { entrypoint } of e.routes) {
-      if (!entrypoint.startsWith(`${e.id}/`)) {
+      // Segment-wise, not a string prefix: 'a/../b/x.ts' starts with 'a/' but is b's file.
+      // The schema already rejects such paths; this also holds for unparsed input.
+      const segments = entrypoint.split('/');
+      if (segments[0] !== e.id || segments.some((s) => s === '' || s === '.' || s === '..' || s.includes('\\'))) {
         issues.push({ path: `${e.id}.routes`, rule: 'entrypoint-owner', message: `Entrypoint ${entrypoint} must live in the experience's own folder ${e.id}/` });
       } else if (!fileExists(entrypoint)) {
-        issues.push({ path: `${e.id}.routes`, rule: 'entrypoint-missing', message: `Entrypoint src/experiences/${entrypoint} does not exist` });
+        issues.push({ path: `${e.id}.routes`, rule: 'entrypoint-missing', message: `Entrypoint src/experiences/${entrypoint} does not exist or is not a regular file (symlinks are refused)` });
       }
     }
   }

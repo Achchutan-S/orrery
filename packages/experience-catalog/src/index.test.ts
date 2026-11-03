@@ -44,3 +44,17 @@ test('an invalid entry names the entry and field', () => {
   assert.ok(issues.some((i) => i.path === `${at}.id`), 'id "x" is too short');
   assert.ok(issues.some((i) => i.path === `${at}.routes`));
 });
+
+test('an entry with an unimplemented chrome fails catalog validation, not the build', () => {
+  const journal = catalog.find((e) => e.id === 'journal')!;
+  const { issues } = validateCatalog(catalog.map((e) => (e === journal ? { ...journal, chrome: 'full' } as unknown as typeof e : e)));
+  assert.deepEqual(issues.map((i) => `${i.rule} ${i.path}`), [`schema catalog[${catalog.indexOf(journal)}].chrome`]);
+});
+
+test('sample-app stays the React-island regression fixture (ADR-021): shape pinned so drift or deletion fails', () => {
+  const app = parseCatalog().experiences.find((e) => e.id === 'sample-app');
+  assert.ok(app && app.kind === 'internal', 'sample-app is a permanent fixture: move its coverage before removing it');
+  assert.equal(app.performanceClass, 'interactive');
+  assert.deepEqual(app.routes.map((r) => r.pattern), ['/sample-app', '/sample-app/[...path]']);
+  assert.deepEqual(Object.keys(app.flags), ['inspector']);
+});

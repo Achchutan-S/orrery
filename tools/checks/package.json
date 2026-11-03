@@ -5,7 +5,8 @@
   "exports": {
     "./budgets": "./src/budgets.ts",
     "./leaks": "./src/leaks.ts",
-    "./metadata": "./src/metadata.ts"
+    "./metadata": "./src/metadata.ts",
+    "./repo": "./src/repo.ts"
   },
   "scripts": {
     "test": "node --test --test-reporter=spec \"src/**/*.test.ts\"",

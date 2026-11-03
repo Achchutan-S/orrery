@@ -1,4 +1,6 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { lstatSync, readdirSync, readFileSync, realpathSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { AstroIntegration } from 'astro';
 import { catalog } from '@pu/experience-catalog';
 import {
@@ -8,6 +10,16 @@ import {
 
 const experiencesDir = new URL('../src/experiences/', import.meta.url);
 const releaseFile = new URL('../../../config/release.json', import.meta.url);
+
+/** A regular file at exactly this path: no symlink in the path, so it cannot point into another experience. */
+function isOwnFile(entrypoint: string): boolean {
+  const path = fileURLToPath(new URL(entrypoint, experiencesDir));
+  try {
+    return lstatSync(path).isFile() && realpathSync(path) === join(realpathSync(experiencesDir), entrypoint);
+  } catch {
+    return false;
+  }
+}
 
 type PlanInput = {
   catalog: readonly ExperienceInput[];
@@ -41,7 +53,7 @@ export default function mountExperiences(): AstroIntegration {
           release: JSON.parse(readFileSync(releaseFile, 'utf8')),
           env,
           folders: readdirSync(experiencesDir, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name),
-          fileExists: (entrypoint) => existsSync(new URL(entrypoint, experiencesDir)),
+          fileExists: isOwnFile,
         });
         if (issues.length > 0) {
           const list = issues.map((i) => `  - ${i.path} [${i.rule}] ${i.message}`).join('\n');

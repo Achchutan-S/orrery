@@ -4,7 +4,7 @@
   "type": "module",
   "packageManager": "pnpm@10.34.9",
   "engines": {
-    "node": ">=22.23.4"
+    "node": ">=22.23.4 <23"
   },
   "scripts": {
     "dev": "pnpm --filter @pu/site dev",
@@ -16,6 +16,7 @@
     "gen:release-schema": "node tools/checks/src/release-schema.ts config/release.schema.json",
     "test:browser": "pnpm --filter @pu/site test:browser && pnpm --filter @pu/control test:browser",
     "build:production": "VERCEL_ENV=production pnpm --filter @pu/site build",
+    "build:deployment": "node tools/checks/src/deploy-build.ts",
     "check": "pnpm check:boundaries && pnpm build:production && pnpm check:metadata && pnpm check:leaks && pnpm check:budgets",
     "check:boundaries": "node tools/checks/src/boundaries.ts",
     "check:metadata": "node tools/checks/src/metadata.ts apps/site/dist",

@@ -15,15 +15,10 @@ interface Props {
   /** Defaults to the catalog summary. */
   description?: string;
   lang?: string;
-  /** Root-relative URL of a 1200×630 link-preview image the experience serves itself. */
-  image?: string;
 }
-const { experience, title, description, lang = 'en', image } = Astro.props;
+const { experience, title, description, lang = 'en' } = Astro.props;
+// chrome is "minimal" or "beacon": the schema rejects anything else (ADR-021).
 const meta = internalExperience(experience);
-if (meta.chrome === 'full') {
-  // ponytail: no experience uses the shared header yet; build it with the first one that does.
-  throw new Error(`"${experience}" uses chrome "full", which is not implemented yet; use "minimal" or "beacon"`);
-}
 const scheme = { light: 'light', dark: 'dark', 'light-dark': 'light dark', custom: undefined }[meta.colorScheme];
 ---
 <!doctype html>
@@ -37,7 +32,7 @@ const scheme = { light: 'light', dark: 'dark', 'light-dark': 'light dark', custo
       title={title ?? meta.title}
       description={description ?? meta.summary}
       listed={resolutionOf(experience).listed}
-      image={image}
+      image={meta.ogImage}
     />
     <slot name="head" />
   </head>

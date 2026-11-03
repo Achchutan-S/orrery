@@ -5,6 +5,7 @@ sources:
   - config/release.json
   - packages/experience-catalog/src/
   - docs/tracker.md
+  - docs/adr/022-link-previews-smoke-and-public-repository.md
 ---
 import Claim from '../components/Claim.astro';
 import Inventory from '../components/Inventory.astro';
@@ -13,7 +14,7 @@ import Inventory from '../components/Inventory.astro';
 
 <Claim standing="verified">
 
-Every production build of this repository contains [the Index](/) at the front page and every experience listed below. This list is not written by hand: it is generated from the catalog and the release file each time the site is built, so it cannot fall out of date. The live site shows this version once it is deployed; until then it shows the earlier, plainer index.
+Every production build of this repository contains [the Index](/) at the front page and every experience listed below. This list is not written by hand: it is generated from the catalog and the release file each time the site is built, so it cannot fall out of date. The live site shows it: the production deployment of commit `9b5fe81` (2 November 2026) serves this Index.
 
 </Claim>
 
@@ -41,7 +42,7 @@ Draft experiences, including the hostile stylesheet and the leak canary, are bui
 
 <Claim standing="verified">
 
-The resume is one of those drafts. Its content was drawn from the owner's own resume and checked against the project repositories it cites. Its page, a two-page PDF and a link-preview image are generated from a single source file, and the PDF and image are served by the resume's own routes, so they exist only where the page does. It has been implemented and verified locally: its text is searchable in the PDF, the page ships no script but the Beacon, and production builds contain none of it. It has not been deployed and is not publicly accessible; it becomes public when the owner approves its content and changes its release entry.
+The resume is one of those drafts. Its content was drawn from the owner's own resume and checked against the project repositories it cites. Its page, a two-page PDF and a link-preview image are generated from a single source file, and the PDF and image are served by the resume's own routes, so they exist only where the page does. It has been implemented and verified locally: its text is searchable in the PDF, the page ships no script but the Beacon, and production builds contain none of it, so the live site answers its addresses with "not found". That keeps it off the website; it does not make it private. This repository is public, so the resume's source text and its generated PDF and image can be read on GitHub, as can their earlier versions in the Git history. It joins the website when the owner approves its content and changes its release entry.
 
 </Claim>
 
@@ -68,7 +69,7 @@ Each difference is recorded in an architecture decision record:
 - **The Beacon's palette is a small plain script**, not a React island, because React alone is four times the budget the blueprint sets for the Beacon (ADR-019).
 - **A small custom import checker** instead of ESLint with dependency-cruiser, because two of the rules need knowledge of the repository a linter cannot express (ADR-014).
 - **Browser tests run against local builds**, not against Vercel previews, so continuous integration needs no Vercel credentials; the live smoke test covers what only Vercel does (ADR-015, ADR-016).
-- **Link-preview images are not required yet**, although the foundation checklist asks for them; no page has one (ADR-014).
-- **The repository is public**, where the blueprint planned a private one (ADR-003).
+- **One platform link-preview image** stands in for every page whose experience has none of its own, rather than an image generated per entry; an experience names its own image in the catalog, as the resume does (ADR-022). Generated per-entry images wait for Phase 2.
+- **The repository is public**, where the blueprint planned a private one (ADR-003). The release file decides what the website builds, not what the repository shows (ADR-022).
 
 </Claim>

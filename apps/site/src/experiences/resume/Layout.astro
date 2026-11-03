@@ -7,7 +7,7 @@ import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
 
 interface Props { title: string; description: string }
 ---
-<ExperienceRoot experience="resume" title={Astro.props.title} description={Astro.props.description} image="/resume/og.png">
+<ExperienceRoot experience="resume" title={Astro.props.title} description={Astro.props.description}>
   <Font slot="head" cssVariable="--font-platform" preload />
   <slot />
 </ExperienceRoot>

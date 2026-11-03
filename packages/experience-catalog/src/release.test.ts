@@ -6,6 +6,7 @@ import {
   mountedRoutes, parseRelease, resolveAll, validateRelease,
   type Environment, type ReleaseState,
 } from '@pu/platform-schema';
+import { fixtureRelease } from './fixture-release.ts';
 import { parseCatalog } from './index.ts';
 
 const configDir = new URL('../../../config/', import.meta.url);
@@ -23,10 +24,29 @@ test('config/release.json parses and is coherent with the catalog', () => {
   assert.deepEqual(validateRelease(load(), experiences), []);
 });
 
-test('production mounts the public samples and lists them with the external projects', () => {
-  assert.deepEqual(ids('production', 'mounted'), ['index', 'journal', 'sample-content', 'sample-app']);
-  assert.deepEqual(ids('production', 'listed'), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app']);
-  assert.deepEqual(mountedRoutes(experiences, load(), 'production').map((r) => r.pattern),
+// Real configuration: expectations come from each entry of config/release.json, by the rule
+// docs/architecture.md states, written out here independently of resolve().
+test('the real release file: production mounts and lists exactly what each entry allows', () => {
+  const state = load();
+  const entryOf = (id: string) => state.experiences[id] ?? { lifecycle: 'draft', access: { kind: 'owner' }, discoverability: 'unlisted' };
+  const ships = (id: string) => ['beta', 'published', 'frozen', 'deprecated'].includes(entryOf(id).lifecycle) && entryOf(id).access.kind === 'public';
+  assert.deepEqual(ids('production', 'mounted'), experiences.filter((e) => e.kind === 'internal' && ships(e.id)).map((e) => e.id));
+  assert.deepEqual(ids('production', 'listed'),
+    experiences.filter((e) => ships(e.id) && entryOf(e.id).discoverability === 'listed' && entryOf(e.id).lifecycle !== 'deprecated').map((e) => e.id));
+});
+
+test('the real release file: the permanent leak and CSS fixtures are never in production', () => {
+  for (const id of ['canary-draft', 'sample-hostile']) {
+    assert.ok(!ids('production', 'mounted').includes(id), `${id} must never be promoted`);
+  }
+});
+
+test('the fixture release state is valid; production mounts the public samples and lists them with the external projects', () => {
+  const state = load(fixtureRelease());
+  assert.deepEqual(validateRelease(state, experiences), []);
+  assert.deepEqual(ids('production', 'mounted', state), ['index', 'journal', 'sample-content', 'sample-app']);
+  assert.deepEqual(ids('production', 'listed', state), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app']);
+  assert.deepEqual(mountedRoutes(experiences, state, 'production').map((r) => r.pattern),
     ['/', '/journal', '/journal/[chapter]', '/sample-content', '/sample-app', '/sample-app/[...path]']);
 });
 
@@ -95,18 +115,32 @@ test('the Journal is withdrawn by editing its release entry alone, never by dele
   }
 });
 
-test('the resume is an owner-only draft until approved: built in development and preview, never listed, absent from production', () => {
-  assert.deepEqual([...ids('production', 'mounted'), ...ids('production', 'listed')].filter((id) => id === 'resume'), []);
-  for (const env of ['development', 'preview'] as const) {
-    assert.ok(ids(env, 'mounted').includes('resume'), env);
-    assert.ok(!ids(env, 'listed').includes('resume'), env);
+test('every release combination for the resume: where it is built and listed (synthetic states)', () => {
+  const routes = ['/resume', '/resume/resume.pdf', '/resume/og.png'];
+  // [lifecycle, access, discoverability] -> [built in production, listed in production, built in preview]
+  for (const [lifecycle, access, discoverability, production, listed, preview] of [
+    ['draft', 'owner', 'unlisted', false, false, true],
+    ['draft', 'public', 'listed', false, false, true],
+    ['alpha', 'owner', 'unlisted', false, false, true],
+    ['beta', 'public', 'listed', true, true, true],
+    ['beta', 'owner', 'listed', false, false, true],
+    ['published', 'public', 'listed', true, true, true],
+    ['published', 'public', 'unlisted', true, false, true],
+    ['published', 'owner', 'listed', false, false, true],
+    ['frozen', 'public', 'listed', true, true, true],
+    ['deprecated', 'public', 'unlisted', true, false, true],
+    ['archived', 'public', 'listed', false, false, false],
+  ] as const) {
+    const s = fixtureRelease();
+    s.experiences.resume = { lifecycle, access: { kind: access }, discoverability, flags: {}, ...(lifecycle === 'archived' ? { archivedTo: '/' } : {}) };
+    const at = `${lifecycle}/${access}/${discoverability}`;
+    assert.deepEqual(validateRelease(s, experiences), [], at);
+    assert.equal(ids('production', 'mounted', s).includes('resume'), production, at);
+    assert.equal(ids('production', 'listed', s).includes('resume'), listed, at);
+    assert.equal(ids('preview', 'mounted', s).includes('resume'), preview, at);
+    // The PDF and image routes always go with the page.
+    assert.deepEqual(mountedRoutes(experiences, s, 'production').filter((r) => r.id === 'resume').map((r) => r.pattern), production ? routes : [], at);
   }
-  assert.ok(!mountedRoutes(experiences, load(), 'production').some((r) => r.id === 'resume'));
-  // Publishing is one release edit; the PDF and image routes go with the page.
-  const published = structuredClone(load());
-  published.experiences.resume = { ...published.experiences.resume!, lifecycle: 'published', access: { kind: 'public' }, discoverability: 'listed' };
-  assert.ok(ids('production', 'listed', published).includes('resume'));
-  assert.deepEqual(mountedRoutes(experiences, published, 'production').filter((r) => r.id === 'resume').map((r) => r.pattern), ['/resume', '/resume/resume.pdf', '/resume/og.png']);
 });
 
 test('external experiences: one entry each, https, at their verified addresses', () => {

@@ -20,6 +20,23 @@ test('a valid catalog parses with defaults and no issues', () => {
   assert.equal(e?.kind === 'internal' && e.chrome, 'minimal');
 });
 
+test('chrome: only the implemented levels validate; "full" fails at validation with the supported values', () => {
+  for (const chrome of ['minimal', 'beacon'] as const) assert.deepEqual(validateCatalog([entry({ chrome })]).issues, [], chrome);
+  for (const chrome of ['full', 'header', '']) {
+    const { issues } = validateCatalog([entry({ chrome: chrome as 'minimal' })]);
+    assert.deepEqual(issues.map((i) => `${i.rule} ${i.path}`), ['schema catalog[0].chrome'], chrome);
+    assert.match(issues[0]!.message, /use "minimal" \(Beacon and colophon\) or "beacon" \(Beacon only\)/);
+  }
+});
+
+test('ogImage must be one of the experience\'s own image routes, so it is built only where the experience is', () => {
+  const routes = [{ pattern: '/xy', entrypoint: 'xy/routes/index.astro' }, { pattern: '/xy/og.png', entrypoint: 'xy/routes/og.ts' }];
+  assert.deepEqual(validateCatalog([entry({ id: 'xy', routes, ogImage: '/xy/og.png' })]).issues, []);
+  for (const ogImage of ['/og.png', '/y/og.png', 'xy/og.png', '/xy', 'https://example.com/x.png']) {
+    assert.deepEqual(rules(validateCatalog([entry({ id: 'xy', routes, ogImage })]).issues), ['og-image-route'], ogImage);
+  }
+});
+
 test('schema failures report the entry index and field', () => {
   const { issues } = validateCatalog([entry({ id: 'Bad Id' })]);
   assert.equal(issues[0]?.path, 'catalog[0].id');
@@ -154,6 +171,50 @@ test('coverage: folders and internal entries match one to one; externals have no
     'orphan-folder experiences/ext',
   ]);
   assert.match(issues[2]!.message, /add packages\/experience-catalog\/src\/entries\/stray\.ts/);
+});
+
+test('entrypoints are canonical paths inside the experience\'s own folder (F01)', () => {
+  const route = (entrypoint: string, pattern = '/sample/x') => entry({ routes: [{ pattern: '/sample', entrypoint: 'sample/routes/index.astro' }, { pattern, entrypoint }] });
+  for (const ok of ['sample/routes/index.astro', 'sample/routes/pdf.ts', 'sample/routes/deep/a_b.c-d.astro']) {
+    assert.deepEqual(validateCatalog([route(ok)]).issues, [], ok);
+  }
+  for (const bad of [
+    'sample/../resume/routes/pdf.ts', // the audit reproducer
+    '../resume/routes/pdf.ts',
+    'sample/routes/../../resume/routes/pdf.ts',
+    'sample/./routes/index.astro',
+    'sample/routes/..',
+    'sample\\..\\resume\\routes\\pdf.ts',
+    'sample/routes\\x.astro',
+    '/sample/routes/index.astro',
+    'sample//routes/index.astro',
+    'sample/routes/.hidden.astro',
+    'sample/%2e%2e/resume/routes/pdf.ts',
+    'Sample/routes/index.astro',
+    'sample/routes/index.astro/',
+  ]) {
+    assert.deepEqual(rules(validateCatalog([route(bad)]).issues), ['schema'], bad);
+  }
+});
+
+test('route patterns are canonical', () => {
+  const route = (pattern: string) => entry({ routes: [{ pattern: '/sample', entrypoint: 'sample/routes/index.astro' }, { pattern, entrypoint: 'sample/routes/x.astro' }] });
+  for (const ok of ['/sample/x', '/sample/[chapter]', '/sample/[...path]', '/sample/resume.pdf']) {
+    assert.deepEqual(validateCatalog([route(ok)]).issues, [], ok);
+  }
+  for (const bad of ['/sample/../resume/resume.pdf', '/sample/./x', '/sample//x', '/sample/x/', '/sample\\x', 'sample/x', '/sample/%2e%2e/x', '/sample/x?y']) {
+    assert.deepEqual(rules(validateCatalog([route(bad)]).issues), ['schema'], bad);
+  }
+});
+
+test('coverage ownership is checked by segment, not by string prefix, even for unparsed entries', () => {
+  // validateCoverage takes parsed entries; this one skips the schema to prove the second line of defence.
+  const [e] = validateCatalog([entry()]).experiences;
+  const escape = { ...e!, routes: [{ pattern: '/sample/notes.pdf', entrypoint: 'sample/../resume/routes/pdf.ts', render: 'static' }] } as Experience;
+  const backslash = { ...e!, routes: [{ pattern: '/sample/x', entrypoint: 'sample/..\\resume\\x.ts', render: 'static' }] } as Experience;
+  for (const x of [escape, backslash]) {
+    assert.deepEqual(validateCoverage([x], ['sample'], () => true).map((i) => i.rule), ['entrypoint-owner'], x.kind === 'internal' ? x.routes[0]!.entrypoint : '');
+  }
 });
 
 test('an experience needs a parameter-free entry route for discovery to link to', () => {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parseCatalog } from '@pu/experience-catalog';
+import { fixtureRelease } from '@pu/experience-catalog/fixture-release';
 import { Lifecycle, parseRelease, type ReleaseState } from '@pu/platform-schema';
 import { authorize } from '../src/platform/access/authorize.ts';
 import { track } from '../src/platform/analytics/track.ts';
@@ -12,7 +13,9 @@ import { stateFacts } from '../src/experiences/sample-app/facts.ts';
 import { views } from '../src/experiences/sample-app/views.ts';
 
 const { experiences } = parseCatalog();
-const release = parseRelease(JSON.parse(readFileSync(new URL('../../../config/release.json', import.meta.url), 'utf8'))).state!;
+const real = parseRelease(JSON.parse(readFileSync(new URL('../../../config/release.json', import.meta.url), 'utf8'))).state!;
+// Exact lists use the fixed fixture state; the real file only where nothing depends on its current values.
+const release = fixtureRelease();
 const ids = (state: ReleaseState) => publicDiscoveryIndex(experiences, state, 'production').map((e) => e.id);
 const edit = (id: string, patch: Partial<ReleaseState['experiences'][string]>) => {
   const s = structuredClone(release);
@@ -40,7 +43,7 @@ test('discovery lists public, listed experiences in catalog order, internal and 
 
 test('discovery excludes drafts and owner-only experiences in every environment', () => {
   for (const env of ['development', 'preview', 'production'] as const) {
-    const ids = publicDiscoveryIndex(experiences, release, env).map((e) => e.id);
+    const ids = publicDiscoveryIndex(experiences, real, env).map((e) => e.id);
     assert.ok(!ids.includes('canary-draft') && !ids.includes('sample-hostile'), env);
   }
   assert.ok(!ids(edit('sample-app', { access: { kind: 'owner' } })).includes('sample-app'));

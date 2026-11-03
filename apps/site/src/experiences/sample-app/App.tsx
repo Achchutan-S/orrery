@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { ErrorBoundary } from './ErrorBoundary.tsx';
 import { ENVIRONMENTS, STATES, type AccessKind, type StateFacts } from './lifecycles.ts';
 import { Link, useRouter, type Location, type Navigate } from './router.tsx';
 import { BASE, NOT_FOUND_TITLE, views } from './views.ts';
@@ -11,7 +12,12 @@ type Props = {
   inspector: boolean;
 };
 
-export default function App({ path, facts, inspector }: Props) {
+/** The island: the explorer inside an error boundary, so a render failure stays in here. */
+export default function App(props: Props) {
+  return <ErrorBoundary><Explorer {...props} /></ErrorBoundary>;
+}
+
+function Explorer({ path, facts, inspector }: Props) {
   const [loc, navigate] = useRouter(BASE, { path, search: '' });
   const view = views.find((v) => v.path === loc.path);
   const access: AccessKind = new URLSearchParams(loc.search).get('access') === 'owner' ? 'owner' : 'public';

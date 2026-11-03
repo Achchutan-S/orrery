@@ -56,12 +56,34 @@ test('no placeholders, only the approved contact details, nothing internal', () 
     const emails = [...s.matchAll(/[\w.+-]+@[\w-]+\.[\w.]+/g)].map((m) => m[0]);
     assert.deepEqual([...new Set(emails)], ['achchutansrinivasan26@gmail.com'], `${what}: only the owner's approved address`);
     assert.doesNotMatch(s, /\+?\d[\d\s()-]{8,}\d/, `${what}: no phone number`);
-    // Internal Verizon names stay generalised (docs/resume.md); the internal performance rating is not published.
-    assert.doesNotMatch(s, /APIGraph|Service Hive|Digital Service|rep-facing|Exceeding Performance|verizon\.com|vzw|\.internal|localhost|salary|ctc|appraisal|rating/i, what);
+    // Generic employment-privacy and internal-address patterns. Specific internal names are not
+    // listed here, because this repository is public: they go in the owner's private term list (below).
+    assert.doesNotMatch(s, /verizon\.com|vzw|\.internal|localhost|salary|ctc|appraisal|rating/i, what);
   }
   // Links are only the owner's verified public profiles, repositories and sites (from the V3 resume or the repositories' remotes).
   const allowed = /^https:\/\/(github\.com\/Achchutan-S(\/(devxray|searchtosyllabi|let-me-study|orrery))?|linkedin\.com\/in\/achchutan-s-5390251b5|leetcode\.com\/u\/achchutan26|orrery-teal\.vercel\.app\/|devxray-one\.vercel\.app\/)$/;
   for (const href of [...resume.links.map((l) => l.href), ...resume.projects.flatMap((p) => p.links.map((l) => l.href))]) assert.match(href, allowed, href);
+});
+
+/** Terms found in `text`, ignoring case and line wrapping (the PDF wraps anywhere). */
+const forbiddenIn = (text: string, terms: readonly string[]) => terms.filter((t) => norm(text).includes(norm(t)));
+
+test('the forbidden-term check finds configured terms in any case and across line breaks', () => {
+  // Fictional sentinels only: real internal names never appear in this public repository.
+  const terms = ['Zorblax Quantum Ledger', 'Team Flibbertigibbet'];
+  assert.deepEqual(forbiddenIn('Built the zorblax quantum\nledger with team FLIBBERTIGIBBET.', terms), terms);
+  assert.deepEqual(forbiddenIn('Built a ledger with another team.', terms), []);
+});
+
+// The owner keeps the specific internal names in a file outside the repository (docs/resume.md
+// § Privacy check): one term per line, `#` for comments. Without it this test is skipped, not passed.
+const termsFile = process.env.PU_PRIVATE_TERMS;
+test('no term from the owner\'s private list appears in content.ts or the PDF', { skip: termsFile ? false : 'PU_PRIVATE_TERMS is not set' }, () => {
+  const terms = readFileSync(termsFile!, 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+  assert.ok(terms.length > 0, `${termsFile} lists no terms`);
+  // Counts only, so the terms never reach a CI log.
+  assert.equal(forbiddenIn(everything, terms).length, 0, 'content.ts contains a private term');
+  assert.equal(forbiddenIn(text, terms).length, 0, 'the PDF contains a private term');
 });
 
 test('prototypes are kept apart from production work, and exposure apart from experience', () => {

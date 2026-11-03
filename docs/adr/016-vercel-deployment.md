@@ -6,7 +6,7 @@ tags: []
 
 # ADR-016 — Vercel deployment configuration, headers and CSP
 
-Status: accepted (1 November 2026), not yet deployed · Implements blueprint task 11 and ADR-002. Operations: [runbooks/deploy.md](../runbooks/deploy.md).
+Status: accepted (1 November 2026), not yet deployed; decision 5 (`engines.node`) superseded by [ADR-021](021-platform-integrity.md) · Implements blueprint task 11 and ADR-002. Operations: [runbooks/deploy.md](../runbooks/deploy.md).
 
 **Decision:** one static Vercel project, Root Directory `apps/site`, configured from `apps/site/vercel.json` wherever Vercel allows; the few dashboard settings are listed in the runbook.
 

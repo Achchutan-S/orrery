@@ -155,5 +155,25 @@ interface Props { title?: string }
     [data-experience='sample-app'] .table-scroll {
       overflow-x: auto;
     }
+
+    /* The error boundary's fallback (ErrorBoundary.tsx). */
+    [data-experience='sample-app'] .island-error {
+      background: var(--sa-panel);
+      border: 1px solid var(--sa-line);
+      padding: 1rem 1.25rem;
+      max-inline-size: 40rem;
+    }
+
+    [data-experience='sample-app'] .island-error button {
+      min-block-size: 44px;
+      padding: 0.5rem 1rem;
+      background: var(--sa-ink);
+      color: var(--sa-bg);
+      border: 0;
+      border-radius: 4px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
   }
 </style>

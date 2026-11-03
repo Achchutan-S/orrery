@@ -6,7 +6,7 @@ tags: []
 
 # ADR-004 — Definition in code, release in data, explicit registry, minimal route mounting
 
-Status: accepted, spike complete except the Vercel checks · Source: [blueprint §6 ADR-004](../blueprint.md#adr-004--experience--definition-in-code--release-entry-in-data-explicit-registry-minimal-route-mounting)
+Status: accepted, spike complete; the Vercel checks (d) passed in the production smoke test of 1 November 2026 (tracker task 11) · Source: [blueprint §6 ADR-004](../blueprint.md#adr-004--experience--definition-in-code--release-entry-in-data-explicit-registry-minimal-route-mounting)
 
 **Decision:** catalog entries in `packages/experience-catalog`, implementation in `apps/site/src/experiences/<id>`, release state in `config/release.json`, and `apps/site/integrations/mount-experiences.ts` injects only mounted routes.
 

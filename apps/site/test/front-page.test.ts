@@ -1,8 +1,10 @@
 // The Index's mapping from public discovery entries to a front page, and the Beacon palette's
-// pure logic. Real catalog and release file; small hand-made lists only for edge cases.
+// pure logic. Real catalog; exact layouts use the fixed fixture release state, the real release
+// file only where the expectation is derived from it; small hand-made lists for edge cases.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { CANARY, parseCatalog } from '@pu/experience-catalog';
+import { fixtureRelease } from '@pu/experience-catalog/fixture-release';
 import { parseRelease, type ReleaseState } from '@pu/platform-schema';
 import { readFileSync } from 'node:fs';
 import { frontPage, related, SECTIONS } from '../src/experiences/index/front-page.ts';
@@ -10,12 +12,21 @@ import { publicDiscoveryIndex, type DiscoveryEntry } from '../src/platform/disco
 import { isApple, isEditable, isShortcut, matches, step } from '../src/platform/beacon/palette.ts';
 
 const { experiences } = parseCatalog();
-const release = parseRelease(JSON.parse(readFileSync(new URL('../../../config/release.json', import.meta.url), 'utf8'))).state!;
+const real = parseRelease(JSON.parse(readFileSync(new URL('../../../config/release.json', import.meta.url), 'utf8'))).state!;
+const release = fixtureRelease();
 const entries = (state: ReleaseState = release, env: 'production' | 'preview' = 'production') => publicDiscoveryIndex(experiences, state, env);
 const entry = (id: string, extra: Partial<DiscoveryEntry> = {}): DiscoveryEntry =>
   ({ id, title: id, summary: 's', href: `/${id}`, weight: 'static', tags: [], ...extra });
 
-test('the real front page: lead, detour, sections, counts; the Index never lists itself', () => {
+test('the real release file: every public discovery entry but the Index appears on the front page exactly once', () => {
+  const list = entries(real);
+  const page = frontPage(list, 'index');
+  const shown = [page.lead, page.detour, ...page.sections.flatMap((s) => s.entries)].filter(Boolean).map((e) => e!.id);
+  assert.deepEqual([...shown].sort(), list.map((e) => e.id).filter((id) => id !== 'index').sort());
+  assert.equal(page.counts.total, shown.length);
+});
+
+test('the fixture front page: lead, detour, sections, counts; the Index never lists itself', () => {
   const page = frontPage(entries(), 'index');
   assert.equal(page.lead?.id, 'journal');
   assert.equal(page.detour?.id, 'sample-app');
@@ -30,9 +41,10 @@ test('the real front page: lead, detour, sections, counts; the Index never lists
 
 test('drafts, owner-only and unlisted entries never reach the front page or the palette, in any environment', () => {
   for (const env of ['production', 'preview'] as const) {
-    const ids = entries(release, env).map((e) => e.id);
+    // The permanent fixtures are drafts in every real configuration.
+    const ids = entries(real, env).map((e) => e.id);
     assert.ok(!ids.includes('canary-draft') && !ids.includes('sample-hostile'), env);
-    assert.ok(!JSON.stringify(entries(release, env)).includes(CANARY), env);
+    assert.ok(!JSON.stringify(entries(real, env)).includes(CANARY), env);
   }
   const withdrawn = structuredClone(release);
   withdrawn.experiences.journal = { ...withdrawn.experiences.journal!, access: { kind: 'owner' } };

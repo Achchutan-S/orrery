@@ -6,7 +6,7 @@ tags: []
 
 # ADR-003 — Private pnpm workspace, one lockfile, no Turborepo
 
-Status: accepted · Source: [blueprint §6 ADR-003](../blueprint.md#adr-003--private-pnpm-workspace-two-apps-one-package-no-turborepo)
+Status: accepted; in practice the repository is public (tracker decision 5), and [ADR-022](022-link-previews-smoke-and-public-repository.md) records what that exposes · Source: [blueprint §6 ADR-003](../blueprint.md#adr-003--private-pnpm-workspace-two-apps-one-package-no-turborepo)
 
 **Decision:** `apps/site`, `apps/control` (Phase 1), `packages/platform-schema`, `packages/experience-catalog`; one `pnpm-lock.yaml`.
 

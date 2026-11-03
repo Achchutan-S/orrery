@@ -141,3 +141,71 @@ test('Control Center browser code reaches the server only through the API', () =
     'apps/control/web/src/bad.tsx:3 [control-web-client]',
   ]);
 });
+
+// F05: platform pages, globs, CSS, MDX islands, alternative spellings, scripts and configs.
+test('platform pages may use the kernel but never an experience', () => {
+  assert.deepEqual(run(
+    f('apps/site/src/pages/ok.astro', "---\nimport Layout from './_PlatformLayout.astro';\nimport { publicDiscoveryIndex } from '../platform/discovery/index.ts';\n---"),
+    f('apps/site/src/pages/bad.astro', "---\nimport Layout from '../experiences/alpha/Layout.astro';\n---"),
+  ), ['apps/site/src/pages/bad.astro:2 [kernel-independence]']);
+});
+
+test('import.meta.glob: own folder passes; another experience, or all of them, fails', () => {
+  const glob = (pattern: string) => f(`${E}/alpha/chapters.ts`, `const m = import.meta.glob<Module>(${pattern}, { eager: true });`);
+  assert.deepEqual(run(glob("'./chapters/*.mdx'")), []);
+  assert.deepEqual(run(glob("['./a/*.ts', '!./a/skip.ts']")), []);
+  assert.deepEqual(run(glob("'../beta/*.ts'")), [`${E}/alpha/chapters.ts:1 [experience-isolation]`]);
+  assert.deepEqual(run(glob("['./a/*.ts', '../beta/**/*.astro']")), [`${E}/alpha/chapters.ts:1 [experience-isolation]`]);
+  assert.deepEqual(run(glob("'../*/content.ts'")), [`${E}/alpha/chapters.ts:1 [experience-isolation]`], 'spans every experience');
+  assert.deepEqual(run(glob("'/src/experiences/beta/*.ts'")), [`${E}/alpha/chapters.ts:1 [experience-isolation]`], 'root-relative');
+  assert.deepEqual(run(f('apps/site/src/platform/discovery/all.ts', "import.meta.glob('../../experiences/*/meta.ts');")),
+    ['apps/site/src/platform/discovery/all.ts:1 [kernel-independence]']);
+  assert.deepEqual(run(glob('patterns')), [`${E}/alpha/chapters.ts:1 [glob-literal]`], 'a variable cannot be checked: fail safe');
+  assert.deepEqual(run(glob('`../${x}/*.ts`')), [`${E}/alpha/chapters.ts:1 [glob-literal]`]);
+});
+
+test('CSS: shared platform styles pass; another experience\'s stylesheet or font fails, in .css and <style>', () => {
+  assert.deepEqual(run(
+    f(`${E}/alpha/alpha.css`, "@import '../../platform/tokens/platform.css';\n@font-face { src: url('./fonts/a.woff2'); }\na { background: url(data:image/png;base64,AA); }\n"),
+  ), []);
+  assert.deepEqual(run(
+    f(`${E}/alpha/a.css`, "/* @import '../beta/x.css'; is a comment */\n@import url(\"../beta/theme.css\");\n"),
+    f(`${E}/alpha/b.css`, "@font-face {\n  src: url(../beta/fonts/b.woff2);\n}\n"),
+    f(`${E}/alpha/Layout.astro`, "---\n---\n<p>x</p>\n<style>\n  @import '../beta/theme.css';\n</style>\n"),
+    f('apps/site/src/platform/tokens/platform.css', "@import '../../experiences/beta/theme.css';\n"),
+  ), [
+    `${E}/alpha/a.css:2 [experience-isolation]`,
+    `${E}/alpha/b.css:2 [experience-isolation]`,
+    `${E}/alpha/Layout.astro:5 [experience-isolation]`,
+    'apps/site/src/platform/tokens/platform.css:1 [kernel-independence]',
+  ]);
+});
+
+test('MDX: an island used in MDX is browser code; a valid island passes, one reading the catalog fails', () => {
+  const chapter = f(`${E}/alpha/chapters/03.mdx`, "import Chart from '../Chart.tsx';\n\n# Heading\n\n<Chart client:visible />\n");
+  assert.deepEqual(run(chapter, f(`${E}/alpha/Chart.tsx`, "import { helper } from './helper.ts';\n")), []);
+  assert.deepEqual(run(chapter, f(`${E}/alpha/Chart.tsx`, "import { catalog } from '@pu/experience-catalog';\n")), [`${E}/alpha/Chart.tsx:1 [client-server-only]`]);
+  assert.deepEqual(run(f(`${E}/alpha/chapters/04.mdx`, "import Note from '../../beta/Note.astro';\n\n<Note />\n")), [`${E}/alpha/chapters/04.mdx:1 [experience-isolation]`]);
+});
+
+test('alternative spellings resolve like the canonical path', () => {
+  for (const spec of ['./x/../../beta/Layout.astro', '..\\\\beta\\\\Layout.astro', '/src/experiences/beta/Layout.astro', '../beta/assets/x.pdf?inline']) {
+    assert.deepEqual(run(f(`${E}/alpha/helper.ts`, `import x from '${spec}';`)), [`${E}/alpha/helper.ts:1 [experience-isolation]`], spec);
+  }
+});
+
+test('scripts and configs are scanned: the Astro config and integration are platform code', () => {
+  assert.deepEqual(run(
+    f('apps/site/astro.config.ts', "import mdx from '@astrojs/mdx';\nimport { LAYER_ORDER } from './src/platform/tokens/layer-order.ts';\nimport x from './src/experiences/alpha/helper.ts';\n"),
+    f('apps/site/scripts/build-thing.ts', "import { createApp } from '../../control/server/app.ts';\n"),
+    f('apps/control/vite.config.ts', "import { defineConfig } from 'vite';\nimport { flag } from '../site/src/platform/release/index.ts';\n"),
+  ), [
+    'apps/site/astro.config.ts:3 [kernel-independence]',
+    'apps/site/scripts/build-thing.ts:1 [site-control]',
+    'apps/control/vite.config.ts:2 [control-deps]',
+  ]);
+  const scanned = readSources(repoRoot).map((x) => x.path);
+  for (const p of ['apps/site/astro.config.ts', 'apps/site/scripts/resume-assets.ts', 'apps/control/vite.config.ts', 'apps/control/web/ui-config.ts', 'apps/site/src/platform/tokens/platform.css']) {
+    assert.ok(scanned.includes(p), p);
+  }
+});

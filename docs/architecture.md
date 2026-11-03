@@ -23,7 +23,7 @@ The Control Center is local only and never deployed.
 
 ## Kernel (`apps/site/src/platform`)
 
-Modules and interfaces are listed in [ADR-012](adr/012-platform-layer.md). An experience page renders `<ExperienceRoot experience="<id>">` (usually through its own `Layout.astro`) and puts its own landmarks inside. Styles go in `@layer experience`, scoped by `[data-experience='<id>']`. The only platform-owned page is 404 (`src/pages/_PlatformLayout.astro`); `/` is the `index` experience. `ExperienceRoot` and the 404 layout render the Beacon.
+Modules and interfaces are listed in [ADR-012](adr/012-platform-layer.md). An experience page renders `<ExperienceRoot experience="<id>">` (usually through its own `Layout.astro`) and puts its own landmarks inside. Styles go in `@layer experience`, scoped by `[data-experience='<id>']`. The only platform-owned page is 404 (`src/pages/_PlatformLayout.astro`); `/` is the `index` experience. `ExperienceRoot` and the 404 layout render the Beacon. `SeoHead` writes each page's metadata: title and description (the catalog's unless the page overrides them), canonical and `og:url` for listed pages, and an absolute `og:image`, which is the catalog entry's `ogImage` (one of the experience's own image routes) or the platform card `public/og.png` ([ADR-022](adr/022-link-previews-smoke-and-public-repository.md)).
 
 ## Experiences today
 
@@ -58,7 +58,7 @@ To move an entry, change `section` (or `headline`) in its catalog file; to reord
 
 **The Beacon** (`src/platform/beacon/`). A fixed pill at the end of the document: a link to `/` (marked `aria-current` on the Index) and a "Go to ⌘K / Ctrl K" button. The palette is a `<template>` holding a native `<dialog>` with a filter `<input role="combobox">` and a listbox of real links, one per public destination. `palette.ts` (1.0 KB gzip, inline, CSP-hashed) filters by every word against title, id, kind, section, host and tags; ↑/↓ move the selection (wrapping), Enter follows the selected link, Escape or a backdrop click closes and returns focus to the button, ⌘K/Ctrl+K toggles it except while typing in a field or with Alt/Shift. Without JavaScript the button stays hidden and nothing of the palette renders; every page still has its links. Styles are `!important` in `platform.chrome` so experience styles cannot break it (ADR-019).
 
-**Adding a destination.** Add or publish an experience: a listed catalog entry with a release entry is on the Index and in the palette in the next build. Platform pages that are not experiences (a future resume or writing index) are added the same way when they exist; nothing is listed before it exists.
+**Adding a destination.** Add or publish an experience: a listed catalog entry with a release entry is on the Index and in the palette in the next build. Platform pages that are not experiences (a future writing index) are added the same way when they exist; nothing is listed before it exists. The resume is an experience like any other: it exists today as a draft and is listed once its release entry says so.
 
 ## platform-schema
 
@@ -72,6 +72,17 @@ To move an entry, change `section` (or `headline`) in its catalog file; to reord
 
 Every function is pure. `validateCoverage` takes the folder list and a `fileExists` callback, so the site integration does the filesystem reads. Release state uses strict objects: an unknown key in `release.json` is an error, not silently dropped.
 
+### Route paths
+
+A route's `entrypoint` (relative to `apps/site/src/experiences/`) and `pattern` are accepted only in canonical form, so the schema, the filesystem, Vite and the URL layer read them the same way:
+
+- `/`-separated lowercase ASCII segments, each starting with a letter, digit or underscore. That rules out `.` and `..`, empty segments (`a//b`, a trailing `/`), backslashes, absolute paths, percent-encoding and look-alike Unicode characters.
+- An entrypoint is `<id>/…/<file>.astro|ts`, and its first segment must be the experience's own id. `validateCoverage` compares whole segments, not a string prefix: `sample-content/../resume/routes/pdf.ts` starts with `sample-content/` but is the resume's file, and is rejected.
+- Pattern segments may also be Astro parameters (`[chapter]`, `[...path]`).
+- The entrypoint must be a regular file at exactly that path: the site integration and the checks refuse a symlink anywhere below `src/experiences/`, which could point into another experience's folder.
+
+Any violation is a catalog issue, so `planMount()` mounts nothing and the build fails.
+
 **Resolution in one line:** an experience is *deployable* when its lifecycle and access allow the environment; *mounted* when deployable and internal; *listed* when deployable, `listed`, public and not deprecated. ADR-005 records where this interprets the blueprint.
 
 ## Site build
@@ -82,4 +93,4 @@ Every function is pure. `validateCoverage` takes the folder list and a `fileExis
 2. `planMount()`: validate catalog, `config/release.json` and folder coverage; any issue fails the build with every issue listed.
 3. `injectRoute` for each route of each mounted experience. Anything else is never compiled.
 
-The catalog and release state are read only here, at config time, never by client code. Deployment: `vercel.json` (install, build with `PU_DEPLOYMENT=1`, clean URLs, security headers, asset caching) and Astro's CSP; see [runbooks/deploy.md](runbooks/deploy.md) and ADR-016.
+The catalog and release state are read only here, at config time, never by client code. Deployment: `vercel.json` (install; build with `PU_DEPLOYMENT=1` through `tools/checks/src/deploy-build.ts`, which gates production on the checks; clean URLs, security headers, asset caching) and Astro's CSP; see [runbooks/deploy.md](runbooks/deploy.md) and ADR-016.

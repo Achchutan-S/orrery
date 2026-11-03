@@ -5,11 +5,21 @@ export const Capability = z.enum([
   'multimedia', 'data', 'downloads', 'api', 'experimental',
 ]);
 
+// Canonical paths only (docs/architecture.md § Route paths): '/'-separated, lowercase ASCII,
+// every segment starts with a letter, digit or underscore. That rules out '.' and '..', empty segments,
+// backslashes, absolute paths, percent-encoding and look-alike characters, so a path means
+// the same thing to the schema, the filesystem, Vite and the URL layer.
+const SEGMENT = '[a-z0-9_][a-z0-9_.-]*';
+const ENTRYPOINT = new RegExp(`^${SEGMENT}(?:/${SEGMENT})+\\.(?:astro|ts)$`);
+// URL segments may also hold Astro parameters ('[chapter]', '[...path]').
+const URL_SEGMENT = `(?:${SEGMENT}|\\[(?:\\.\\.\\.)?[a-z][a-zA-Z0-9]*\\])`;
+const PATTERN = new RegExp(`^/(?:${URL_SEGMENT}(?:/${URL_SEGMENT})*)?$`);
+
 export const Route = z.object({
-  pattern: z.string().startsWith('/'),
+  pattern: z.string().regex(PATTERN, 'Route patterns are canonical: /a/b, no ".", "..", empty segments or backslashes'),
   // Path relative to apps/site/src/experiences/, e.g. 'cloud/routes/index.astro'.
   // A string, never an import, so the catalog stays free of site code.
-  entrypoint: z.string().regex(/^[a-z0-9-]+\/.+\.(astro|ts)$/),
+  entrypoint: z.string().regex(ENTRYPOINT, 'Entrypoints are canonical relative paths: <id>/…/<file>.astro|ts, no ".", "..", empty segments or backslashes'),
   render: z.enum(['static', 'on-demand']).default('static'),
 });
 
@@ -37,7 +47,11 @@ const Base = z.object({
 export const InternalExperience = Base.extend({
   kind: z.literal('internal'),
   routes: z.array(Route).min(1),
-  chrome: z.enum(['full', 'minimal', 'beacon']).default('minimal'),
+  // Implemented chrome only (ADR-021). The blueprint's 'full' (shared header) is rejected here,
+  // not at build time, until an experience needs it.
+  chrome: z.enum(['minimal', 'beacon'], {
+    error: (i) => `chrome ${JSON.stringify(i.input)} is not supported; use "minimal" (Beacon and colophon) or "beacon" (Beacon only). "full" is not implemented (ADR-021)`,
+  }).default('minimal'),
   colorScheme: z.enum(['light', 'dark', 'light-dark', 'custom']).default('light-dark'),
   performanceClass: z.enum(['content', 'interactive', 'immersive']),
   budgetOverrides: z.object({
@@ -51,7 +65,9 @@ export const InternalExperience = Base.extend({
   exclusiveImports: z.array(z.string()).default([]),
   flags: z.record(z.string(), FlagDeclaration).default({}),
   events: z.array(z.string()).default([]),
-  ogImage: z.string().optional(), // path relative to the experience folder
+  // Link-preview image: the pattern of one of this experience's own .png/.jpg routes, so it is
+  // built only where the experience is (ADR-020, ADR-022). Without it pages use the platform's /og.png.
+  ogImage: z.string().optional(),
 });
 
 export const ExternalExperience = Base.extend({
