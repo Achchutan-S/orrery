@@ -9,10 +9,11 @@ import { join } from 'node:path';
 import { after, before, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
+import { defaultReleaseEntry, ReleaseState, resolveAll } from '@pu/platform-schema';
 import { chromium, type Browser, type BrowserContextOptions, type Page } from 'playwright';
 import { build, preview, type PreviewServer } from 'vite';
 import { loadCatalog, start } from '../server/main.ts';
-import { FileReleaseStore } from '../server/store.ts';
+import { FileReleaseStore, revisionOf } from '../server/store.ts';
 import { uiConfig } from '../web/ui-config.ts';
 
 const REAL = new URL('../../../config/release.json', import.meta.url);
@@ -80,6 +81,19 @@ const open = async (p: Page, path: string) => {
   await p.getByRole('heading', { level: 1 }).waitFor();
 };
 const release = () => JSON.parse(readFileSync(file, 'utf8'));
+/** After a write the page re-reads the experience and remounts the editor for the new revision; wait for it before the next edit. */
+const editorFor = (p: Page) => p.locator(`.composer[data-revision="${revisionOf(readFileSync(file))}"]`).waitFor();
+
+// The UI shows the real config/release.json, so what it must show is derived from it: these
+// tests hold whatever the release state is (the resume a draft or published).
+const { experiences } = loadCatalog();
+const realState = ReleaseState.parse(JSON.parse(realBytes.toString('utf8')));
+const production = resolveAll(experiences, realState, 'production');
+const builtInProduction = production.filter((r) => r.mounted).length;
+const listedInProduction = production.filter((r) => r.listed).length;
+/** The "In production" filter: built here, or (external) linked. */
+const inProduction = production.filter((r) => r.mounted || (r.listed && experiences.find((e) => e.id === r.id)!.kind === 'external')).length;
+const drafts = experiences.filter((e) => (realState.experiences[e.id] ?? defaultReleaseEntry()).lifecycle === 'draft').map((e) => e.id);
 
 async function axe(p: Page, label: string) {
   // Let entry fades finish: axe measures contrast as rendered, opacity included.
@@ -96,9 +110,9 @@ test('overview: real release data, connection state, local session label', async
   assert.ok(await p.getByText('Local session', { exact: true }).isVisible());
   const revision = await p.locator('.session .rev').textContent();
   assert.match(revision!, /^[0-9a-f]{8}$/);
-  const production = p.locator('.env[data-env="production"]');
-  assert.match(await production.locator('.env-count').textContent() ?? '', /4 built here · 6 in discovery/);
-  assert.ok(!(await production.textContent())!.includes('Canary draft'), 'drafts are not in production');
+  const card = p.locator('.env[data-env="production"]');
+  assert.equal(await card.locator('.env-count').textContent(), `${builtInProduction} built here · ${listedInProduction} in discovery`);
+  assert.ok(!(await card.textContent())!.includes('Canary draft'), 'drafts are not in production');
   assert.ok(await p.getByText('Nothing. Every release rule passes').isVisible());
   await p.screenshot({ path: join(shots, 'journey-overview.png'), fullPage: true });
   await p.context().close();
@@ -118,14 +132,14 @@ test('registry: search, filters, sort, external entries and the environment matr
   await p.getByLabel('Search by name or id').fill('');
 
   await p.getByRole('radio', { name: 'Draft' }).check({ force: true });
-  assert.deepEqual(await rows.evaluateAll((r) => r.map((x) => x.getAttribute('data-id'))), ['resume', 'canary-draft', 'sample-hostile']);
+  assert.deepEqual(await rows.evaluateAll((r) => r.map((x) => x.getAttribute('data-id'))), drafts);
   assert.match(p.url(), /filter=draft/);
   await p.getByRole('radio', { name: 'External' }).check({ force: true });
   assert.deepEqual(await rows.evaluateAll((r) => r.map((x) => x.getAttribute('data-id'))), ['kawaiui', 'devxray']);
   assert.equal(await rows.first().locator('.kind').textContent(), 'External link');
   assert.match(await rows.first().locator('td[data-env="production"]').innerText(), /■ Linked$/);
   await p.getByRole('radio', { name: 'In production' }).check({ force: true });
-  assert.equal(await rows.count(), 6);
+  assert.equal(await rows.count(), inProduction);
   await p.getByRole('radio', { name: 'All' }).check({ force: true });
   await p.getByLabel('Sort by').selectOption('name');
   assert.equal(await rows.first().getAttribute('data-id'), 'canary-draft');
@@ -248,6 +262,7 @@ test('rule violations are shown at the controls and cannot be applied', async ()
   assert.match(await p.getByRole('dialog').innerText(), /Production is not affected\./);
   await p.getByRole('button', { name: 'Write to release file' }).click();
   await p.getByText(/^Written\./).waitFor();
+  await editorFor(p);
   // …but an alpha with public access breaks a release rule.
   await p.getByRole('radio', { name: 'Access' }).check({ force: true });
   await p.getByRole('radio', { name: 'public' }).check();

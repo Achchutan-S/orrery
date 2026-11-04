@@ -221,7 +221,7 @@ export function Composer({ item, revision, onWritten }: { item: RegistryItem; re
   const prodChanges = prepared ? prepared.data.changes.filter((c) => c.environment === 'production') : [];
 
   return (
-    <div className="composer">
+    <div className="composer" data-revision={revision}>
       {disabled && (
         <Callout tone="warn" title="Editing is unavailable.">
           <p>{lost ? 'The server is not responding.' : 'The catalog fails validation; fix the code and restart the server.'}</p>
