@@ -71,9 +71,11 @@ const fail = (code: ApiErrorCode, message: string, extra?: ErrorExtra): never =>
   throw new ApiFailure(code, message, extra);
 };
 
-const errorResponse = (c: Context, code: ApiErrorCode, message: string, { allow, ...extra }: ErrorExtra = {}) => {
+const errorResponse = (c: Context, code: ApiErrorCode, message: string, { allow, current, ...extra }: ErrorExtra = {}) => {
   if (allow) c.header('Allow', allow.join(', '));
-  return c.json({ ok: false, error: { code, message, ...extra } }, API_ERRORS[code]);
+  // Only the documented fields of a snapshot leave the server.
+  const snapshot = current && { current: { state: current.state, revision: current.revision } };
+  return c.json({ ok: false, error: { code, message, ...extra, ...snapshot } }, API_ERRORS[code]);
 };
 
 const ok = <T>(c: Context, data: T, revision?: string) =>
@@ -243,7 +245,8 @@ export function createApp(o: AppOptions): Hono {
     const { baseRevision } = await body(c, RevertRequest);
     const current = await o.store.read();
     if (current.revision !== baseRevision) fail('STALE_REVISION', 'The release file changed since it was loaded. Reload before retrying.', { current });
-    const written = entryChanges(current.state, o.baseline.state).length === 0 ? current : await o.store.write(o.baseline.state, baseRevision);
+    // The baseline's own bytes, not a re-serialisation: a revert leaves no formatting diff behind.
+    const written = entryChanges(current.state, o.baseline.state).length === 0 ? current : await o.store.write(o.baseline.bytes, baseRevision);
     if (written !== current) o.log('release.revert', { revision: written.revision.slice(0, 12) });
     return ok<WriteData>(c, { state: written.state, revision: written.revision, changes: resolutionChanges(o.catalog.experiences, current.state, written.state) }, written.revision);
   });

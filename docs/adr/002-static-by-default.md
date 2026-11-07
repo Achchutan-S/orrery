@@ -1,9 +1,3 @@
----
-noteId: "e68a5f00d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-002 — Static by default; on-demand only for protected and API routes
 
 Status: accepted · Source: [blueprint §6 ADR-002](../blueprint.md#adr-002--static-by-default-on-demand-only-for-protected-and-api-routes)

@@ -1,9 +1,3 @@
----
-noteId: "fd59a480d60f11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Control Center (tasks 12 and 13)
 
 The owner's tool for `config/release.json`: a local API (task 12) and the interface that uses it (task 13). It runs only on the owner's machine, on `127.0.0.1`, and is never deployed. Design: blueprint §4 and [ADR-006](adr/006-control-center.md); where this differs from the blueprint, [ADR-017](adr/017-control-center-server.md) (server) and [ADR-018](adr/018-control-center-ui.md) (interface).
@@ -54,7 +48,7 @@ A loopback server is reachable by any web page open in the owner's browser, so "
 4. **Session.** Every endpoint except `GET /api/health` and `POST /api/session` needs the session cookie (below). Otherwise `UNAUTHORIZED`.
 5. **Body rules for writes.** `Content-Type: application/json` (optionally `; charset=utf-8`), else `UNSUPPORTED_MEDIA_TYPE`. At most 64 KB, else `PAYLOAD_TOO_LARGE`. Strict JSON, then a strict zod schema: unknown fields are errors.
 6. **No CORS.** The server never sends `Access-Control-*` headers, so a cross-origin page can neither read a response nor send a non-simple request (JSON content type, PATCH). CORS is not relied on as the boundary; Origin is.
-7. **Response headers** on everything: `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `Cross-Origin-Resource-Policy: same-origin`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`.
+7. **Response headers** on everything (the UI's own responses also send `Cross-Origin-Opener-Policy: same-origin`, ADR-023): `Cache-Control: no-store`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `Cross-Origin-Resource-Policy: same-origin`, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex`.
 
 GET never writes. The server never runs Git, a shell or any client-supplied path; the only file it writes is the release file resolved at start.
 
@@ -73,6 +67,8 @@ What this is not: identity. Any page served from the UI origin can obtain a sess
 The session is a cookie, so cross-site request forgery is the threat. Defences: SameSite=Strict (other sites never send the cookie), Origin required on every write (exact match), JSON content type required (a cross-site form or `fetch` with JSON triggers a preflight that gets no CORS approval). No CSRF token: with Origin checked on every write it would add nothing (ADR-017).
 
 Other local web servers on `127.0.0.1` are the same *site*, so SameSite does not stop them from sending the cookie; the Origin check does (their Origin has another port), and without CORS they cannot read responses.
+
+The other direction is a known risk, proposed for acceptance (audit F20, ADR-023; owner decision pending): cookies are scoped by host, not by port, so the browser also sends `pu_control_session` to any other server on `127.0.0.1` when a page asks it for a path under `/api`. That server learns the token and, outside a browser, could call this API with any Host and Origin. It is a program the owner runs, which could write `config/release.json` directly anyway, so it gains nothing; the token also dies with this server. Do not run untrusted local servers while the Control Center is open.
 
 ## API
 
@@ -136,8 +132,9 @@ Handlers never touch the filesystem. `FileReleaseStore` is V1; V2 swaps in a Git
 
 - **Revision:** SHA-256 of the file's bytes. Any edit, including whitespace, is a new revision; identical bytes, the same revision. No timestamps.
 - **Canonical format:** `serializeRelease` writes ids sorted, fields in a fixed order (`lifecycle, access, discoverability, flags, archivedTo, note`), empty flag maps omitted, two-space indent, trailing newline. It reproduces today's `config/release.json` byte for byte (tested), so writing an unchanged state keeps the revision.
-- **Read:** `lstat` (refuse anything but a regular file, so a symlink cannot redirect writes), read, `JSON.parse`, `parseRelease`. Rule issues (`validateRelease`) are reported by the API, not by the store.
-- **Write:** validate `next` with the schema; read the file and compare its revision with `expectedRevision` (`STALE_REVISION`); write the canonical text to `.release.json.<uuid>.tmp` in the same directory with the original's mode, `fsync`, close; re-read the file and compare again (`WRITE_CONFLICT` if an editor saved meanwhile); `rename` over the original (atomic on one filesystem); re-read and return. On any failure the temporary file is removed and the original is untouched. Temporary files are git-ignored.
+- **Read:** one `open` with `O_NOFOLLOW` (a symlink is refused, so it cannot redirect writes), then `fstat` and read from that same descriptor, so the file checked is the file read; anything but a regular file is refused. Then `JSON.parse`, `parseRelease`. Rule issues (`validateRelease`) are reported by the API, not by the store. Windows has no `O_NOFOLLOW`; there the regular-file check on the open descriptor remains (ADR-023).
+- **Write:** validate `next` with the schema; read the file and compare its revision with `expectedRevision` (`STALE_REVISION`); write the canonical text to `.release.json.<uuid>.tmp` in the same directory with the original's mode, `fsync`, close; re-read the file and compare again (`WRITE_CONFLICT` if an editor saved meanwhile); `rename` over the original (atomic on one filesystem); `fsync` the directory so the rename itself survives a crash (best effort: Windows cannot, and the write has already happened); re-read and return. On any failure the temporary file is removed and the original is untouched. Temporary files are git-ignored.
+- **Revert:** writes the session baseline's own bytes, not a re-serialisation of its state, after the same JSON and schema checks as a read, so reverting a hand-formatted file leaves no diff.
 - **Concurrency:** writes are serialised by an in-process queue, so two simultaneous requests with one revision give one success and one `STALE_REVISION`; edits from other programs are caught by the two revision checks. Boundary: one server process per checkout. Two servers on the same checkout could race in the microseconds between the final check and the rename; no cross-process lock exists.
 
 ## Logging

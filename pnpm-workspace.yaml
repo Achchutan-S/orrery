@@ -14,3 +14,9 @@ packageExtensions:
   '@astrojs/astro2tsx@0.1.3':
     dependencies:
       '@emnapi/runtime': 1.11.3
+# esbuild is only Vite's optional peer here; pnpm auto-installed 0.27.x, which has a low advisory
+# for the Windows dev server (GHSA-g7r4-m6w7-qqqr). With this override (Vite 8 accepts ^0.28) the
+# optional peer is no longer installed at all; builds and both dev servers work without it
+# (ADR-023). Remove when Vite resolves a fixed esbuild by itself.
+overrides:
+  esbuild: 0.28.2

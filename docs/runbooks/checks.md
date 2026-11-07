@@ -1,9 +1,3 @@
----
-noteId: "7bf69490d5f411f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Repository checks
 
 Guardrails from task 9 ([ADR-014](../adr/014-repository-checks.md)). No network, no credentials. All four run after a clean `pnpm install --frozen-lockfile`.
@@ -53,16 +47,23 @@ Example failure (a preview build scanned as if it were production):
 The table `BUDGETS` at the top of that file is the only place limits live; an experience may raise its own with `budgetOverrides` (and a written reason) in its catalog entry.
 
 - **Unit:** gzip level 9 bytes, 1 KB = 1024 bytes, for everything including fonts. No raw or brotli sizes.
-- **Per page, initial load:** inline `<script>` + referenced JS + their static imports (not `import()`); inline `<style>` + CSS files; fonts; transfer = HTML + external JS, CSS and fonts. A shared chunk counts on every page that loads it, because a first visit to any of them downloads it.
+- **Per page, initial load:** inline `<script>` + referenced JS + their static imports; inline `<style>` + CSS files; fonts, from preloads, inline `@font-face` and `url()` inside CSS; images, from `<img src|srcset>`, `<source srcset>`, the icon and CSS `url()`; transfer = HTML + all of those. A shared chunk counts on every page that loads it, because a first visit to either downloads it.
+- **Lazy:** the largest chunk a page loads later through `import("./x.js")`, with its own static imports, minus what the page already loaded: 100 KB for interactive pages (blueprint 3.12), nothing for content and platform pages, the declared transfer cap (8 MB) for immersive ones.
+- **Images:** provisional caps (10 KB platform, 100 KB content and interactive, 250 KB immersive) until the first real image; every `<img>` must declare `width` and `height`.
+- **Files no page loads** are budgeted by kind in `FILE_BUDGETS`: link-preview images (`og.png` and every catalog `ogImage`) 150 KB, documents (`.pdf`) 400 KB. Any other emitted file that no page loads is a finding, and so is a page that references a file the build did not emit (ADR-023).
 - **Beacon:** the Beacon's script is measured as its own metric, `beacon` (15 KB on every page, blueprint 3.12), not as the page's `js`. It is recognised by `BEACON_MARKER` (the palette template's selector), inline or as a file. Content pages therefore keep a 0 KB `js` budget with the Beacon on them.
 - **Per experience:** the worst page for each metric is judged. Pages belong to the experience whose route made them (`index.html` to the `index` experience); `404.html` to the platform.
 - Exactly at budget passes; one byte over fails.
+
+## Repository hygiene (`tools/checks/src/hygiene.test.ts`, part of `pnpm test`)
+
+Fails when any Markdown or MDX file Git would commit has `noteId` front matter, which a notes extension adds when it opens a file (GitHub shows it as a table on every document). Remove the `noteId` and `tags` lines and turn the extension off for this folder.
 
 ## Resume content and assets (`apps/site/test/resume.test.ts`)
 
 The resume's PDF and link-preview image are committed, generated from `content.ts` (docs/resume.md). The tests fail when `source.sha256` no longer matches `content.ts`, when any statement in `content.ts` is missing from the PDF's extracted text, when an e-mail other than the approved one, a phone number, an internal address or the word "rating" appears, when a term from the owner's private list appears (only with `PU_PRIVATE_TERMS` set; docs/resume.md § Privacy check), when a link leaves the verified list, or when prototype work is listed as production. Fix by editing `content.ts` and running `pnpm --filter @pu/site resume:assets`.
 
-Last full verification (engineering audit Phase C, 3 November 2026, Node 22.23.4, local, uncommitted working tree): typecheck 0 errors, warnings and hints; tests schema 45, catalog 20, checks 78, Control Center 71, site 55 (54 passed, 1 skipped: the private-term test, which passed separately with `PU_PRIVATE_TERMS`); browser site 55, Control Center 11; `pnpm check` boundaries (123 files), metadata, leaks (30 files) and budgets (25 limits) passed; `build:deployment` passed for production and preview and refused a deployment build without `VERCEL_ENV`. Hosted CI has not run on this tree. Earlier record, for history: (task 15.1, 2 November 2026, Node 22.23.4, local): typecheck 0 errors; tests schema 40, catalog 16, checks 50, Control Center 71, site 48; browser site 52, Control Center 11; `pnpm check` boundaries, metadata, leaks and budgets passed; the production build contains no resume file and no file naming the owner; `config/release.json` unchanged (resume still `draft`, `owner`, `unlisted`).
+Last full verification (engineering audit Phase D, 7 November 2026, Node 22.23.4, local, uncommitted working tree): typecheck 0 errors, warnings and hints; tests schema 45, catalog 20, checks 85, Control Center 76, site 55 (54 passed, 1 skipped: the private-term test, which passed separately with `PU_PRIVATE_TERMS`); browser site 61, Control Center 12; `pnpm check` boundaries (124 files), metadata, leaks (34 files) and budgets (42 page limits, 34 emitted files) passed; `build:deployment` passed for production and preview and refused a deployment build without `VERCEL_ENV`; `pnpm audit` found nothing. Hosted CI has not run on this tree. Earlier record (Phase C, 3 November 2026): typecheck 0 errors, warnings and hints; tests schema 45, catalog 20, checks 78, Control Center 71, site 55 (54 passed, 1 skipped: the private-term test, which passed separately with `PU_PRIVATE_TERMS`); browser site 55, Control Center 11; `pnpm check` boundaries (123 files), metadata, leaks (30 files) and budgets (25 limits) passed; `build:deployment` passed for production and preview and refused a deployment build without `VERCEL_ENV`. Hosted CI has not run on this tree. Earlier record, for history: (task 15.1, 2 November 2026, Node 22.23.4, local): typecheck 0 errors; tests schema 40, catalog 16, checks 50, Control Center 71, site 48; browser site 52, Control Center 11; `pnpm check` boundaries, metadata, leaks and budgets passed; the production build contains no resume file and no file naming the owner; `config/release.json` unchanged (resume still `draft`, `owner`, `unlisted`).
 
 ## Metadata (`tools/checks/src/metadata.ts`)
 

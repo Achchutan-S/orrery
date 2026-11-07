@@ -1,9 +1,3 @@
----
-noteId: "103fe640d61011f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-017 — Control Center server: cookie session, API shape, file store
 
 Status: accepted (1 November 2026) · Implements blueprint task 12 and ADR-006; refines blueprint §4.0 where listed. Reference: [control-center.md](../control-center.md).

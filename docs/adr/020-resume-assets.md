@@ -1,9 +1,3 @@
----
-noteId: "8ea69c90d61f11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-020 — Resume: one content source, generated assets served as release-controlled routes
 
 Status: accepted (1 November 2026) · Implements blueprint task 15 (resume part). Reference: [resume.md](../resume.md).

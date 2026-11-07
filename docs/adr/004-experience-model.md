@@ -1,9 +1,3 @@
----
-noteId: "e68a5f04d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-004 — Definition in code, release in data, explicit registry, minimal route mounting
 
 Status: accepted, spike complete; the Vercel checks (d) passed in the production smoke test of 1 November 2026 (tracker task 11) · Source: [blueprint §6 ADR-004](../blueprint.md#adr-004--experience--definition-in-code--release-entry-in-data-explicit-registry-minimal-route-mounting)

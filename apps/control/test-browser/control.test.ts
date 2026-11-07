@@ -318,6 +318,8 @@ test('the session stays out of reach of page scripts and storage', async () => {
 test('the UI server adds no CORS, sends a strict CSP, and the proxy keeps the API’s Origin check', async () => {
   const page = await fetch(base, { headers: { origin: 'http://localhost:9999' } });
   assert.match(page.headers.get('content-security-policy')!, /script-src 'self';/);
+  assert.equal(page.headers.get('cross-origin-opener-policy'), 'same-origin');
+  assert.equal(page.headers.get('x-frame-options'), 'DENY');
   assert.equal(page.headers.get('access-control-allow-origin'), null);
   const preflight = await fetch(`${base}/api/release`, { method: 'OPTIONS', headers: { origin: 'http://localhost:9999', 'access-control-request-method': 'PATCH' } });
   assert.equal(preflight.status, 403);
@@ -350,6 +352,18 @@ test('axe: every screen, desktop and mobile, light and dark; no horizontal overf
       await p.context().close();
     }
   }
+});
+
+test('reflow at 320 CSS px (400% zoom) and forced colours: no sideways scrolling; the focus outline survives', async () => {
+  const p = await page({ viewport: { width: 320, height: 720 }, forcedColors: 'active' });
+  for (const path of ['/', '/experiences', '/experiences/sample-app', '/release?experience=journal', '/pending']) {
+    await open(p, path);
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${path}: scrolls sideways at 320px`);
+    await p.keyboard.press('Tab');
+    const outline = await p.evaluate(() => { const s = getComputedStyle(document.activeElement!); return `${s.outlineStyle} ${parseFloat(s.outlineWidth)}`; });
+    assert.ok(!outline.startsWith('none') && parseFloat(outline.split(' ')[1]!) >= 2, `${path}: focus outline in forced colours is ${outline}`);
+  }
+  await p.context().close();
 });
 
 test('server unavailable: a clear screen with the start command, and recovery', async () => {

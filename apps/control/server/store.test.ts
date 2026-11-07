@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, copyFileSync, mkdtempSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, lstatSync, mkdtempSync, readdirSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -74,6 +74,32 @@ test('a write persists canonical bytes, keeps the file mode and returns the new 
   assert.notEqual(after.revision, before.revision);
   assert.equal(after.state.experiences.journal?.lifecycle, 'frozen');
   assert.equal(statSync(file).mode & 0o777, 0o640);
+  assert.deepEqual(tmpFiles(dir), []);
+});
+
+test('bytes are written exactly, after the same validation as a read (revert, F21)', async () => {
+  const { file } = copy();
+  const store = new FileReleaseStore(file);
+  const original = readFileSync(file);
+  const exact = Buffer.from(JSON.stringify(JSON.parse(original.toString('utf8')), null, 4));
+  const w = await store.write(exact, revisionOf(original));
+  assert.deepEqual(readFileSync(file), exact);
+  assert.equal(w.revision, revisionOf(exact));
+  assert.deepEqual(w.bytes, exact);
+  await rejects(store.write(Buffer.from('{ "platform": '), w.revision), 'STORE_UNAVAILABLE', /not valid JSON/);
+  await rejects(store.write(Buffer.from('{"platform":{"flags":{}},"experiences":{"x":{"lifecycle":"live"}}}'), w.revision), 'STORE_UNAVAILABLE', /schema/);
+  assert.deepEqual(readFileSync(file), exact, 'invalid bytes never reach the disk');
+});
+
+test('a symlink swapped in for the file is refused at open, not after a separate check (F21)', async () => {
+  const { dir, file } = copy();
+  const store = new FileReleaseStore(file, {
+    // Between the temporary file being complete and the final re-read, replace the file with a symlink.
+    beforeRename: () => { const real = join(dir, 'elsewhere.json'); copyFileSync(file, real); unlinkSync(file); symlinkSync(real, file); },
+  });
+  const before = await store.read();
+  await rejects(store.write(withLifecycle(before.state, 'journal', 'frozen'), before.revision), 'STORE_UNAVAILABLE', /not a regular file/);
+  assert.ok(lstatSync(file).isSymbolicLink(), 'the symlink was not written through or replaced');
   assert.deepEqual(tmpFiles(dir), []);
 });
 

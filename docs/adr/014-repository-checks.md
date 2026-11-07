@@ -1,9 +1,3 @@
----
-noteId: "7bf66d80d5f411f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-014 — Repository checks in `tools/checks`
 
 Status: accepted (1 November 2026); known limit 1 (og:image) superseded by [ADR-022](022-link-previews-smoke-and-public-repository.md) · Implements blueprint task 9 (§5 `tools/checks`, 3.8, 3.12, 7.2). How to run them: [runbooks/checks.md](../runbooks/checks.md).

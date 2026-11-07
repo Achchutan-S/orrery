@@ -264,6 +264,8 @@ th, td { text-align: start; vertical-align: top; }
 .matrix tbody th { font-family: var(--serif); font-weight: 600; }
 .matrix tr[data-env='production'] th::after { content: ' · public'; font: 400 0.8125rem var(--sans); color: var(--oxide); }
 @media (max-width: 40rem) { .matrix { font-size: 0.875rem; } .matrix th, .matrix td { padding-inline-end: 0.5rem; } }
+/* A wide table scrolls in its own focusable region instead of the page (reflow at 320 px). */
+.table-scroll { overflow-x: auto; }
 .routes { list-style: none; padding: 0; }
 .hint { font-size: 0.875rem; color: var(--graphite); }
 .current { margin-block: 1rem; }

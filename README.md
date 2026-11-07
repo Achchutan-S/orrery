@@ -6,11 +6,11 @@ Orrery is also an architecture project in its own right. Its release model, buil
 
 ## Live
 
-| | URL | Status (checked 3 November 2026) |
+| | URL | Status (checked 7 November 2026) |
 | --- | --- | --- |
 | Orrery | https://orrery-teal.vercel.app/ | live |
 | The Orrery Journal | https://orrery-teal.vercel.app/journal | live: the platform's own history, chapter by chapter |
-| Resume | https://orrery-teal.vercel.app/resume | **not on the site yet**: a draft awaiting the owner's approval, so production answers 404 by design. Its source and generated PDF are in this public repository ([What is public](#what-is-public), [docs/resume.md](docs/resume.md)) |
+| Resume | https://orrery-teal.vercel.app/resume | live since 3 November 2026, with a PDF download ([docs/resume.md](docs/resume.md)) |
 | Dev X-Ray | https://devxray-one.vercel.app/ | live; a separate project, linked from Orrery |
 | KawaiUI | https://kawaiui.vercel.app/ | live; a separate project, linked from Orrery |
 
@@ -60,7 +60,7 @@ The Control Center edits `config/release.json` on disk. It never commits, pushes
 | `tools/checks` | Repository checks (boundaries, metadata, leaks, budgets), the release-schema generator and the HTTP smoke test. |
 | `docs` | Blueprint, architecture, ADRs, tracker and runbooks. |
 
-The experiences today: the Index at `/`, the Journal, two sample experiences (`sample-content`, `sample-app`), the resume (draft), two permanent test fixtures that must never ship, and two external entries (Dev X-Ray, KawaiUI) that are links only and are never built here. The table in [docs/architecture.md](docs/architecture.md#experiences-today) is the current list.
+The experiences today: the Index at `/`, the Journal, two sample experiences (`sample-content`, `sample-app`), the resume, two permanent test fixtures that must never ship, and two external entries (Dev X-Ray, KawaiUI) that are links only and are never built here. The table in [docs/architecture.md](docs/architecture.md#experiences-today) is the current list.
 
 ## Stack
 
@@ -141,10 +141,10 @@ Feature flags are not secrecy: an island's JavaScript is emitted even when its f
 
 The release state controls the **website**, not the repository. Four things are separate ([ADR-022](docs/adr/022-link-previews-smoke-and-public-repository.md)):
 
-| | Who can see it | A draft experience (the resume today) |
+| | Who can see it | A draft experience (for example the two test fixtures) |
 | --- | --- | --- |
 | The website | whatever `config/release.json` releases to that environment | not in production; built in previews |
-| This repository | anyone: it is public on GitHub, including raw file URLs | its source, text and committed files (the resume's PDF and preview image) are readable here |
+| This repository | anyone: it is public on GitHub, including raw file URLs | its source, text and committed files are readable here |
 | Git history | anyone, for every pushed commit | earlier versions stay readable; history has not been rewritten |
 | The Control Center | the owner, on their own machine | listed with its release state; never deployed |
 
@@ -203,9 +203,10 @@ Production follows `main`. Changing what is public means changing `config/releas
 | [docs/blueprint.md](docs/blueprint.md) | The architecture and the phased plan |
 | [docs/architecture.md](docs/architecture.md) | How the code maps to the blueprint today |
 | [docs/tracker.md](docs/tracker.md) | Task status and evidence |
-| [docs/adr/](docs/adr/) | Decisions, for example [021 platform integrity](docs/adr/021-platform-integrity.md), [022 link previews, smoke test, public repository](docs/adr/022-link-previews-smoke-and-public-repository.md), [004 experience model](docs/adr/004-experience-model.md), [005 release dimensions](docs/adr/005-release-dimensions.md), [014 checks](docs/adr/014-repository-checks.md), [016 Vercel and CSP](docs/adr/016-vercel-deployment.md), [017](docs/adr/017-control-center-server.md) and [018](docs/adr/018-control-center-ui.md) Control Center, [019 Index and Beacon](docs/adr/019-index-and-beacon.md), [020 resume assets](docs/adr/020-resume-assets.md) |
+| [docs/adr/](docs/adr/) | Decisions, for example [021 platform integrity](docs/adr/021-platform-integrity.md), [022 link previews, smoke test, public repository](docs/adr/022-link-previews-smoke-and-public-repository.md), [023 audit closure](docs/adr/023-audit-closure.md), [004 experience model](docs/adr/004-experience-model.md), [005 release dimensions](docs/adr/005-release-dimensions.md), [014 checks](docs/adr/014-repository-checks.md), [016 Vercel and CSP](docs/adr/016-vercel-deployment.md), [017](docs/adr/017-control-center-server.md) and [018](docs/adr/018-control-center-ui.md) Control Center, [019 Index and Beacon](docs/adr/019-index-and-beacon.md), [020 resume assets](docs/adr/020-resume-assets.md) |
 | [docs/runbooks/checks.md](docs/runbooks/checks.md) | Repository checks and CI |
 | [docs/runbooks/deploy.md](docs/runbooks/deploy.md) | Vercel setup, deployment gate, smoke test, rollback |
+| [docs/runbooks/accessibility.md](docs/runbooks/accessibility.md) | Automated accessibility coverage and the manual checklist, with recorded results |
 | [docs/runbooks/add-experience.md](docs/runbooks/add-experience.md) | Adding an experience: folder, catalog, release, metadata, tests, checks |
 | [docs/control-center.md](docs/control-center.md) | Control Center usage, security model and API |
 | [docs/resume.md](docs/resume.md) | Resume content provenance, asset generation and publishing steps |
@@ -221,11 +222,11 @@ Implemented and deployed:
 - The Journal and the two sample experiences.
 - Links to Dev X-Ray and KawaiUI.
 - Security headers and CSP.
-- Repository checks, and GitHub Actions CI. As of 3 November 2026, hosted CI passed on every pushed commit, the latest being `9b5fe81` (run 41403945761), and that commit is the production deployment.
+- The resume, with its PDF and link-preview image.
+- Repository checks, and GitHub Actions CI. As of 7 November 2026 the production deployment is `5f0e245`, whose hosted CI run (41771430170) passed; the run on `f49d6dc` failed (Control Center tests that assumed a draft resume) and `5f0e245` fixed them.
 
 Implemented, not public:
 
-- **Resume:** a draft awaiting the owner's approval; not on the site, but its files are in this public repository.
 - **Control Center:** local by design.
 
 Planned, not built:
@@ -233,6 +234,6 @@ Planned, not built:
 - Search and RSS (Phase 2).
 - Owner sign-in, protected rendering and a hosted Control Center (Phase 4).
 - Custom domain and subdomains (waiting on a domain).
-- Manual screen-reader, zoom and forced-colours accessibility checks. Automated axe checks pass, which is not the same thing.
+- Manual screen-reader, zoom and forced-colours accessibility checks ([checklist](docs/runbooks/accessibility.md)). Automated checks pass, which is not the same thing.
 
 This is a personal project. Architecture decisions are recorded as ADRs in [`docs/adr/`](docs/adr/), and working rules are in [AGENTS.md](AGENTS.md).

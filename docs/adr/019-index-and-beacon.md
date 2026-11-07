@@ -1,9 +1,3 @@
----
-noteId: "1dfbc8d0d61a11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-019 — The Index at `/` and the Beacon
 
 Status: accepted (1 November 2026) · Implements blueprint task 14; resolves ADR-012 choice 1. Reference: [architecture.md § Index and Beacon](../architecture.md#index-and-beacon).

@@ -1,9 +1,3 @@
----
-noteId: "7e9cde70d73e11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-022 — Link-preview images from the catalog, environment-aware smoke tests, and what a public repository exposes
 
 Status: accepted (3 November 2026) · Engineering audit Phase C (F08, F17, F04). Supersedes [ADR-014](014-repository-checks.md) known limit 1 ("og:image is not enforced") and resolves tracker decision 4.

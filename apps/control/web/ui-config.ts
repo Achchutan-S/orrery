@@ -14,6 +14,7 @@ export const UI_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'no-referrer',
   'Cache-Control': 'no-store',
+  'Cross-Origin-Opener-Policy': 'same-origin',
 };
 
 export function uiConfig({ uiPort, apiPort, outDir }: { uiPort: number; apiPort: number; outDir?: string }): UserConfig {

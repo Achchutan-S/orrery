@@ -1,9 +1,3 @@
----
-noteId: "5f716e90d61611f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-018 — Control Center UI: one process, a built UI under CSP, no extra libraries
 
 Status: accepted (1 November 2026) · Implements blueprint task 13 and ADR-006. Reference: [control-center.md](../control-center.md).

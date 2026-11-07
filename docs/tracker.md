@@ -1,14 +1,8 @@
----
-noteId: "ab2792f0d5f411f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Implementation tracker
 
 Status is `complete` only when the acceptance evidence passes. Source: blueprint §10.
 
-Words used below, and only in this sense: **implemented** (the code exists), **locally verified** (the relevant tests and checks passed on the owner's machine), **committed** (in a pushed commit, named), **hosted CI passed** (a GitHub Actions run passed on that commit, named), **deployed** (Vercel built it and the live site serves it), **manually verified** (a person checked it by hand). Hosted evidence below was read from the public GitHub API and the live site on 3 November 2026.
+Words used below, and only in this sense: **implemented** (the code exists), **locally verified** (the relevant tests and checks passed on the owner's machine), **committed** (in a pushed commit, named), **hosted CI passed** (a GitHub Actions run passed on that commit, named), **deployed** (Vercel built it and the live site serves it), **manually verified** (a person checked it by hand). Hosted evidence below was read from the public GitHub API and the live site on 7 November 2026.
 
 | # | Blueprint task | Status | Evidence | Tests |
 | --- | --- | --- | --- | --- |
@@ -24,24 +18,53 @@ Words used below, and only in this sense: **implemented** (the code exists), **l
 | 15 (part) | External entries for UI Lab (KawaiUI) and Dev X-Ray | catalog part complete and deployed (links on the live Index); subdomains blocked on the domain | ADR-013; live sites answered 200 on 1 November 2026 | `index.test.ts`, browser external-link tests |
 | 9 | `tools/checks`: leaks, budgets, metadata, boundaries | complete · committed `65194d2` · hosted CI passed | ADR-014; real failing runs observed for each check | `tools/checks/src/*.test.ts` |
 | 10 | CI (GitHub Actions) | complete · hosted CI passed on every pushed commit: `65194d2` (41313826313), `34d6f59` (41316409156), `226996e` (41326506821), `fdd47e4` (41335632573), `9b5fe81` (41403945761) | ADR-015; `.github/workflows/ci.yml` | all suites |
-| 11 | Vercel, close Phase 0 | complete · deployed at https://orrery-teal.vercel.app/; the current production deployment is `9b5fe81` (GitHub commit status "Vercel: success") | ADR-016; production smoke test passed 1 November 2026 (`65194d2`); on 3 November 2026 the smoke test with the Phase C checks passed against production except `/og.png`, which only the uncommitted Phase C work adds; CSP verified in the browser | `tools/checks/src/smoke.test.ts`, CSP tests in `browser.test.ts` |
+| 11 | Vercel, close Phase 0 | complete · deployed at https://orrery-teal.vercel.app/; the current production deployment is `5f0e245` (GitHub commit status "Vercel: success") | ADR-016; production smoke test passed 1 November 2026 (`65194d2`); on 3 November 2026 the smoke test with the Phase C checks passed against `9b5fe81` except `/og.png` (added by Phase C, since deployed); CSP verified in the browser | `tools/checks/src/smoke.test.ts`, CSP tests in `browser.test.ts` |
 | 12 | Control Center server | complete · committed `226996e` · hosted CI passed · not deployed, by design | ADR-017; `docs/control-center.md`; mutation checks failed as expected | `apps/control/server/*.test.ts`, `platform-schema/src/control.test.ts`, boundaries `control-deps` |
 | 13 | Control Center web | complete · committed `fdd47e4` · hosted CI passed · not deployed, by design | ADR-018; `docs/control-center.md` § The interface; `pnpm control` verified locally | `apps/control/web/src/*.test.ts`, `apps/control/test-browser/control.test.ts`, boundaries `control-web-client` |
 | 14 | Index homepage and Beacon with command palette | complete · committed `fdd47e4` · hosted CI passed · deployed (the live `/` is the Index) | ADR-019; `docs/architecture.md` § Index and Beacon; Lighthouse 13.5.0 mobile on a local preview: 100/100/100/100 on `/`, `/journal`, `/sample-content`, `/sample-app/states` | `apps/site/test/front-page.test.ts`, pipeline Index tests, browser `The Index` and `Beacon and palette` suites, budgets `beacon` metric |
-| 15 | Resume experience; external entries and subdomains | resume implemented as a **draft** · committed `fdd47e4`, content `9b5fe81` · hosted CI passed · **not on the website**: production answers 404 for its page, PDF and image (checked 3 November 2026); its files are in the public repository (ADR-022) · certification title to confirm and publication approval pending ([resume.md](resume.md)) · subdomains blocked on the domain | ADR-020; PDF 2 pages A4 with text layer; OG 1200×630; Lighthouse 13.5.0 mobile on the preview build: 100/100/100 (SEO 60 by design: draft is noindex) | `apps/site/test/resume.test.ts`, pipeline resume test, browser `Resume` suite, catalog release tests, leak and smoke file-route tests |
+| 15 | Resume experience; external entries and subdomains | resume complete · committed `fdd47e4`, content `9b5fe81`, published `f49d6dc` (3 November 2026, owner decision) · hosted CI passed on `5f0e245` (41771430170; the run on `f49d6dc` failed on Control Center tests that assumed a draft, fixed in `5f0e245`) · **deployed**: `/resume`, its PDF and image answer 200 (checked 7 November 2026) · certification title confirmation not recorded ([resume.md](resume.md)) · subdomains blocked on the domain | ADR-020; PDF 2 pages A4 with text layer; OG 1200×630; Lighthouse 13.5.0 mobile on the preview build: 100/100/100 (SEO 60 then, as a noindex draft) | `apps/site/test/resume.test.ts`, pipeline resume test, browser `Resume` suite, catalog release tests, leak and smoke file-route tests |
 | — | The Orrery Journal (`journal`) | complete · committed `34d6f59` (updated since) · hosted CI passed · deployed (`/journal` live) | 8 MDX chapters in `apps/site/src/experiences/journal/chapters/`; published and listed via `config/release.json` | pipeline Journal tests, browser `The Orrery Journal` suite, `release.test.ts` withdraw test |
-| — | Engineering audit, Phase A (F01 route traversal, F02 sensitive references, F06 leak scanner, F03 production build gate) | implemented · locally verified (3 November 2026) · **not committed** · hosted CI not run · not deployed | `docs/architecture.md` § Route paths; `docs/runbooks/checks.md` § Leaks; `docs/runbooks/deploy.md` § Production build gate; `docs/resume.md` § Privacy check | `validate.test.ts`, `leaks.test.ts`, `deploy-build.test.ts`, `resume.test.ts`, pipeline |
-| — | Engineering audit, Phase B (F05 boundaries, F07 release-state tests, F16 chrome, F09 island error boundary, F10 `sample-app` fixture, F14 Node policy, F15 local font) | implemented · locally verified (3 November 2026) · **not committed** · hosted CI not run · not deployed | ADR-021; `docs/runbooks/add-experience.md`; `docs/runbooks/checks.md` | `boundaries.test.ts`, `release.test.ts`, `node-policy.test.ts`, browser island error-boundary suite, pipeline |
-| — | Engineering audit, Phase C (F04 public repository, F11 documentation, F08 link-preview images, F17 smoke test) | implemented · locally verified (3 November 2026) · **not committed** · hosted CI not run · not deployed | ADR-022; README § What is public; `docs/runbooks/deploy.md` | `metadata.test.ts`, `smoke.test.ts`, `validate.test.ts`, pipeline link-preview test |
+| — | Engineering audit, Phase A (F01 route traversal, F02 sensitive references, F06 leak scanner, F03 production build gate) | implemented · locally verified (3 November 2026) · committed `2aa55ec` (3 November 2026) · hosted CI passed (41581436788) · deployed | `docs/architecture.md` § Route paths; `docs/runbooks/checks.md` § Leaks; `docs/runbooks/deploy.md` § Production build gate; `docs/resume.md` § Privacy check | `validate.test.ts`, `leaks.test.ts`, `deploy-build.test.ts`, `resume.test.ts`, pipeline |
+| — | Engineering audit, Phase B (F05 boundaries, F07 release-state tests, F16 chrome, F09 island error boundary, F10 `sample-app` fixture, F14 Node policy, F15 local font) | implemented · locally verified (3 November 2026) · committed `2aa55ec` (3 November 2026) · hosted CI passed (41581436788) · deployed | ADR-021; `docs/runbooks/add-experience.md`; `docs/runbooks/checks.md` | `boundaries.test.ts`, `release.test.ts`, `node-policy.test.ts`, browser island error-boundary suite, pipeline |
+| — | Engineering audit, Phase C (F04 public repository, F11 documentation, F08 link-preview images, F17 smoke test) | implemented · locally verified (3 November 2026) · committed `2aa55ec` (3 November 2026) · hosted CI passed (41581436788) · deployed | ADR-022; README § What is public; `docs/runbooks/deploy.md` | `metadata.test.ts`, `smoke.test.ts`, `validate.test.ts`, pipeline link-preview test |
+| — | Engineering audit, Phase D (F12 accessibility, F13 budgets, F18 hygiene, F19 dependencies, F20–F23 Control Center and headers) | implemented · locally verified (7 November 2026); commit, hosted CI and deployment not yet recorded · F12 manual checks **not performed** | ADR-023; `docs/runbooks/accessibility.md`; `docs/runbooks/checks.md` § Budgets, § Repository hygiene; `docs/control-center.md` § Store | `budgets.test.ts`, `hygiene.test.ts`, `store.test.ts`, `app.test.ts`, browser § accessibility beyond axe, Control Center § reflow |
 
 Nothing in this table is **manually verified** beyond what its evidence names; see decision 3.
 
 ## Outstanding decisions
 
 1. **Domain name.** Not needed to deploy on `*.vercel.app`; needed for custom subdomains (runbooks/deploy.md § Custom domains).
-2. **Committing the audit remediation.** Phases A–C are in the working tree only. The owner reviews, commits and pushes, then checks the Vercel preview (runbooks/deploy.md § Deployment procedure) before merging to `main`.
-3. **Manual accessibility checks not yet done** (axe passes, which is not proof): VoiceOver and NVDA reading order and the external link's announcement; 200% and 400% zoom; Windows High Contrast / forced colours (the focus ring uses `box-shadow`, which forced-colours mode removes; the outline band remains); real touch devices; cognitive review of the copy.
+2. **Committing Phase D.** Phases A–C are committed and deployed; Phase D is in the working tree only. The owner reviews, commits and pushes, then checks the Vercel preview (runbooks/deploy.md § Deployment procedure) before merging to `main`.
+3. **Manual accessibility checks not yet done** (audit F12). The 16-step session and its results table are in [runbooks/accessibility.md](runbooks/accessibility.md); the automated checks there pass, which is not proof. Screen readers, real zoom, forced colours on Windows, real touch devices and a copy review need a person.
 4. **og:image.** Decided in ADR-022 (3 November 2026): one platform card (`apps/site/public/og.png`) for every page without its own, and an experience's own image through the catalog's `ogImage`; `check:metadata` now requires it. Per-entry generation stays Phase 2. The owner may replace the card's design (`pnpm --filter @pu/site og:platform`).
 5. **Repository visibility.** GitHub reports the repository as public; ADR-003 planned it private. The release state never made repository files private (ADR-022). Owner decision.
 6. **Git history.** Earlier pushed commits contain text later removed (docs/resume.md § Privacy check). History has not been rewritten; doing so, or making the repository private, is the owner's decision.
 7. **CI as a deployment gate.** Vercel builds a push to `main` in parallel with CI and `main` has no branch protection; the production build gate (Phase A) runs the checks but not the unit and browser tests. Requiring CI before deployment is a GitHub or Vercel dashboard change.
+
+## Engineering audit findings (1 November 2026 audit; status 7 November 2026)
+
+| Finding | Status | Evidence |
+| --- | --- | --- |
+| F01 route traversal | closed: implemented and verified, deployed | Phase A; `validate.test.ts`; leak scan catches it even with validation disabled |
+| F02 sensitive references | closed in current files; **history unchanged** (decision 6) | Phase A; generic and private-list tests in `resume.test.ts` |
+| F03 production build gate | closed: implemented and verified, deployed | Phase A; `deploy-build.test.ts`; fail-closed without `VERCEL_ENV` |
+| F04 public repository wording | closed: implemented and verified | Phase C; ADR-022 |
+| F05 boundary checker gaps | closed: implemented and verified | Phase B; `boundaries.test.ts` |
+| F06 leak scanner gaps | closed: implemented and verified | Phase A; `leaks.test.ts` |
+| F07 tests pinned to the draft resume | closed: implemented and verified; the publish on 3 November 2026 exposed one missed file (Control Center browser test), fixed in `5f0e245` | Phase B; `release.test.ts`, `control.test.ts` |
+| F08 link-preview images | closed: implemented and verified, deployed | Phase C; `metadata.test.ts` |
+| F09 island error boundary | closed: implemented and verified | Phase B; browser § island error boundary |
+| F10 `sample-app` fixture | closed: owner decision, kept published | ADR-021 |
+| F11 documentation drift | closed: implemented | Phases C and D; link check |
+| F12 manual accessibility | **partially closed**: automated checks extended and passing (two reflow defects fixed); manual checks outstanding | ADR-023; runbooks/accessibility.md |
+| F13 budget coverage | closed: implemented and verified locally; no Lighthouse/CWV gate in CI (deferred) | ADR-023; `budgets.test.ts` |
+| F14 Node policy | closed: implemented and verified | ADR-021; `node-policy.test.ts` |
+| F15 build-time Google Fonts | closed: implemented and verified, deployed | ADR-021; offline build |
+| F16 `chrome: full` | closed: implemented and verified | ADR-021 |
+| F17 smoke test gaps | closed in the repository; a hosted **preview** smoke run is still outstanding | ADR-022; `smoke.test.ts` |
+| F18 repository hygiene | implemented and verified locally; **`prompt.md` deletion pending owner approval**; the notes extension that stamped `noteId` must be off for this workspace (VS Code) | ADR-023; `hygiene.test.ts` |
+| F19 dependency updates | closed: implemented and verified locally | ADR-023; `pnpm audit` clean |
+| F20 cookie not port-scoped | documented; **acceptance pending owner decision** | ADR-023; control-center.md § CSRF |
+| F21 store read gap, directory fsync, revert bytes | closed: implemented and verified locally | ADR-023; `store.test.ts`, `app.test.ts` |
+| F22 esbuild advisory | closed: implemented and verified locally (override; esbuild no longer installed) | ADR-023; `pnpm audit` |
+| F23 no COOP header | closed in the repository; live once Phase D is deployed | ADR-023; smoke test requires every `vercel.json` header |

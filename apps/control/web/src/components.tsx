@@ -77,32 +77,34 @@ export function EnvMatrix({ item }: { item: RegistryItem }) {
   const external = isExternal(item);
   const flags = Object.keys(item.environments.production.flags);
   return (
-    <table className="matrix">
-      <caption className="visually-hidden">Environment matrix for {item.definition.title}</caption>
-      <thead>
-        <tr>
-          <th scope="col">Environment</th>
-          <th scope="col">Release allows it</th>
-          <th scope="col">{external ? 'Built here' : 'Built'}</th>
-          <th scope="col">{external ? 'Linked from discovery' : 'Listed in discovery'}</th>
-          {flags.length > 0 && <th scope="col">Flags</th>}
-        </tr>
-      </thead>
-      <tbody>
-        {ENVIRONMENTS.map((env) => {
-          const r = item.environments[env];
-          return (
-            <tr key={env} data-env={env}>
-              <th scope="row">{ENV_LABEL[env]}</th>
-              <td><YesNo on={r.deployable} /></td>
-              <td>{external ? <span className="muted">Never (separate site)</span> : <YesNo on={r.mounted} />}</td>
-              <td><YesNo on={r.listed} /></td>
-              {flags.length > 0 && <td>{flags.map((f) => <span key={f} className="flag">{f} {r.flags[f] ? 'on' : 'off'}</span>)}</td>}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div className="table-scroll" role="region" aria-label={`Environment matrix for ${item.definition.title}`} tabIndex={0}>
+      <table className="matrix">
+        <caption className="visually-hidden">Environment matrix for {item.definition.title}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Environment</th>
+            <th scope="col">Release allows it</th>
+            <th scope="col">{external ? 'Built here' : 'Built'}</th>
+            <th scope="col">{external ? 'Linked from discovery' : 'Listed in discovery'}</th>
+            {flags.length > 0 && <th scope="col">Flags</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {ENVIRONMENTS.map((env) => {
+            const r = item.environments[env];
+            return (
+              <tr key={env} data-env={env}>
+                <th scope="row">{ENV_LABEL[env]}</th>
+                <td><YesNo on={r.deployable} /></td>
+                <td>{external ? <span className="muted">Never (separate site)</span> : <YesNo on={r.mounted} />}</td>
+                <td><YesNo on={r.listed} /></td>
+                {flags.length > 0 && <td>{flags.map((f) => <span key={f} className="flag">{f} {r.flags[f] ? 'on' : 'off'}</span>)}</td>}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

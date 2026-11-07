@@ -67,6 +67,8 @@ interface Props { title?: string }
 
     [data-experience='sample-app'] .explorer {
       display: grid;
+      /* minmax(0, …): the column may be narrower than the table, which scrolls in its own region (320 px reflow). */
+      grid-template-columns: minmax(0, 1fr);
       gap: 2rem;
     }
 

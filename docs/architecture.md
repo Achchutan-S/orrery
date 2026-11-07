@@ -1,9 +1,3 @@
----
-noteId: "fdcdb954d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Architecture
 
 The design is in [`blueprint.md`](blueprint.md); decisions are in [`adr/`](adr/). This page describes the code as it is now and how it maps to the blueprint.
@@ -35,7 +29,7 @@ Modules and interfaces are listed in [ADR-012](adr/012-platform-layer.md). An ex
 | `journal` | internal, content | mounted | The Orrery Journal: platform history in MDX chapters, each passage marked with its standing (intent, implemented, verified, deployed, planned). Withdraw it by editing its entry in `config/release.json` (access `owner`, or `discoverability: unlisted`); its content stays. The Inventory and orrery diagram list only publicly listed experiences. |
 | `sample-content` | internal, content | mounted | static essay, zero JavaScript |
 | `sample-app` | internal, interactive | mounted | lifecycle explorer, in-app router, `inspector` flag (preview only) |
-| `resume` | internal, content | never yet (draft) | `/resume`, its PDF and link-preview image as routes; one content source; owner approval pending ([resume.md](resume.md), ADR-020) |
+| `resume` | internal, content | yes (published 3 November 2026) | `/resume`, its PDF and link-preview image as routes; one content source ([resume.md](resume.md), ADR-020) |
 | `canary-draft` | internal | never | leak-check fixture |
 | `sample-hostile` | internal | never | CSS isolation fixture |
 

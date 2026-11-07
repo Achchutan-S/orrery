@@ -1,14 +1,8 @@
----
-noteId: "8e6a56e0d61f11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Resume (`/resume`, task 15)
 
-Status: **draft awaiting the owner's approval.** Content finalised from the owner's V3 resume on 2 November 2026 (task 15.1), with the owner's editorial decisions applied (task 15.2). Release entry `draft`, `owner`, `unlisted`: built in development and preview builds only, never in production, never listed on the Index or in the Beacon palette.
+Status: **published.** The owner set the release entry to `published`, `public`, `listed` on 3 November 2026 (commit `f49d6dc`); it is live at `/resume` and listed on the Index and in the Beacon palette. Content finalised from the owner's V3 resume on 2 November 2026 (task 15.1), with the owner's editorial decisions applied (task 15.2). Before publication it was a draft (`draft`, `owner`, `unlisted`), built in development and preview builds only.
 
-**Not on the website, but not private.** The release entry keeps the resume off the deployed site: production answers `/resume`, `/resume/resume.pdf` and `/resume/og.png` with 404. It does not hide the files in this repository, which is public: `content.ts`, the committed PDF and image, and this document can be read on GitHub (raw file URLs included), and earlier versions remain in the Git history. Preview deployments also contain the resume. The Control Center lists it on the owner's machine only. See [ADR-022](adr/022-link-previews-smoke-and-public-repository.md) for the four layers.
+**What the release entry controlled.** While it was a draft, the release entry kept the resume off the deployed site (production answered `/resume`, `/resume/resume.pdf` and `/resume/og.png` with 404). It never hid the files in this repository, which is public: `content.ts`, the committed PDF and image, and this document can be read on GitHub (raw file URLs included), and earlier versions remain in the Git history. Preview deployments also contain the resume. The Control Center lists it on the owner's machine only. See [ADR-022](adr/022-link-previews-smoke-and-public-repository.md) for the four layers.
 
 ## One source, three outputs
 
@@ -79,13 +73,13 @@ The pushed commit `9b5fe81` (2 November 2026) still contains the specific names 
 7. Orrery: "built with AI coding assistance" removed; described by its platform and engineering.
 8. Index placement: unchanged (catalog position and "Worth the detour" rule).
 
-Remaining before publication: confirm the certification title in item 5, then approve publishing.
+Item 5 (the certification title) was listed as "to confirm" before publication; no confirmation is recorded here. Check it against the credential.
 
 ## Length
 
 Two A4 pages at 8.8 pt. One page would need text below 8 pt with no margin column; readability was preferred. The web page is not affected.
 
-## Publishing, once approved
+## Publishing (done 3 November 2026; the steps, for a re-publication after a withdrawal)
 
 1. Edit `content.ts`, then run `pnpm --filter @pu/site resume:assets` and `pnpm test`.
 2. In `config/release.json` (or the Control Center), set `resume` to `published`, access `public`, discoverability `listed`.

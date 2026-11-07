@@ -1,9 +1,3 @@
----
-noteId: "e68a5f07d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Architecture Decision Records
 
 One file per decision. The blueprint (`docs/blueprint.md` §6) holds the full context; these files record the decision, its status and what implementation learned.

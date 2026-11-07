@@ -1,9 +1,3 @@
----
-noteId: "9d78acd0d6a711f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Adding an experience
 
 The short path, and the ownership rules `pnpm check:boundaries` enforces. Architecture: [architecture.md](../architecture.md); checks: [checks.md](checks.md).

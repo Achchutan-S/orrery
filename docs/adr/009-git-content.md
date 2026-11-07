@@ -1,9 +1,3 @@
----
-noteId: "e68a5f05d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-009 — Git-based content with collections and MDX
 
 Status: accepted, not started (Phase 1–2) · Source: [blueprint §6 ADR-009](../blueprint.md#adr-009--git-based-content-with-collections-and-mdx)

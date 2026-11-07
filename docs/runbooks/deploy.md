@@ -1,9 +1,3 @@
----
-noteId: "bd24c580d5fa11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Deploying to Vercel
 
 One Vercel project serves `apps/site` as static files ([ADR-002](../adr/002-static-by-default.md), [ADR-016](../adr/016-vercel-deployment.md)). No adapter, no functions, no server runtime.
@@ -47,7 +41,7 @@ External experiences (KawaiUI, Dev X-Ray) are links in every environment and nev
 
 ### Today's addresses
 
-From the current `config/release.json` (verified against local production and preview builds on 3 November 2026; the smoke test derives the same lists itself, so this table is for reading, not for the test):
+From the current `config/release.json` (verified against local production and preview builds on 7 November 2026; the smoke test derives the same lists itself, so this table is for reading, not for the test):
 
 | Address | Production | Preview |
 | --- | --- | --- |
@@ -55,7 +49,7 @@ From the current `config/release.json` (verified against local production and pr
 | `/sample-content` | 200 | 200 |
 | `/sample-app`, `/sample-app/states`, `/sample-app/states/<lifecycle>` (7) | 200, inspector panel off | 200, inspector panel on |
 | `/favicon.svg`, `/og.png` (platform files from `public/`) | 200 | 200 |
-| `/resume`, `/resume/resume.pdf`, `/resume/og.png` (draft, owner only, unlisted) | **404** | 200 |
+| `/resume`, `/resume/resume.pdf`, `/resume/og.png` (published 3 November 2026) | 200 | 200 |
 | `/canary-draft`, `/sample-hostile` (permanent fixtures) | **404** | 200 |
 | `/kawaiui`, `/devxray`, any unknown path | 404 (the site's Not found page) | 404 |
 
@@ -84,7 +78,7 @@ What the gate does not cover: unit and browser tests (`pnpm test`, `pnpm test:br
    pnpm smoke https://<preview-url> --env preview
    ```
 4. **Production gate**, all required: Task 9 checks pass (the production build also enforces them, see above); GitHub Actions CI passed on the commit; the preview smoke test passed; no leak reported; the owner approves.
-5. Merge to `main`. In the production build log, confirm `deploy build (production): typecheck → check:boundaries → build → check:metadata → check:leaks → check:budgets`, `[pu:mount-experiences] production: mounted index, journal, sample-content, sample-app` (today's release state) and `✔ deploy build (production): all steps passed`. Then:
+5. Merge to `main`. In the production build log, confirm `deploy build (production): typecheck → check:boundaries → build → check:metadata → check:leaks → check:budgets`, `[pu:mount-experiences] production: mounted index, journal, sample-content, sample-app, resume` (today's release state) and `✔ deploy build (production): all steps passed`. Then:
    ```sh
    pnpm smoke https://<production-url> --env production --external
    ```
@@ -129,6 +123,7 @@ Every response (`/(.*)`):
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()` | No experience uses these; deny until one does (then scope it to that experience's paths). |
 | `Content-Security-Policy` | `frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'` | Only directives that do not restrict scripts or styles: a second policy is combined with Astro's, so a header `script-src` would block the hashed inline scripts Astro allows. `frame-ancestors` cannot be set by `<meta>`. |
 | `X-Frame-Options` | `DENY` | For browsers without `frame-ancestors`. |
+| `Cross-Origin-Opener-Policy` | `same-origin` | A page opened from another site gets its own browsing context group, so neither can script the other through `window.opener`. Nothing here opens popups or relies on an opener (external links open in the same tab). Added in audit Phase D (F23). |
 
 Astro's `<meta>` CSP on every page: `default-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'`, plus `script-src`/`style-src` with the SHA-256 of every inline script and style Astro emits and of the inline layer-order statement. No `'unsafe-inline'`. The browser suite fails on any CSP violation and proves an injected inline script is blocked.
 

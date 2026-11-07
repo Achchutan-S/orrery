@@ -1,9 +1,3 @@
----
-noteId: "65ad4920d5dd11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Personal Universe — Architecture Blueprint
 
 Oct 30, 2026 · @Achchutan

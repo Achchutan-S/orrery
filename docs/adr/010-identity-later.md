@@ -1,9 +1,3 @@
----
-noteId: "e68a8610d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-010 — Identity, authorization and analytics designed now, built later
 
 Status: accepted · Source: [blueprint §6 ADR-010](../blueprint.md#adr-010--identity-authorization-and-analytics-are-designed-now-built-later)

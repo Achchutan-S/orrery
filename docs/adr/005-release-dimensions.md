@@ -1,9 +1,3 @@
----
-noteId: "e68a5f01d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-005 — Four release dimensions; channels derived; three environments
 
 Status: accepted · Source: [blueprint §6 ADR-005](../blueprint.md#adr-005--four-release-dimensions-channels-derived-three-environments)

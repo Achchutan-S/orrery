@@ -1,9 +1,3 @@
----
-noteId: "e68a5f02d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-006 — Control Center as a separate app; V1 local and Git-backed
 
 Status: accepted; V1 built locally (server task 12, UI task 13), never deployed · Source: [blueprint §6 ADR-006](../blueprint.md#adr-006--control-center-as-a-separate-app-v1-local-and-git-backed)

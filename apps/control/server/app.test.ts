@@ -19,10 +19,11 @@ const UI = 'http://127.0.0.1:4317';
 
 type Res = { status: number; headers: Headers; json: any; text: string };
 
-async function setup(o: { catalog?: Catalog; store?: (file: string) => ReleaseStore } = {}) {
+async function setup(o: { catalog?: Catalog; store?: (file: string) => ReleaseStore; bytes?: Buffer } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'pu-control-'));
   const file = join(dir, 'release.json');
-  copyFileSync(REAL, file);
+  if (o.bytes) writeFileSync(file, o.bytes);
+  else copyFileSync(REAL, file);
   const store = o.store?.(file) ?? new FileReleaseStore(file);
   const token = newToken();
   const logs: string[] = [];
@@ -137,6 +138,17 @@ test('every endpoint except health and session bootstrap needs the session cooki
   }
   assert.equal((await call('GET', '/api/health', { session: false })).status, 200);
   assert.equal((await call('POST', '/api/session', { session: false })).status, 200);
+});
+
+test('odd paths cannot skip the Host, Origin and session checks (router middleware-bypass class, hono 4.13.16)', async () => {
+  const { call } = await setup();
+  for (const path of ['/api/registry%0A', '/api/registry%0D', '/api/registry%E2%80%A8', '/api/registry/', '/api//registry', '/api/registry%2F', '/API/registry', '/api/registry\\x']) {
+    const anonymous = await call('GET', path, { session: false });
+    assert.notEqual(anonymous.status, 200, `${path} without a session`);
+    assert.notEqual(anonymous.json?.ok, true, path);
+    const rebound = await call('GET', path, { headers: { host: 'evil.example' } });
+    assert.equal(errorCode(rebound), 'INVALID_HOST', `${path} with a foreign Host`);
+  }
 });
 
 test('a token is not accepted from a header or the query string, only the HttpOnly cookie', async () => {
@@ -425,6 +437,26 @@ test('pending changes and revert: diff against the session baseline, commands to
   assert.equal((await call('GET', '/api/release/pending')).json.data.changed, false);
   // Reverting with nothing to revert is a no-op.
   assert.equal((await call('POST', '/api/release/revert', { body: { baseRevision: r.json.data.revision } })).json.data.revision, r.json.data.revision);
+});
+
+test('revert restores the baseline byte for byte, even when it was not in canonical form (F21)', async () => {
+  // The owner's hand-edited file: four-space indentation, keys out of canonical order.
+  const handEdited = Buffer.from(JSON.stringify(JSON.parse(realBytes.toString('utf8')), null, 4) + '\n');
+  const { call, revision, file } = await setup({ bytes: handEdited });
+  const w = await call('PATCH', '/api/release', patch({ op: 'setNote', experienceId: 'journal', note: 'temporary' }, await revision()));
+  assert.equal(w.status, 200);
+  assert.notDeepEqual(readFileSync(file), handEdited, 'a write is canonical');
+  const r = await call('POST', '/api/release/revert', { body: { baseRevision: w.json.data.revision } });
+  assert.equal(r.status, 200);
+  assert.deepEqual(readFileSync(file), handEdited, 'no formatting diff is left behind');
+  assert.equal(r.json.data.revision, revisionOf(handEdited));
+});
+
+test('an error carrying the current snapshot sends only its state and revision', async () => {
+  const { call } = await setup();
+  const r = await call('PATCH', '/api/release', patch({ op: 'setNote', experienceId: 'journal', note: 'x' }, 'f'.repeat(64)));
+  assert.equal(errorCode(r), 'STALE_REVISION');
+  assert.deepEqual(Object.keys(r.json.error.current).sort(), ['revision', 'state']);
 });
 
 // ---- Failure modes ----

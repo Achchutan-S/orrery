@@ -1,9 +1,3 @@
----
-noteId: "ca52f290d5fa11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-016 — Vercel deployment configuration, headers and CSP
 
 Status: accepted (1 November 2026), not yet deployed; decision 5 (`engines.node`) superseded by [ADR-021](021-platform-integrity.md) · Implements blueprint task 11 and ADR-002. Operations: [runbooks/deploy.md](../runbooks/deploy.md).

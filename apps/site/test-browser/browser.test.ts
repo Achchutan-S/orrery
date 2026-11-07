@@ -849,6 +849,95 @@ describe('CSS isolation (adversarial)', () => {
 });
 
 // Runs last: every page every test above opened, production and preview, under Astro's CSP.
+describe('accessibility beyond axe (automated; manual checks: docs/runbooks/accessibility.md)', () => {
+  // Every page production serves, the resume included when it is released.
+  const PAGES = [...ROUTES, ...(resumeIn('production').mounted ? ['/resume'] : [])];
+  const overflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  const palette = (page: Page) => page.getByRole('dialog', { name: 'Go to' });
+
+  test('reflow: no horizontal scrolling at 320 and 640 CSS px wide (400% and 200% zoom of a 1280 px window)', async () => {
+    for (const width of [320, 640]) {
+      for (const path of PAGES) {
+        const page = await open(path, { viewport: { width, height: 720 } });
+        assert.ok(await overflow(page) <= 0, `${path} at ${width}px scrolls horizontally by ${await overflow(page)}px`);
+        await page.context().close();
+      }
+    }
+  });
+
+  test('text spacing (WCAG 1.4.12): wider lines, letters, words and paragraphs lose nothing sideways', async () => {
+    const spacing = '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }';
+    for (const vp of [VIEWPORTS.desktop, VIEWPORTS.mobile]) {
+      for (const path of PAGES) {
+        // A user stylesheet, as a reader's extension would add it; the page's own CSP is tested elsewhere.
+        const page = await open(path, { ...vp, bypassCSP: true });
+        await page.addStyleTag({ content: spacing });
+        assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('h1')!).lineHeight.endsWith('px') && getComputedStyle(document.querySelector('h1')!).wordSpacing !== '0px'), true, `${path}: the spacing applies`);
+        assert.ok(await overflow(page) <= 0, `${path} (${vp.viewport.width}px) overflows by ${await overflow(page)}px with WCAG text spacing`);
+        await page.context().close();
+      }
+    }
+  });
+
+  test('forced colours: the focus indicator survives (outline, not only the box-shadow band) and the Beacon stays visible', async () => {
+    for (const path of PAGES) {
+      const page = await open(path, { ...VIEWPORTS.desktop, forcedColors: 'active' });
+      await page.keyboard.press('Tab');
+      const focus = await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement;
+        const s = getComputedStyle(el);
+        return { tag: el.tagName, style: s.outlineStyle, width: parseFloat(s.outlineWidth) };
+      });
+      assert.notEqual(focus.tag, 'BODY', `${path}: Tab reaches a control`);
+      assert.ok(focus.style !== 'none' && focus.width >= 2, `${path}: focus outline ${focus.style} ${focus.width}px in forced colours`);
+      assert.ok(await page.locator('.pu-beacon-mark').isVisible(), `${path}: Beacon visible`);
+      await page.context().close();
+    }
+  });
+
+  test('every page: one h1, one main landmark, headings that never skip a level, a language, and a title', async () => {
+    for (const path of PAGES) {
+      const page = await open(path);
+      const r = await page.evaluate(() => {
+        const levels = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter((h) => (h as HTMLElement).offsetParent !== null || h.closest('dialog') === null)
+          .filter((h) => !h.closest('dialog, template')).map((h) => Number(h.tagName[1]));
+        const skips = levels.filter((l, i) => i > 0 && l > levels[i - 1]! + 1);
+        return { h1: document.querySelectorAll('h1').length, main: document.querySelectorAll('main, [role=main]').length, skips, lang: document.documentElement.lang, title: document.title };
+      });
+      assert.deepEqual({ h1: r.h1, main: r.main, skips: r.skips }, { h1: 1, main: 1, skips: [] }, path);
+      assert.ok(r.lang && r.title, path);
+      await page.context().close();
+    }
+  });
+
+  test('palette: Tab and Shift+Tab never reach the page behind the open dialog, which is inert', async () => {
+    const page = await open('/journal');
+    await page.getByRole('button', { name: /^Go to/ }).click();
+    await palette(page).waitFor();
+    // A native modal <dialog>: Tab cycles between its controls and the browser's own UI (document.activeElement
+    // is then <body>); it never lands on the page's links behind the dialog.
+    const where: string[] = [];
+    for (const key of [...Array(6).fill('Tab'), ...Array(6).fill('Shift+Tab')]) {
+      await page.keyboard.press(key);
+      where.push(await page.evaluate(() => (document.activeElement?.closest('dialog[open]') ? 'dialog' : document.activeElement === document.body ? 'browser' : `page: ${document.activeElement?.outerHTML.slice(0, 80)}`)));
+    }
+    assert.deepEqual(where.filter((w) => w.startsWith('page')), [], 'focus never reaches the page behind');
+    assert.ok(where.includes('dialog'), 'focus returns to the dialog');
+    assert.equal(await page.evaluate(() => document.querySelector('main')?.matches(':modal') ?? false), false);
+    assert.ok(await page.evaluate(() => document.querySelector('dialog[open]')!.matches(':modal')), 'opened as a modal dialog (the rest of the page is inert)');
+    await page.context().close();
+  });
+
+  test('axe best practices (beyond WCAG): landmarks, heading order, unique regions, on every page', async () => {
+    for (const path of PAGES) {
+      const page = await open(path);
+      const { violations } = await new AxeBuilder({ page }).withTags(['best-practice']).analyze();
+      assert.deepEqual(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`), [], path);
+      await page.context().close();
+    }
+  });
+});
+
 describe('Content Security Policy', () => {
   test('no page loaded by this suite violated its CSP', () => {
     assert.deepEqual(cspViolations, []);

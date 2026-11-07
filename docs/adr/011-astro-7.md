@@ -1,9 +1,3 @@
----
-noteId: "b83e5780d5e011f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-011 — Upgrade the host to Astro 7
 
 Status: accepted (1 November 2026) · Supersedes the version pin in ADR-001; the framework choice in ADR-001 stands.

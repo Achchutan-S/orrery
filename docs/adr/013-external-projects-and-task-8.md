@@ -1,9 +1,3 @@
----
-noteId: "3df00ca0d5f211f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-013 — KawaiUI and Dev X-Ray as external experiences; Task 8 samples
 
 Status: accepted (1 November 2026) · Builds on ADR-004, ADR-008, ADR-012.

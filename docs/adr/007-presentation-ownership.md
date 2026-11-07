@@ -1,9 +1,3 @@
----
-noteId: "e68a8611d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # ADR-007 — Presentation ownership and CSS isolation
 
 Status: accepted, not started (task 7) · Source: [blueprint §6 ADR-007](../blueprint.md#adr-007--presentation-ownership-and-css-isolation)

@@ -1,9 +1,3 @@
----
-noteId: "fdcdb951d5de11f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Personal Universe — agent guide
 
 A personal platform of independent "experiences" (writing, interactive apps, visualisations, resume) on one static Astro site. Not a portfolio template.
@@ -69,7 +63,11 @@ Node 22.23.4 (`.nvmrc`; Astro 7 minimum; `nvm use`), pnpm via Corepack (`corepac
 
 **Design** — experiences own layout, fonts, theme and navigation. The platform owns only the Beacon, accessibility tokens and the optional colophon. Use the `frontend-design` skill for UI work and audit with `web-design-guidelines`. No templated hero/card/gradient defaults without a reason.
 
-**Accessibility** — semantic HTML, keyboard reachable, visible focus, reduced motion, contrast, touch targets. Not negotiable for any experience.
+**Accessibility** — semantic HTML, keyboard reachable, visible focus, reduced motion, contrast, touch targets, reflow at 320 px (wide tables scroll in their own focusable region). Not negotiable for any experience. Automated checks and the manual checklist: `docs/runbooks/accessibility.md`; never record a manual check as done unless a person did it.
+
+**Budgets** — `pnpm check:budgets` measures every emitted file: page JS, CSS, fonts, images and lazy chunks per performance class, plus `FILE_BUDGETS` for files no page loads. An `<img>` needs `width` and `height`; a new kind of emitted file needs a page that loads it or a `FILE_BUDGETS` entry (ADR-023).
+
+**Hygiene** — the repository is public. No editor metadata in committed files (`noteId` front matter fails `hygiene.test.ts`), no task prompts or scratch files at the root.
 
 **Security**
 - Nothing non-public in production `dist/`: no drafts, no non-public titles or summaries, no source maps, no secrets.

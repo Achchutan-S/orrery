@@ -1,6 +1,4 @@
 ---
-noteId: "c34115e0d5dc11f1ae605f8c0e08bb6f"
-tags: []
 name: "web-design-guidelines"
 description: "Review UI code for Web Interface Guidelines compliance. Use when asked to \"review my UI\", \"check accessibility\", \"audit design\", \"review UX\", or \"check my site against best practices\"."
 metadata:

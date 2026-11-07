@@ -1,9 +1,3 @@
----
-noteId: "b13873d0d5e511f1ae605f8c0e08bb6f"
-tags: []
-
----
-
 # Platform identity (task 7)
 
 > Since task 14 the Index experience owns `/` and the platform owns the Beacon ([ADR-019](../adr/019-index-and-beacon.md)); this page records the task 7 design.
