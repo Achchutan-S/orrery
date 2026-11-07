@@ -3,7 +3,7 @@ import Layout from '../Layout.astro';
 import { skillBySlug } from '../library.ts';
 type L = { href: string; title: string };
 const link = (slug: string): L => ({ href: `/skills/${slug}`, title: skillBySlug(slug)!.title });
-const [sq, vat, pf, iqa, mo, dda, sdp, wf] = (['sidequest', 'vedic-astrology-tamil', 'problem-finder', 'interview-quick-answer', 'moral-oratory', 'deep-dive-audio', 'system-design-prep', 'wayfinder'] as const).map(link) as [L, L, L, L, L, L, L, L];
+const [sq, cc, iqa, dda, sdp] = (['sidequest', 'conceptcast', 'interview-quick-answer', 'deep-dive-audio', 'system-design-prep'] as const).map(link) as [L, L, L, L, L];
 ---
 <Layout page="guide" title="How skills work · The Claude Skills Archive" description="What a Claude skill is, how SKILL.md and supporting files work, how to install one, and the design patterns behind this collection.">
   <nav class="trail" aria-label="Breadcrumb">
@@ -32,13 +32,12 @@ const [sq, vat, pf, iqa, mo, dda, sdp, wf] = (['sidequest', 'vedic-astrology-tam
     <section class="folio folio--opinion" aria-labelledby="patterns-h">
       <h2 id="patterns-h"><span class="folio__n">II</span> Patterns from this collection <span class="badge badge--opinion">My opinion</span></h2>
       <ol class="patterns">
-        <li><h3>Name the failure the skill exists to prevent</h3><p>The most useful paragraph in a skill is often the one that says what goes wrong without it. <a href={mo.href}>{mo.title}</a> opens with the two failures it guards against; everything after serves them.</p></li>
-        <li><h3>Let a script own what the model gets wrong</h3><p>Probabilities, cooldowns, scores and ephemeris positions drift when a model computes them. In <a href={sq.href}>{sq.title}</a> the engine owns every number and Claude is told never to recompute one; <a href={vat.href}>{vat.title}</a> forbids estimating a planet’s position at all.</p></li>
-        <li><h3>Force a decision at the end</h3><p>A ranked list hands the work back to the reader. <a href={pf.href}>{pf.title}</a> ends every run with “build now, investigate, avoid”, one pick each, and then waits.</p></li>
+        <li><h3>Name the failure the skill exists to prevent</h3><p>The most useful paragraph in a skill is often the one that says what goes wrong without it. <a href={cc.href}>{cc.title}</a> opens by ruling out “a monologue with speaker labels stuck on it”; everything after serves that.</p></li>
+        <li><h3>Let a script own what the model gets wrong</h3><p>Probabilities, cooldowns and scores drift when a model computes them. In <a href={sq.href}>{sq.title}</a> a small script owns every number, and Claude is told never to recompute one.</p></li>
+        <li><h3>Put the trigger phrases in the description</h3><p>Claude chooses a skill from its description. <a href={dda.href}>{dda.title}</a> lists the words people actually say (“explain X like a podcast”, “something I can listen to”) so it is picked without being named.</p></li>
         <li><h3>Choose the format by the kind of question</h3><p><a href={iqa.href}>{iqa.title}</a> keeps four templates (concept, comparison, scenario, behavioural) instead of one, so a comparison gets a table and a story question gets a structure, not an invented story.</p></li>
         <li><h3>Load references only for the mode that needs them</h3><p>A table of modes, each naming the one file it reads, keeps a large skill fast. <a href={dda.href}>{dda.title}</a> reads its spoken-style guide only when it starts writing.</p></li>
         <li><h3>Keep the output format you tested</h3><p><a href={sdp.href}>{sdp.title}</a> says plainly that its Q&amp;A layout “was tested and preferred over a plain evaluation table”, and includes a worked example as a reference file.</p></li>
-        <li><h3>Plan, don’t do, when the route is unclear</h3><p><a href={wf.href}>{wf.title}</a>, collected from Matt Pocock, treats the urge to start building as the sign that planning has reached the edge of the map.</p></li>
       </ol>
     </section>
 
@@ -46,9 +45,9 @@ const [sq, vat, pf, iqa, mo, dda, sdp, wf] = (['sidequest', 'vedic-astrology-tam
       <h2 id="mistakes-h"><span class="folio__n">III</span> Common mistakes <span class="badge badge--opinion">My opinion</span></h2>
       <ul class="crosses">
         <li><strong>A vague description.</strong> If the trigger phrases are not in the description, the skill is never chosen. Write the words people actually type.</li>
-        <li><strong>No “when not to”.</strong> Sibling skills collide. Say which one owns which request, as Problem Finder and India Product Gap Finder do.</li>
+        <li><strong>No “when not to”.</strong> Sibling skills collide. Say which one owns which request, as {cc.title} does when it tells Claude to leave single-narrator scripts to {dda.title}.</li>
         <li><strong>Asking the model to keep score.</strong> Anything that must be exact belongs in a script.</li>
-        <li><strong>Letting it invent the user.</strong> Behavioural answers, birth details and personal history must come from the user, never from the model.</li>
+        <li><strong>Letting it invent the user.</strong> Behavioural answers and personal history must come from the user, never from the model.</li>
         <li><strong>One giant file.</strong> Move reference material out of <code>SKILL.md</code> and point to it by path.</li>
       </ul>
     </section>
@@ -57,10 +56,10 @@ const [sq, vat, pf, iqa, mo, dda, sdp, wf] = (['sidequest', 'vedic-astrology-tam
       <h2 id="build-h"><span class="folio__n">IV</span> From a repeated workflow to a skill <span class="badge badge--opinion">My practice</span></h2>
       <ol class="path">
         <li><h3>Do it by hand three times</h3><p>Notice what you keep re-explaining to Claude. That explanation is the skill’s first draft.</p></li>
-        <li><h3>Start as a command</h3><p>{sq.title} and {pf.title} both began as Claude Code slash commands in August 2026, before they became skills.</p></li>
+        <li><h3>Start as a command</h3><p>{sq.title} began as a pair of Claude Code slash commands in August 2026, before it became a skill.</p></li>
         <li><h3>Write the description last</h3><p>Once the instructions settle, list the phrases that should trigger them, and the neighbouring requests that should not.</p></li>
         <li><h3>Move the mechanical parts into files</h3><p>Reference notes beside the instructions; arithmetic and state into a script with plain JSON output.</p></li>
-        <li><h3>Keep the original as the source of truth</h3><p>This archive copies each skill byte for byte and records its SHA-256, so an explanation can improve without the skill quietly changing.</p></li>
+        <li><h3>Keep the original as the source of truth</h3><p>This archive copies each skill byte for byte and records its SHA-256, so an explanation can improve without the skill quietly changing. Where a file had to be edited for publication, the page says what changed and keeps the original’s hash.</p></li>
       </ol>
     </section>
     <p><a class="link-arrow link-arrow--back" href="/skills#stacks">Back to the stacks</a></p>

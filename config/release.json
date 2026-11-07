@@ -79,6 +79,14 @@
       },
       "discoverability": "unlisted",
       "note": "Permanent CSS isolation fixture. Never promote."
+    },
+    "skills": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "note": "The Claude Skills Archive. Published by the owner on 7 November 2026 (docs/claude-skills/publication-decisions.md)."
     }
   }
 }

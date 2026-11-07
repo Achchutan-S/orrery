@@ -4,9 +4,10 @@
 //
 // Verify checks every published copy against the SHA-256 in source/manifest.json and, where the
 // private origin map exists (docs/claude-skills/private/origins.json, gitignored, machine-specific),
-// compares each copy with its original and reports any that are out of date. It never writes.
+// compares each original with the hash it was published from (its own, or for a file edited for
+// publication, the `edited.originalSha256` recorded with the edit), reporting any that changed. It never writes.
 // Import is the only writer: it copies the files the origin map lists for one skill, unmodified, and
-// records their hashes. Run it only for a skill whose publication was approved.
+// records their hashes. It never overwrites a file edited for publication: those are maintained by hand.
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,7 +35,10 @@ if (args[0] === '--import') {
     console.error(`usage: skills:source --import <slug>; the slug must be in the manifest and in ${originsPath}`);
     process.exit(2);
   }
+  const previous = manifest.skills[slug]!.files;
   const files = origin.files.map((path) => {
+    const kept = previous.find((f) => f.path === path && f.edited);
+    if (kept) { console.log(`  ${slug}/${path}  edited for publication: kept as is (${kept.edited!.note})`); return kept; }
     const from = join(origin.dir, path);
     const to = join(sourceDir, slug, path);
     mkdirSync(dirname(to), { recursive: true });
@@ -61,15 +65,14 @@ for (const [slug, entry] of Object.entries(manifest.skills)) {
     const from = join(origin.dir, f.path);
     if (!existsSync(from)) { console.log(`?    ${slug}/${f.path}: original not found on this machine`); continue; }
     const now = sha256(readFileSync(from));
-    if (now === f.sha256) console.log(`ok   ${slug}/${f.path}`);
-    else { console.error(`OUT OF DATE ${slug}/${f.path}: the original changed (${now}); review it, then --import ${slug}`); failures++; }
+    const expected = f.edited?.originalSha256 ?? f.sha256;
+    if (now === expected) console.log(`ok   ${slug}/${f.path}${f.edited ? ' (edited for publication from this original)' : ''}`);
+    else { console.error(`OUT OF DATE ${slug}/${f.path}: the original changed (${now}); review it, then ${f.edited ? 'redo the edit by hand' : `--import ${slug}`}`); failures++; }
   }
-  // Files the original has now that are neither published nor withheld.
-  const accounted = new Set([...entry.files.map((f) => f.path), ...(entry.withheld?.paths ?? [])]);
-  if (!entry.withheld || entry.withheld.paths) {
-    for (const path of filesUnder(origin.dir).keys()) {
-      if (!accounted.has(path)) { console.error(`NEW  ${slug}/${path}: in the original, neither published nor withheld`); failures++; }
-    }
+  // Files the original has now that the archive does not publish.
+  const published = new Set(entry.files.map((f) => f.path));
+  for (const path of filesUnder(origin.dir).keys()) {
+    if (!published.has(path)) { console.error(`NEW  ${slug}/${path}: in the original, not published`); failures++; }
   }
 }
 console.log(origins ? 'compared with the originals on this machine' : 'no private origin map here: checked published copies against their hashes only');

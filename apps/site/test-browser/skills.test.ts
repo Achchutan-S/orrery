@@ -51,7 +51,7 @@ async function open(path: string, opts: BrowserContextOptions = DESKTOP): Promis
   return page;
 }
 const visibleTitles = (page: Page) => page.locator('.bookcase [data-volume]:visible .volume__title').allInnerTexts();
-const PAGES = ['/skills', '/skills/guide', '/skills/shelf/learning', '/skills/sidequest', '/skills/moral-oratory', '/skills/vedic-astrology-tamil', '/skills/wayfinder'];
+const PAGES = ['/skills', '/skills/guide', '/skills/shelf/learning', '/skills/sidequest', '/skills/interview-quick-answer', '/skills/system-design-prep', '/skills/conceptcast'];
 
 describe('Skills Archive: axe, layout and structure', () => {
   test('axe (WCAG 2.2 A/AA) by day and by lantern, desktop and mobile; no horizontal scroll at 320 px', async () => {
@@ -138,7 +138,7 @@ describe('Skills Archive: accessibility beyond axe (automated; manual rows 17–
 
 describe('Skills Archive: copy and download', () => {
   test('Copy SKILL.md puts the exact original on the clipboard (every line break and character)', async () => {
-    for (const slug of ['sidequest', 'conceptcast', 'vedic-astrology-tamil']) {
+    for (const slug of ['sidequest', 'conceptcast', 'interview-quick-answer']) {
       const page = await open(`/skills/${slug}`);
       await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
       await page.getByRole('button', { name: 'Copy SKILL.md' }).first().click();
@@ -162,17 +162,19 @@ describe('Skills Archive: copy and download', () => {
     assert.equal(await read(), text.slice(0, text.indexOf('\n---\n', 4) + 5));
     await page.getByRole('button', { name: 'Copy invocation' }).click();
     assert.equal(await read(), '/sidequest');
+    await page.locator('details.more > summary', { hasText: 'Step by step' }).click();
     await page.getByRole('button', { name: 'Copy this line' }).click();
     assert.match(await read(), /^description: '[^'\n]{1,200}'$/);
     await page.context().close();
   });
 
   test('without clipboard permission, copy says so and selects the text instead', async () => {
-    const page = await open('/skills/problem-finder');
+    const page = await open('/skills/deep-dive-audio');
     await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new Error('denied')) } }); });
     await page.getByRole('button', { name: 'Copy SKILL.md' }).first().click();
     assert.match(await page.locator('[data-toast]').innerText(), /Could not reach the clipboard\. The text is selected/);
-    assert.equal(await page.evaluate(() => getSelection()?.toString()), original('problem-finder', 'SKILL.md'));
+    // A browser's selection text drops the final newline; the clipboard path above is the exact one.
+    assert.equal(await page.evaluate(() => getSelection()?.toString()), original('deep-dive-audio', 'SKILL.md').replace(/\n$/, ''));
     await page.context().close();
   });
 
@@ -190,17 +192,30 @@ describe('Skills Archive: copy and download', () => {
     await page.context().close();
   });
 
-  test('withheld sources: no copy or download for moral-oratory; vedic-astrology-tamil offers SKILL.md only', async () => {
-    const mo = await open('/skills/moral-oratory');
-    assert.equal(await mo.getByRole('button', { name: /^Copy SKILL/ }).count(), 0);
-    assert.equal(await mo.getByRole('link', { name: /^Download/ }).count(), 0);
-    assert.match(await mo.locator('.withheld').innerText(), /Withheld: 10 files/);
-    await mo.context().close();
-    const vat = await open('/skills/vedic-astrology-tamil');
-    assert.equal(await vat.getByRole('link', { name: /Download the whole skill/ }).count(), 0);
-    assert.equal(await vat.getByRole('link', { name: 'Download SKILL.md' }).count(), 2);
-    assert.match(await vat.locator('.withheld').innerText(), /scripts it runs are not/);
-    await vat.context().close();
+  test('the header jump and collapsible blocks: closed by default, open on demand, reachable by keyboard', async () => {
+    const page = await open('/skills/conceptcast');
+    await page.getByRole('link', { name: 'Source & downloads' }).click();
+    await page.waitForURL(/#source$/);
+    for (const name of ['Design notes', 'Step by step']) {
+      const block = page.locator('details.more', { hasText: name });
+      assert.equal(await block.evaluate((d) => (d as HTMLDetailsElement).open), false, name);
+      await block.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      assert.equal(await block.evaluate((d) => (d as HTMLDetailsElement).open), true, name);
+    }
+    await page.context().close();
+  });
+
+  test('a file edited for publication says so, and Copy gives the published text', async () => {
+    const page = await open('/skills/interview-quick-answer');
+    await page.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: base });
+    assert.match(await page.locator('.source__note').first().innerText(), /^Edited for publication\. Line 132 was reworded/);
+    assert.ok(await page.getByRole('region', { name: 'SKILL.md, copy edited for publication' }).isVisible());
+    await page.getByRole('button', { name: 'Copy SKILL.md' }).first().click();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    assert.equal(copied, original('interview-quick-answer', 'SKILL.md'));
+    assert.match(copied, /^Questions may be dictated\. Read terms/m);
+    await page.context().close();
   });
 });
 
@@ -208,19 +223,19 @@ describe('Skills Archive: discovery and interaction', () => {
   test('search filters by name, words in the purpose, shelf and tags; empty results say so; the URL keeps the query', async () => {
     const page = await open('/skills');
     const box = page.getByRole('searchbox', { name: 'Search the archive' });
-    await box.fill('India');
-    assert.deepEqual(await visibleTitles(page), ['India Product Gap Finder']);
-    assert.match(await page.locator('[data-finder-count]').innerText(), /^1 volume matches “India”$/);
+    await box.fill('audio');
+    assert.deepEqual(await visibleTitles(page), ['Deep Dive Audio']);
+    assert.match(await page.locator('[data-finder-count]').innerText(), /^1 volume matches “audio”$/);
     await box.fill('podcast');
     assert.deepEqual((await visibleTitles(page)).sort(), ['ConceptCast']);
     await box.fill('personal exploration');
-    assert.deepEqual((await visibleTitles(page)).sort(), ['Side Quest', 'Vedic Astrology (Tamil)']);
+    assert.deepEqual((await visibleTitles(page)).sort(), ['Side Quest']);
     assert.match(page.url(), /\?q=personal\+exploration$/);
     await box.fill('zzzz nothing');
     assert.deepEqual(await visibleTitles(page), []);
     assert.ok(await page.locator('[data-finder-empty]').isVisible());
     await box.fill('');
-    assert.equal((await visibleTitles(page)).length, 10);
+    assert.equal((await visibleTitles(page)).length, 5);
     await page.goto(`${base}/skills?q=interview`);
     assert.deepEqual((await visibleTitles(page)).sort(), ['Interview Quick Answer', 'System Design Prep']);
     await page.context().close();
@@ -265,7 +280,7 @@ describe('Skills Archive: discovery and interaction', () => {
 
   test('without JavaScript every volume, link and download is there; controls that need a script stay hidden', async () => {
     const page = await open('/skills', { ...DESKTOP, javaScriptEnabled: false });
-    assert.equal(await page.locator('.bookcase [data-volume]').count(), 10);
+    assert.equal(await page.locator('.bookcase [data-volume]').count(), 5);
     assert.equal(await page.locator('[data-finder]').isVisible(), false);
     assert.equal(await page.getByRole('button', { name: 'Light the lanterns' }).count(), 0);
     await page.goto(`${base}/skills/sidequest`);

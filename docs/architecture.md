@@ -30,7 +30,7 @@ Modules and interfaces are listed in [ADR-012](adr/012-platform-layer.md). An ex
 | `sample-content` | internal, content | mounted | static essay, zero JavaScript |
 | `sample-app` | internal, interactive | mounted | lifecycle explorer, in-app router, `inspector` flag (preview only) |
 | `resume` | internal, content | yes (published 3 November 2026) | `/resume`, its PDF and link-preview image as routes; one content source ([resume.md](resume.md), ADR-020) |
-| `skills` | internal, interactive | no (draft; no release entry) | The Claude Skills Archive at `/skills`: an editorial page per skill beside its original files, copied byte for byte and checked against SHA-256 hashes at build; per-file and ZIP downloads as routes; vanilla script only (copy, search, lanterns). Publication decisions: [claude-skills/publication-decisions.md](claude-skills/publication-decisions.md) |
+| `skills` | internal, interactive | yes (published 7 November 2026) | The Claude Skills Archive at `/skills`: an editorial page per skill beside its original files, copied byte for byte and checked against SHA-256 hashes at build; per-file and ZIP downloads as routes; vanilla script only (copy, search, lanterns). Publication decisions: [claude-skills/publication-decisions.md](claude-skills/publication-decisions.md) |
 | `canary-draft` | internal | never | leak-check fixture |
 | `sample-hostile` | internal | never | CSS isolation fixture |
 

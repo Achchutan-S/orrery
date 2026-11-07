@@ -18,7 +18,7 @@ Two kinds of evidence, never mixed: what the browser suites prove automatically 
 | Touch targets of 44 px on phones | site § The Index; error fallback | Index headlines, the island error fallback's button |
 | Island errors: an `alert` fallback with focus on its heading | site § island error boundary | `sample-app` |
 | Works without JavaScript | site § The Index, Resume | Index, resume |
-| Skills Archive (preview build, a draft): axe light and dark on desktop and phone; reflow at 320 px; WCAG text spacing; forced-colours focus; Tab order through every volume; one `h1`, `main` and skip link; source regions focusable and labelled; copy announced in a polite status; reduced motion; works without JavaScript | `apps/site/test-browser/skills.test.ts` | `/skills`, guide, a shelf, four skill pages |
+| Skills Archive: axe light and dark on desktop and phone; reflow at 320 px; WCAG text spacing; forced-colours focus; Tab order through every volume; one `h1`, `main` and skip link; source regions focusable and labelled; copy announced in a polite status; reduced motion; works without JavaScript | `apps/site/test-browser/skills.test.ts` | `/skills`, guide, a shelf, four skill pages |
 
 ## Manual checklist
 
@@ -64,7 +64,7 @@ Start VoiceOver with ⌘F5. VO = Control+Option.
 | 15 | `/`, palette, Control Center | macOS: System Settings → Accessibility → Display → Reduce motion, then reload | No animated transitions |
 | 16 | `/`, `/resume`, palette | A real iPhone (Safari) and Android phone (Chrome) | Every link and button can be hit without zooming; the Beacon button opens and closes the palette; the PDF downloads; then read `/`, `/resume` and one Journal chapter for plain language and link text that makes sense alone |
 
-### E. The Claude Skills Archive (`/skills`; a draft, so use a preview build: `VERCEL_ENV=preview pnpm build`, then `pnpm --filter @pu/site preview`)
+### E. The Claude Skills Archive (`/skills`)
 
 | # | Route | Action | Expected |
 | --- | --- | --- | --- |

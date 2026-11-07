@@ -52,7 +52,7 @@ export default {
   },
   related: [
     { slug: 'deep-dive-audio', why: 'Turn a quest you loved into a full episode.' },
-    { slug: 'vedic-astrology-tamil', why: 'The other skill here with real computation behind the conversation.' },
+    { slug: 'conceptcast', why: 'Turn a quest into a two-voice episode for the walk home.' },
   ],
   claudeAiDescription: "A daily game for learning outside your field: a 30-minute quest with rarity rolls, XP, levels and badges, plus a monthly journal. Use for /sidequest, \"quest me\" or a quest review.",
   portability: 'Download the whole folder: SKILL.md, config.json and scripts/quest.py. As written it expects Claude.ai with code execution and memory; it is not portable to Claude Code without changes.',

@@ -37,8 +37,8 @@ const card = `<!doctype html><html><head><meta charset="utf-8"><style>
   <g fill="#5b8a3c"><ellipse cx="1150" cy="300" rx="16" ry="6" transform="rotate(-30 1150 300)"/><ellipse cx="1166" cy="330" rx="16" ry="6" transform="rotate(35 1166 330)"/><ellipse cx="1146" cy="360" rx="15" ry="6" transform="rotate(-40 1146 360)"/><ellipse cx="1162" cy="392" rx="15" ry="6" transform="rotate(30 1162 392)"/></g>
   <path d="M1158 250 L1150 300 L1166 330 L1146 360 L1162 392" fill="none" stroke="#4a6a2c" stroke-width="3"/>
 </svg>
-<div class="text"><div class="eyebrow">A reading room in Orrery</div><h1><span>The Claude</span>Skills Archive</h1><p>Skills I’ve created and collected for Claude, with their original instructions kept exactly as written.</p></div>
-<footer>10 volumes · originals kept exactly</footer>
+<div class="text"><div class="eyebrow">A reading room in Orrery</div><h1><span>The Claude</span>Skills Archive</h1><p>Skills I’ve created for Claude, with their original instructions to read, copy and download.</p></div>
+<footer>5 volumes · originals to copy and download</footer>
 </body></html>`;
 
 const browser = await chromium.launch();

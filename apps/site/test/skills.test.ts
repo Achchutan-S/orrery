@@ -10,6 +10,7 @@ import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { preview } from 'astro';
 import { parseCatalog } from '@pu/experience-catalog';
+import { parseRelease, resolveAll } from '@pu/platform-schema';
 import { evaluate, fileFindings, measure } from '@pu/checks/budgets';
 import { checkSkill, sha256, type Manifest } from '../src/experiences/skills/integrity.ts';
 import { matches } from '../src/experiences/skills/search.ts';
@@ -35,14 +36,15 @@ before(async () => {
   entries = await Promise.all(readdirSync(join(dir, 'entries')).map(async (f) => (await import(join(dir, 'entries', f))).default as SkillEntry));
 });
 const clone = <T>(x: T): T => structuredClone(x);
+/** Skills taken out of the archive on 7 November 2026 (docs/claude-skills/publication-decisions.md). */
+const REMOVED = ['india-product-gap-finder', 'moral-oratory', 'problem-finder', 'vedic-astrology-tamil', 'wayfinder'];
+const releaseState = parseRelease(JSON.parse(readFileSync(new URL('../../../config/release.json', import.meta.url), 'utf8'))).state!;
+const listedInPreview = resolveAll(parseCatalog().experiences, releaseState, 'preview').find((r) => r.id === 'skills')!.listed;
 const unzip = (...args: string[]) => spawnSync('unzip', args, { encoding: 'buffer' });
 
 describe('content and integrity (no build)', () => {
-  test('the ten skills, each with an editorial entry and a manifest record; the real content has no problems', () => {
-    assert.deepEqual(entries.map((e) => e.slug).sort(), [
-      'conceptcast', 'deep-dive-audio', 'india-product-gap-finder', 'interview-quick-answer', 'moral-oratory',
-      'problem-finder', 'sidequest', 'system-design-prep', 'vedic-astrology-tamil', 'wayfinder',
-    ]);
+  test('the five published skills, each with an editorial entry and a manifest record; the real content has no problems', () => {
+    assert.deepEqual(entries.map((e) => e.slug).sort(), ['conceptcast', 'deep-dive-audio', 'interview-quick-answer', 'sidequest', 'system-design-prep']);
     assert.deepEqual(Object.keys(manifest.skills).sort(), entries.map((e) => e.slug).sort());
     assert.deepEqual(validateLibrary(entries, manifest, SHELVES, sources()), []);
   });
@@ -69,21 +71,26 @@ describe('content and integrity (no build)', () => {
     assert.match(checkSkill('sidequest', entry, extra).join('\n'), /notes\.md: in source\/ but not in the manifest/);
   });
 
-  test('withheld sources are absent from the repository copy: moral-oratory entirely, vedic-astrology-tamil\'s scripts', () => {
-    assert.ok(!existsSync(join(sourceDir, 'moral-oratory')));
-    assert.deepEqual([...filesUnder(join(sourceDir, 'vedic-astrology-tamil')).keys()], ['SKILL.md']);
-    assert.equal(manifest.skills['moral-oratory']!.files.length, 0);
-    assert.ok(manifest.skills['moral-oratory']!.withheld!.reason.length > 40);
-    assert.deepEqual(manifest.skills['vedic-astrology-tamil']!.withheld!.paths, ['scripts/ashtakavarga.py', 'scripts/calculate_chart.py', 'scripts/chart_analysis.py', 'scripts/today_view.py']);
+  test('removed skills (privacy, licensing) leave no source, entry or manifest record', () => {
+    for (const slug of REMOVED) {
+      assert.ok(!existsSync(join(sourceDir, slug)), slug);
+      assert.ok(!existsSync(join(dir, 'entries', `${slug}.ts`)), slug);
+      assert.ok(!(slug in manifest.skills), slug);
+    }
   });
 
-  test('the collected skill carries its upstream MIT notice, marked as added by the archive', () => {
-    const w = manifest.skills.wayfinder!;
-    assert.deepEqual(w.added?.map((a) => a.path), ['LICENSE.txt']);
-    assert.match(readFileSync(join(sourceDir, 'wayfinder/LICENSE.txt'), 'utf8'), /^MIT License\n\nCopyright \(c\) 2026 Matt Pocock\n/);
-    const e = entries.find((x) => x.slug === 'wayfinder')!;
-    assert.equal(e.provenance.kind, 'collected');
-    assert.equal(e.provenance.upstream?.licence, 'MIT');
+  test('files edited for publication record the original\'s hash and what changed; the personal lines are gone', () => {
+    const edited = Object.entries(manifest.skills).flatMap(([slug, m]) => m.files.filter((f) => f.edited).map((f) => `${slug}/${f.path}`));
+    assert.deepEqual(edited.sort(), ['interview-quick-answer/SKILL.md', 'system-design-prep/references/output-format-example.md']);
+    // Each edited copy differs from the original it records (checkSkill rejects an identical one).
+    for (const [slug, m] of Object.entries(manifest.skills)) for (const f of m.files) if (f.edited) assert.notEqual(f.sha256, f.edited.originalSha256, `${slug}/${f.path}`);
+    assert.match(readFileSync(join(sourceDir, 'interview-quick-answer/SKILL.md'), 'utf8'), /^Questions may be dictated\. Read terms/m);
+    assert.match(readFileSync(join(sourceDir, 'system-design-prep/references/output-format-example.md'), 'utf8'), /lines below are illustrative, not from a real attempt/);
+    const entry = clone(manifest.skills['interview-quick-answer']!);
+    entry.files[0]!.edited = { originalSha256: 'nope', note: 'x' };
+    assert.match(checkSkill('interview-quick-answer', entry, filesUnder(join(sourceDir, 'interview-quick-answer'))).join('\n'), /must record its original's SHA-256 and say what changed/);
+    entry.files[0]!.edited = { originalSha256: entry.files[0]!.sha256, note: 'a note long enough to pass the check' };
+    assert.match(checkSkill('interview-quick-answer', entry, filesUnder(join(sourceDir, 'interview-quick-answer'))).join('\n'), /marked edited but identical to its original/);
   });
 
   test('invalid metadata is reported, not published: unknown shelf, missing related, empty fields, collected without upstream, two featured', () => {
@@ -91,12 +98,12 @@ describe('content and integrity (no build)', () => {
     const pick = (slug: string) => bad.find((e) => e.slug === slug)!;
     pick('conceptcast').shelf = 'attic';
     pick('sidequest').related = [{ slug: 'no-such-skill', why: 'x' }];
-    pick('problem-finder').why = '  ';
-    pick('problem-finder').useWhen = [];
-    pick('wayfinder').provenance = { kind: 'collected', note: 'x' };
+    pick('system-design-prep').why = '  ';
+    pick('system-design-prep').useWhen = [];
+    pick('interview-quick-answer').provenance = { kind: 'collected', note: 'x' };
     pick('deep-dive-audio').featured = true;
     const problems = validateLibrary(bad, manifest, SHELVES, sources()).join('\n');
-    for (const expected of ['unknown shelf "attic"', 'related skill "no-such-skill" does not exist', 'problem-finder: why is empty', 'problem-finder: useWhen needs at least one item', 'collected skill must name its upstream', 'exactly one entry is featured']) {
+    for (const expected of ['unknown shelf "attic"', 'related skill "no-such-skill" does not exist', 'system-design-prep: why is empty', 'system-design-prep: useWhen needs at least one item', 'collected skill must name its upstream', 'exactly one entry is featured']) {
       assert.ok(problems.includes(expected), `${expected}\n${problems}`);
     }
   });
@@ -111,7 +118,7 @@ describe('content and integrity (no build)', () => {
       assert.ok(e.claudeAiDescription && e.claudeAiDescription.length <= CLAUDE_AI_DESCRIPTION_MAX, e.slug);
       assert.notEqual(e.claudeAiDescription, d.description, e.slug);
     }
-    assert.deepEqual(long.sort(), ['deep-dive-audio', 'india-product-gap-finder', 'interview-quick-answer', 'problem-finder', 'sidequest', 'system-design-prep', 'vedic-astrology-tamil']);
+    assert.deepEqual(long.sort(), ['deep-dive-audio', 'interview-quick-answer', 'sidequest', 'system-design-prep']);
     const missing = clone(entries); delete missing.find((e) => e.slug === 'sidequest')!.claudeAiDescription;
     assert.match(validateLibrary(missing, manifest, SHELVES, sources()).join('\n'), /sidequest: SKILL\.md's description is 552 characters; add a claudeAiDescription/);
     const tooLong = clone(entries); tooLong.find((e) => e.slug === 'sidequest')!.claudeAiDescription = 'x'.repeat(201);
@@ -177,15 +184,14 @@ describe('preview build', () => {
 
   test('routes: landing, guide, one page per shelf and per skill, the card; files and packages exactly as published', () => {
     const pages = ['skills.html', 'skills/guide.html', ...SHELVES.map((s) => `skills/shelf/${s.id}.html`), ...entries.map((e) => `skills/${e.slug}.html`)];
-    const raw = Object.entries(manifest.skills).flatMap(([slug, m]) => [...m.files, ...(m.added ?? [])].map((f) => `skills/${slug}/files/${f.path}`));
-    const zips = Object.entries(manifest.skills).filter(([, m]) => m.files.length > 0 && !m.withheld).map(([slug]) => `skills/${slug}/package.zip`);
+    const raw = Object.entries(manifest.skills).flatMap(([slug, m]) => m.files.map((f) => `skills/${slug}/files/${f.path}`));
+    const zips = Object.keys(manifest.skills).map((slug) => `skills/${slug}/package.zip`);
     assert.deepEqual(files, [...pages, ...raw, ...zips, 'skills/og.png'].sort());
-    assert.ok(!zips.includes('skills/vedic-astrology-tamil/package.zip') && !zips.includes('skills/moral-oratory/package.zip'));
   });
 
   test('every served file is byte-identical to the published copy', () => {
     for (const [slug, m] of Object.entries(manifest.skills)) {
-      for (const f of [...m.files, ...(m.added ?? [])]) {
+      for (const f of m.files) {
         assert.equal(sha256(readFileSync(join(out, `skills/${slug}/files/${f.path}`))), f.sha256, `${slug}/${f.path}`);
       }
     }
@@ -198,9 +204,9 @@ describe('preview build', () => {
       const m = manifest.skills[slug]!;
       const zipPath = join(out, f);
       assert.equal(unzip('-tq', zipPath).status, 0, f);
-      const expected = [...m.files, ...(m.added ?? [])].map((x) => `${slug}/${x.path}`).sort();
+      const expected = m.files.map((x) => `${slug}/${x.path}`).sort();
       assert.deepEqual(unzip('-Z1', zipPath).stdout.toString().trim().split('\n').sort(), expected, f);
-      for (const x of [...m.files, ...(m.added ?? [])]) assert.equal(sha256(unzip('-p', zipPath, `${slug}/${x.path}`).stdout), x.sha256, `${f}: ${x.path}`);
+      for (const x of m.files) assert.equal(sha256(unzip('-p', zipPath, `${slug}/${x.path}`).stdout), x.sha256, `${f}: ${x.path}`);
     }
   });
 
@@ -208,7 +214,7 @@ describe('preview build', () => {
     const unescape = (s: string) => s.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&amp;/g, '&');
     for (const [slug, m] of Object.entries(manifest.skills)) {
       const html = text(`skills/${slug}.html`);
-      for (const f of [...m.files, ...(m.added ?? [])]) {
+      for (const f of m.files) {
         const id = `src-${slug}-${f.path.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}`;
         const inner = html.match(new RegExp(`<code id="${id}" data-text>([^]*?)</code></pre>`))?.[1];
         assert.ok(inner !== undefined, `${slug}: ${f.path} has a viewer`);
@@ -227,15 +233,17 @@ describe('preview build', () => {
     }
   });
 
-  test('withheld skills: no download, no package, the reason on the page', () => {
-    const mo = text('skills/moral-oratory.html');
-    assert.doesNotMatch(mo, /\/skills\/moral-oratory\/files\//);
-    assert.doesNotMatch(mo, /package\.zip/);
-    assert.match(mo, /Withheld: 10 files/);
-    const vat = text('skills/vedic-astrology-tamil.html');
-    assert.match(vat, /href="\/skills\/vedic-astrology-tamil\/files\/SKILL\.md" download="SKILL\.md"/);
-    assert.doesNotMatch(vat, /vedic-astrology-tamil\/package\.zip/);
-    assert.doesNotMatch(vat, /files\/scripts\//);
+  test('removed skills have no page, file or package, and nothing links to them', () => {
+    for (const slug of REMOVED) assert.ok(!files.some((f) => f === `skills/${slug}.html` || f.startsWith(`skills/${slug}/`)), slug);
+    for (const f of files.filter((x) => x.endsWith('.html'))) {
+      for (const slug of REMOVED) assert.ok(!text(f).includes(`/skills/${slug}`), `${f} links ${slug}`);
+    }
+  });
+
+  test('edited files are marked on their pages with what changed', () => {
+    assert.match(text('skills/interview-quick-answer.html'), /Edited for publication\.<\/strong> Line 132 was reworded/);
+    assert.match(text('skills/system-design-prep.html'), /edited for publication to remove personal details/);
+    assert.doesNotMatch(text('skills/conceptcast.html'), /Edited for publication/);
   });
 
   test('no machine path, account or skill id, or personal address anywhere in the archive\'s output', () => {
@@ -245,13 +253,15 @@ describe('preview build', () => {
     }
   });
 
-  test('pages: CSP, no inline style attributes, one Beacon, unlisted drafts are noindex, the archive\'s own card', () => {
+  test('pages: CSP, no inline style attributes, one Beacon, indexable only when listed, the archive\'s own card', () => {
     for (const f of files.filter((x) => x.endsWith('.html'))) {
       const html = text(f);
       assert.match(html, /<meta http-equiv="content-security-policy"/, f);
       assert.doesNotMatch(html, /\sstyle="/, f);
       assert.ok(html.includes('pu-palette-template'), `${f}: the Beacon`);
-      assert.match(html, /<meta name="robots" content="noindex">/, f);
+      // Indexable exactly when config/release.json lists the archive (preview follows the same state).
+      if (listedInPreview) assert.match(html, /<link rel="canonical" href="http:\/\/localhost:4321\/skills/, f);
+      else assert.match(html, /<meta name="robots" content="noindex">/, f);
       assert.match(html, /<meta property="og:image" content="http:\/\/localhost:4321\/skills\/og\.png">/, f);
       assert.equal(html.match(/<h1[\s>]/g)?.length, 1, `${f}: one h1`);
     }
@@ -280,8 +290,11 @@ describe('preview build', () => {
       assert.equal(await status('/skills/sidequest'), 200);
       assert.equal(await status('/skills/no-such-skill'), 404);
       assert.equal(await status('/skills/shelf/attic'), 404);
-      assert.equal(await status('/skills/vedic-astrology-tamil/files/scripts/calculate_chart.py'), 404);
-      assert.equal(await status('/skills/moral-oratory/files/SKILL.md'), 404);
+      for (const slug of REMOVED) {
+        assert.equal(await status(`/skills/${slug}`), 404, slug);
+        assert.equal(await status(`/skills/${slug}/files/SKILL.md`), 404, slug);
+        assert.equal(await status(`/skills/${slug}/package.zip`), 404, slug);
+      }
     } finally {
       await server.stop();
     }

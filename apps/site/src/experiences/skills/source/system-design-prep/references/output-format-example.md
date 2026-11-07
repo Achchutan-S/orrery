@@ -1,8 +1,9 @@
-# Worked Example — Output Format (from Ticketmaster session)
+# Worked Example — Output Format (Ticketmaster)
 
 This shows the exact structure to replicate for any new system's closing-gaps
 reference doc. Truncated to 3 entries here for brevity — a real output should
-cover every phase, weighted toward deep-dive/LLD questions.
+cover every phase, weighted toward deep-dive/LLD questions. The *Your note*
+lines below are illustrative, not from a real attempt.
 
 ---
 
@@ -26,7 +27,7 @@ conditional update — `UPDATE tickets SET status='held' WHERE id=? AND
 status='available'` — and I check rows_affected == 1. Redis alone isn't
 sufficient — if it's down or evicts early, two users could still race — so the
 DB-level atomic check is the real source of truth."
-> *Your note: had the Redis-hold idea; hadn't named the atomic DB update as the
+> *Your note: named the Redis hold, but not the atomic DB update as the
 > actual correctness guarantee — this is usually the single most-listened-for
 > line in the whole interview.*
 

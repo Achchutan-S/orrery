@@ -7,7 +7,7 @@ export default {
   shelf: 'engineering',
   tags: ['system design', 'interviews', 'architecture', 'trade-offs', 'study notes'],
   artefact: 'blueprint',
-  provenance: { kind: 'original', note: 'Written by the archive’s owner after working through Ticketmaster end to end; the output format is the one that session tested and preferred.' },
+  provenance: { kind: 'original', note: 'Written by the archive’s owner after working through Ticketmaster end to end; the output format is the one that session tested and preferred. Its worked example was edited for publication (see Original source).' },
   runs: { surfaces: ['claude-ai', 'claude-code'], note: 'Written for Claude.ai’s file tools (it asks for an actual markdown file); in Claude Code the same file is written to disk. Study mode may use web search.' },
 
   why: 'System design rounds reward a method more than an answer, and that method needs practice in the right order. The skill keeps the order, lets you speak first, and turns the session into notes worth keeping.',
@@ -49,7 +49,7 @@ export default {
   },
   related: [
     { slug: 'interview-quick-answer', why: 'For the concept questions that come up inside a design round.' },
-    { slug: 'wayfinder', why: 'Planning real work too large for one session.' },
+    { slug: 'conceptcast', why: 'Hearing the trade-offs argued out loud before a mock round.' },
   ],
   claudeAiDescription: "Runs a phase-by-phase system design interview session (requirements, entities, APIs, HLD, schema, deep dives) and writes a Q&A reference doc. Use for /system-design or design-round prep.",
   portability: 'SKILL.md and two reference files. It asks for a saved file, so it works best where Claude can create files.',

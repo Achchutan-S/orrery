@@ -89,6 +89,15 @@ const run = (env: 'production' | 'preview', m?: Mutate, target?: SmokeInput['tar
   smoke({ base: 'https://pu.example', env, experiences, state: state!, vercel, target, fetch: deployment(env, m) })
     .then((f) => f.map((x) => `${x.file}: ${x.reason}`));
 
+test('a listed experience must be linked from the index by its first route only; its other pages are fetched, not required on the index', async () => {
+  const listed = { ...state!, experiences: { ...state!.experiences, skills: { lifecycle: 'published' as const, access: { kind: 'public' as const }, discoverability: 'listed' as const, flags: {} } } };
+  const check = (link: boolean) => smoke({ base: 'https://pu.example', env: 'preview', experiences, state: listed, vercel, fetch: deployment('preview', {
+    files: (f) => { if (link) f.set('index.html', f.get('index.html')!.replace('</body>', '<a href="/skills">s</a></body>')); },
+  }) }).then((f) => f.map((x) => `${x.file}: ${x.reason}`));
+  assert.deepEqual(await check(false), ['/: the index does not link listed "skills" (/skills)']);
+  assert.deepEqual(await check(true), []);
+});
+
 test('a correct production deployment passes', async () => {
   assert.deepEqual(await run('production'), []);
 });

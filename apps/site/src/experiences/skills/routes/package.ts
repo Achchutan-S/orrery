@@ -1,10 +1,10 @@
 // The whole skill as a ZIP whose root is the skill's folder (what Claude.ai's upload expects), with
-// every published file at its original relative path. Offered only when nothing it needs is withheld.
+// every published file at its original relative path.
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { skills } from '../library.ts';
 import { zip } from '../zip.ts';
 
-export const getStaticPaths = (() => skills.filter((s) => s.packaged).map((s) => ({ params: { skill: s.slug } }))) satisfies GetStaticPaths;
+export const getStaticPaths = (() => skills.map((s) => ({ params: { skill: s.slug } }))) satisfies GetStaticPaths;
 
 export const GET: APIRoute = ({ params }) => {
   const s = skills.find((k) => k.slug === params.skill)!;

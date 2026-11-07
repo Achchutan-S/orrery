@@ -19,8 +19,8 @@ export type PublishedFile = {
   sha256: string;
   bytes: number;
   lines: number;
-  /** Added by the archive (a licence notice), not part of the original. */
-  added?: string;
+  /** Set when the copy was edited for publication: what changed, and the original's SHA-256. */
+  edited?: { originalSha256: string; note: string };
   /** Top-level sections of a Markdown file, as character ranges of `text`, for copying one. */
   sections: { title: string; start: number; end: number }[];
 };
@@ -31,8 +31,6 @@ export type Skill = SkillEntry & {
   files: PublishedFile[];
   /** The skill's own frontmatter `name` and `description`, read from its SKILL.md when published. */
   declared?: { name: string; description: string };
-  /** A ZIP is offered only when nothing the skill needs is withheld. */
-  packaged: boolean;
 };
 
 const sourcesBySkill = new Map<string, Map<string, Uint8Array>>();
@@ -86,22 +84,21 @@ export const skills: readonly Skill[] = byShelf.map((e) => {
   const n = (counters.get(e.shelf) ?? 0) + 1;
   counters.set(e.shelf, n);
   const source = manifest.skills[e.slug]!;
-  const file = (path: string, added?: string): PublishedFile => {
+  const file = ({ path, edited }: ManifestSkill['files'][number]): PublishedFile => {
     const text = textOf.get(`${e.slug}/${path}`)!;
     const bytes = Buffer.from(text, 'utf8');
     return {
-      path, text, sha256: sha256(bytes), bytes: bytes.length, added,
+      path, text, sha256: sha256(bytes), bytes: bytes.length, edited,
       lines: text.split('\n').length - (text.endsWith('\n') ? 1 : 0),
       sections: path.endsWith('.md') ? sectionsOf(text) : [],
     };
   };
-  const files = [...source.files.map((f) => file(f.path)), ...(source.added ?? []).map((f) => file(f.path, f.why))];
+  const files = source.files.map(file);
   const skill = files.find((f) => f.path === 'SKILL.md');
   return {
     ...e, shelfInfo, source, files,
     call: `${shelfInfo.call}·${String(n).padStart(2, '0')}`,
     declared: skill && declaredOf(skill.text),
-    packaged: source.files.length > 0 && !source.withheld,
   };
 });
 
@@ -114,7 +111,7 @@ export const totals = {
   skills: skills.length,
   shelves: SHELVES.length,
   files: skills.reduce((n, s) => n + s.source.files.length, 0),
-  lines: skills.reduce((n, s) => n + s.files.filter((f) => !f.added).reduce((m, f) => m + f.lines, 0), 0),
+  lines: skills.reduce((n, s) => n + s.files.reduce((m, f) => m + f.lines, 0), 0),
 };
 
 /** Human date, in English, from YYYY-MM-DD (UTC, so the build machine's zone cannot shift it). */

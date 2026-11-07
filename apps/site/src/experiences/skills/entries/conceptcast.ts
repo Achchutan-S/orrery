@@ -48,7 +48,7 @@ export default {
   dependencies: ['Web search (optional, but the script is weaker without it).', 'A text-to-speech tool of your choice to listen to the result.'],
   limitations: [
     'Long by design: a focused concept is about 2,500 to 3,000 words, and broad subjects become a series.',
-    'For programming examples it is told to prefer Java and Spring Boot, the owner’s working stack.',
+    'For programming examples it is told to prefer Java and Spring Boot.',
     'It produces a script, not audio.',
   ],
   example: {

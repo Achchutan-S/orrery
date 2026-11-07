@@ -144,7 +144,9 @@ async function checks(input: SmokeInput, findings: Finding[]): Promise<void> {
       if (exact !== undefined) {
         const path = pattern;
         await page(path, r.mounted ? 200 : 404, r.mounted ? `"${e.id}" is mounted in ${env}` : `"${e.id}" is not released to ${env}`);
-        if (r.listed && !isFileRoute(path) && !hrefs(crawled.get('/') ?? '').includes(path)) fail('/', `the index does not link listed "${e.id}" (${path})`);
+        // Discovery links each listed experience once, to its first parameter-free route (src/platform/discovery).
+        const discoveryRoute = e.routes.find((x) => !x.pattern.includes('['))?.pattern;
+        if (r.listed && path === discoveryRoute && !hrefs(crawled.get('/') ?? '').includes(path)) fail('/', `the index does not link listed "${e.id}" (${path})`);
       } else if (r.mounted) {
         // Enumerated views: follow the links the experience's own pages make into its subtree.
         const views = [...new Set([...crawled.values()].flatMap(hrefs).filter((h) => h.startsWith(`/${under}`)))];

@@ -7,7 +7,7 @@ export default {
   shelf: 'learning',
   tags: ['interviews', 'java', 'spring boot', 'explanation', 'analogies'],
   artefact: 'notebook',
-  provenance: { kind: 'original', note: 'Written by the archive’s owner for their own interview preparation; the topic list follows their working stack.' },
+  provenance: { kind: 'original', note: 'Written by the archive’s owner for interview preparation. One line was edited for publication (see Original source).' },
   runs: { surfaces: ['claude-ai', 'claude-code'], note: 'Self-contained instructions; no tools required.' },
 
   why: 'Interview preparation happens under time pressure, and short answers that only make sense to someone who already knows them do not help. This skill keeps answers short where brevity helps and full where clarity needs room.',
@@ -40,7 +40,7 @@ export default {
   inputs: ['One question or a batch, typed or dictated. Say “short” for a compressed form.'],
   outputs: ['A formatted answer: What it is, key points or a comparison table, an analogy, an optional example, a memory hook, and two follow-ups with one-line answers.'],
   dependencies: ['None.'],
-  limitations: ['Optimised for spoken interview answers, not for documentation or study notes.', 'The listed domains reflect one engineer’s stack; other domains work but are not called out.'],
+  limitations: ['Optimised for spoken interview answers, not for documentation or study notes.', 'The listed domains are a fixed set; other domains work but are not called out.'],
   example: {
     invocation: 'mock vs stub',
     request: 'quick: 401 vs 403',

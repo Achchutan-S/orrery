@@ -11,13 +11,11 @@ export const getStaticPaths = (() => skills.map((s) => ({ params: { skill: s.slu
 const s = skillBySlug(Astro.params.skill!) as Skill;
 const related = s.related.map((r) => ({ ...r, skill: skillBySlug(r.slug)! }));
 const shelfmates = skills.filter((k) => k.shelf === s.shelf && k.slug !== s.slug && !s.related.some((r) => r.slug === k.slug));
-const original = s.files.filter((f) => !f.added);
 const zipName = `${s.slug}.zip`;
-const tree = [...s.files.map((f) => ({ path: f.path, state: f.added ? 'added' : 'published' })), ...(s.source.withheld?.paths ?? []).map((p) => ({ path: p, state: 'withheld' }))]
-  .sort((a, b) => (a.path === 'SKILL.md' ? -1 : b.path === 'SKILL.md' ? 1 : a.path.localeCompare(b.path)));
+const edited = s.files.filter((f) => f.edited);
+const tree = [...s.files].sort((a, b) => (a.path === 'SKILL.md' ? -1 : b.path === 'SKILL.md' ? 1 : a.path.localeCompare(b.path)));
 const descLength = s.declared?.description.length;
 const where = s.runs.surfaces.map((x) => SURFACE_LABEL[x]).join(' and ');
-const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Partly published' : 'Published in full';
 ---
 <Layout page="skill" title={`${s.title} · The Claude Skills Archive`} description={s.purpose}>
   <nav class="trail" aria-label="Breadcrumb">
@@ -38,9 +36,12 @@ const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Pa
           <div><dt>Provenance</dt><dd><span class:list={['stamp', `stamp--${s.provenance.kind}`]}>{s.provenance.kind === 'original' ? 'Original' : 'Collected'}</span> {s.provenance.note}{s.provenance.upstream && <> Source: <a href={s.provenance.upstream.href}>{s.provenance.upstream.label}</a> ({s.provenance.upstream.licence}).</>}</dd></div>
           <div><dt>Runs in</dt><dd>{where}. {s.runs.note}</dd></div>
           <div><dt>Last updated</dt><dd><time datetime={s.source.updated}>{longDate(s.source.updated)}</time>, in its {s.source.origin.split(',')[0]}. No version number is recorded.</dd></div>
-          <div><dt>Original source</dt><dd>{sourceState}{original.length > 0 && `: ${original.length} file${original.length === 1 ? '' : 's'}, ${original.reduce((n, f) => n + f.lines, 0)} lines, unedited`}.</dd></div>
+          <div><dt>Original source</dt><dd>Published in full: {s.files.length} file{s.files.length === 1 ? '' : 's'}, {s.files.reduce((n, f) => n + f.lines, 0)} lines, {edited.length === 0 ? 'unedited' : `${edited.length === 1 ? 'one file' : `${edited.length} files`} edited for publication (see below)`}.</dd></div>
           <div><dt>Invoke as</dt><dd><code translate="no">{s.declared?.name ? `/${s.declared.name}` : `/${s.slug}`}</code>, or describe the task and let Claude choose it.</dd></div>
         </dl>
+        <p class="plate__jump">
+          <a class="btn btn--brass btn--small" href="#source">Source & downloads</a>
+        </p>
         <nav class="plate__toc" aria-label="On this page">
           <ul>
             <li><a href="#understanding">Understanding</a></li>
@@ -74,18 +75,19 @@ const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Pa
     <section id="how" class="folio" aria-labelledby="how-h">
       <h2 id="how-h"><span class="folio__n">II</span> How it works</h2>
       <ol class="path">{s.workflow.map((w) => <li><h3>{w.step}</h3><p>{w.detail}</p></li>)}</ol>
-      <div class="folio__cols">
-        <div>
-          <h3>What it asks of you</h3><ul>{s.inputs.map((x) => <li>{x}</li>)}</ul>
-          <h3>What you get back</h3><ul>{s.outputs.map((x) => <li>{x}</li>)}</ul>
-          <h3>Decision points</h3><ul>{s.decisions.map((x) => <li>{x}</li>)}</ul>
-        </div>
-        <div>
-          <h3>What is distinctive</h3><ul>{s.distinctive.map((x) => <li>{x}</li>)}</ul>
-          <h3>Tools and dependencies</h3><ul>{s.dependencies.map((x) => <li>{x}</li>)}</ul>
-          <h3>Limitations</h3><ul>{s.limitations.map((x) => <li>{x}</li>)}</ul>
-        </div>
+      <div class="facets">
+        <div class="facet"><h3>What it asks of you</h3><ul>{s.inputs.map((x) => <li>{x}</li>)}</ul></div>
+        <div class="facet"><h3>What you get back</h3><ul>{s.outputs.map((x) => <li>{x}</li>)}</ul></div>
+        <div class="facet"><h3>Tools and dependencies</h3><ul>{s.dependencies.map((x) => <li>{x}</li>)}</ul></div>
+        <div class="facet"><h3>Limitations</h3><ul>{s.limitations.map((x) => <li>{x}</li>)}</ul></div>
       </div>
+      <details class="more">
+        <summary>Design notes: decision points and what is distinctive</summary>
+        <div class="folio__cols">
+          <div><h3>Decision points</h3><ul>{s.decisions.map((x) => <li>{x}</li>)}</ul></div>
+          <div><h3>What is distinctive</h3><ul>{s.distinctive.map((x) => <li>{x}</li>)}</ul></div>
+        </div>
+      </details>
     </section>
 
     <section id="use" class="folio" aria-labelledby="use-h">
@@ -108,33 +110,20 @@ const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Pa
 
     <section id="source" class="folio folio--source" aria-labelledby="source-h">
       <h2 id="source-h"><span class="folio__n">IV</span> Original source</h2>
-      {original.length > 0 ? (
-        <>
-          <p>These are the files of the skill as it exists in its {s.source.origin.split(',')[0]}, copied byte for byte. Each one’s SHA-256 is recorded in the archive’s manifest and checked on every build; if a copy here ever differed from that record, the site would not build.</p>
-          <div class="actions">
-            <button type="button" class="btn btn--brass" data-copy={`src-${s.slug}-skill-md`} data-label="SKILL.md" hidden>Copy SKILL.md</button>
-            <a class="btn" href={`/skills/${s.slug}/files/SKILL.md`} download="SKILL.md">Download SKILL.md</a>
-            {s.packaged ? <a class="btn" href={`/skills/${s.slug}/package.zip`} download={zipName} type="application/zip">Download the whole skill ({zipName})</a>
-              : <span class="actions__none">No complete package: {s.source.withheld?.reason ? 'files it needs are withheld (below).' : 'see below.'}</span>}
-          </div>
-        </>
-      ) : <p>The original is not published.</p>}
-      {s.source.withheld && (
-        <div class="withheld" role="note">
-          <h3>Withheld: {s.source.withheld.count} file{s.source.withheld.count === 1 ? '' : 's'}</h3>
-          <p>{s.source.withheld.reason}</p>
-        </div>
-      )}
+      <p>These are the files of the skill as it exists in its {s.source.origin.split(',')[0]}{edited.length === 0 ? ', copied byte for byte' : `, copied byte for byte except ${edited.length === 1 ? 'one file' : `${edited.length} files`} edited for publication to remove personal details (marked below, with what changed and the original’s SHA-256)`}. Each published file’s SHA-256 is recorded in the archive’s manifest and checked on every build; if a copy here ever differed from that record, the site would not build.</p>
+      <div class="actions">
+        <button type="button" class="btn btn--brass" data-copy={`src-${s.slug}-skill-md`} data-label="SKILL.md" hidden>Copy SKILL.md</button>
+        <a class="btn" href={`/skills/${s.slug}/files/SKILL.md`} download="SKILL.md">Download SKILL.md</a>
+        <a class="btn" href={`/skills/${s.slug}/package.zip`} download={zipName} type="application/zip">Download the whole skill ({zipName})</a>
+      </div>
       <div class="tree" aria-label="Files in this skill">
         <p class="tree__root"><code>{s.slug}/</code></p>
         <ul>
-          {tree.map((t) => <li class={`tree__${t.state}`}><code>{t.path}</code> <span>{t.state === 'published' ? 'original' : t.state === 'added' ? 'added by this archive' : 'withheld'}</span></li>)}
-          {s.source.withheld && !s.source.withheld.paths && <li class="tree__withheld"><code>…</code> <span>{s.source.withheld.count} files withheld</span></li>}
+          {tree.map((f) => <li class:list={[f.edited && 'tree__edited']}><code>{f.path}</code> <span>{f.edited ? 'edited for publication' : 'original'}</span></li>)}
         </ul>
       </div>
       {s.files.map((f, i) => <SourceViewer slug={s.slug} file={f} open={i === 0} />)}
-      {s.files.length > 0 && (
-        <details class="integrity">
+      <details class="integrity">
           <summary>Integrity record</summary>
           <table>
             <caption>SHA-256 of every published file, as recorded in the manifest and verified at build</caption>
@@ -142,18 +131,18 @@ const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Pa
             <tbody>{s.files.map((f) => <tr><td><code>{f.path}</code></td><td>{f.bytes}</td><td><code class="hash" translate="no">{f.sha256}</code></td></tr>)}</tbody>
           </table>
         </details>
-      )}
     </section>
 
     <section id="install" class="folio" aria-labelledby="install-h">
       <h2 id="install-h"><span class="folio__n">V</span> Installing it yourself</h2>
       <p class="portability"><strong>Before you download:</strong> {s.portability}</p>
-      {s.packaged || original.length > 0 ? (
+        <details class="more">
+        <summary>Step by step: Claude Code and Claude.ai</summary>
         <div class="folio__cols">
           <div>
             <h3>In Claude Code</h3>
             <ol>
-              <li>Unzip {s.packaged ? <code>{zipName}</code> : 'the files above'} so the folder is <code translate="no">~/.claude/skills/{s.declared?.name || s.slug}/</code> (for every project) or <code translate="no">.claude/skills/{s.declared?.name || s.slug}/</code> (one project), with <code>SKILL.md</code> directly inside.</li>
+              <li>Unzip <code>{zipName}</code> so the folder is <code translate="no">~/.claude/skills/{s.declared?.name || s.slug}/</code> (for every project) or <code translate="no">.claude/skills/{s.declared?.name || s.slug}/</code> (one project), with <code>SKILL.md</code> directly inside.</li>
               <li>Keep the relative paths as they are: the instructions refer to their supporting files by path.</li>
               <li>Start a session. Claude picks the skill when a request matches its description, or run it directly with <code translate="no">/{s.declared?.name || s.slug}</code>.</li>
             </ol>
@@ -163,7 +152,7 @@ const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Pa
             <ol>
               <li>Turn on code execution: Settings › Capabilities. Skills need it.</li>
               <li>Open Customize › Skills, choose “+”, then “Create skill”, then “Upload a skill”.</li>
-              <li>Upload {s.packaged ? <code>{zipName}</code> : 'a ZIP of the skill folder'}. Its root is the <code>{s.slug}/</code> folder, as Claude.ai asks.</li>
+              <li>Upload <code>{zipName}</code>. Its root is the <code>{s.slug}/</code> folder, as Claude.ai asks.</li>
             </ol>
             {descLength !== undefined && descLength > CLAUDE_AI_DESCRIPTION_MAX && s.claudeAiDescription && (
               <div class="limit" role="note" data-limit>
@@ -176,7 +165,7 @@ const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Pa
             )}
           </div>
         </div>
-      ) : <p>Nothing to install from this archive; the method above is the part that is shared.</p>}
+        </details>
       <p class="fine">Sources for these steps: <a href="https://code.claude.com/docs/en/skills">Claude Code skills documentation</a>, <a href="https://support.claude.com/en/articles/12512180-using-skills-in-claude">Using Skills in Claude</a>, <a href="https://support.claude.com/en/articles/12512198-how-to-create-custom-skills">How to create custom skills</a> (read 7 November 2026).</p>
     </section>
 

@@ -1,5 +1,4 @@
 // One published file of a skill, served exactly as stored: /skills/<slug>/files/<relative path>.
-// Withheld files have no route at all.
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { skills } from '../library.ts';
 

@@ -604,9 +604,10 @@ describe('Beacon and palette', () => {
     await input.fill('journal');
     assert.deepEqual(await shown(), ['/journal']);
     await input.fill('ARCH');
-    assert.deepEqual(await shown(), ['/journal', '/sample-content', '/sample-app']);
+    // Tag "architecture" on three entries; "The Claude Skills Archive" matches by title.
+    assert.deepEqual(await shown(), ['/journal', '/sample-content', '/sample-app', '/skills']);
     await input.fill('labs');
-    assert.deepEqual(await shown(), ['https://kawaiui.vercel.app/']);
+    assert.deepEqual(await shown(), ['https://kawaiui.vercel.app/', '/skills']);
     await input.fill('external engineering');
     assert.deepEqual(await shown(), ['https://devxray-one.vercel.app/']);
     await input.fill('zzz');

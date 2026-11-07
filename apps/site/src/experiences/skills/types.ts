@@ -2,7 +2,7 @@
 // the skill itself; the original files live, unmodified, under source/<slug>/ (integrity.ts).
 
 /** The look of a skill's artefact on the shelf. Each skill has its own. */
-export type Artefact = 'book' | 'tome' | 'scroll' | 'notebook' | 'blueprint' | 'map' | 'ledger' | 'atlas' | 'journal' | 'palmleaf';
+export type Artefact = 'book' | 'scroll' | 'notebook' | 'blueprint' | 'journal';
 export type Surface = 'claude-ai' | 'claude-code';
 
 export type SkillEntry = {

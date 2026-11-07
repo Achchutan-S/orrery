@@ -39,16 +39,16 @@ const short = `${file.sha256.slice(0, 12)}…`;
 <details class="source" open={open} data-source-file>
   <summary class="source__summary">
     <span class="source__path"><code>{file.path}</code></span>
-    <span class="source__facts">{file.lines} lines · {file.bytes.toLocaleString('en-GB')} bytes{file.added && ' · added by this archive'}</span>
+    <span class="source__facts">{file.lines} lines · {file.bytes.toLocaleString('en-GB')} bytes{file.edited && ' · edited for publication'}</span>
   </summary>
-  {file.added && <p class="source__note">{file.added}</p>}
+  {file.edited && <p class="source__note"><strong>Edited for publication.</strong> {file.edited.note} Original SHA-256: <code translate="no">{file.edited.originalSha256.slice(0, 12)}…</code></p>}
   <div class="source__bar">
     <button type="button" class="btn btn--brass" data-copy={id} data-label={file.path} hidden>Copy {name}</button>
     <a class="btn" href={href} download={name}>Download {name}</a>
     <a class="btn btn--quiet" href={href}>Open as plain text</a>
     <span class="source__hash" title={`SHA-256 ${file.sha256}`}>SHA-256 <code translate="no">{short}</code></span>
   </div>
-  <div class="source__scroll" role="region" aria-label={`${file.path}, original text`} tabindex="0">
+  <div class="source__scroll" role="region" aria-label={`${file.path}, ${file.edited ? "copy edited for publication" : "original text"}`} tabindex="0">
     <pre class="code"><code id={id} data-text>{lines.map((l, i) => <Fragment><span class:list={['ln', kinds[i]]}>{l}</span>{i < lines.length - 1 || trailing ? '\n' : ''}</Fragment>)}</code></pre>
   </div>
   {file.sections.length > 1 && (

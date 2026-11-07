@@ -19,8 +19,8 @@ export const catalog: readonly ExperienceInput[] = [
   devxray,
   sampleContent,
   sampleApp,
-  resume,
   skills,
+  resume,
   canaryDraft,
   sampleHostile,
 ];

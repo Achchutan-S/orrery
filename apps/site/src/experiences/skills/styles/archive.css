@@ -353,16 +353,6 @@
   [data-experience='skills'] .cover--book .cover__body::after, [data-experience='skills'] .cover--book .cover__body::before { content: ''; position: absolute; inset-block-end: calc(-0.6rem * var(--cs)); inline-size: calc(0.45rem * var(--cs)); block-size: calc(1.8rem * var(--cs)); background: #a8322a; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); }
   [data-experience='skills'] .cover--book .cover__body::before { inset-inline-start: 58%; background: #d2a23c; }
   [data-experience='skills'] .cover--book .cover__body::after { inset-inline-start: 66%; }
-  /* Heavy leather tome with brass corners and a clasp. */
-  [data-experience='skills'] .cover--tome { --w: 9rem; --c: light-dark(#5b1f1a, #4a1915); --c-ink: #e8c77a; }
-  [data-experience='skills'] .cover--tome.cover--sm { --w: 6.5rem; } [data-experience='skills'] .cover--tome.cover--lg { --w: 13.5rem; }
-  [data-experience='skills'] .cover--tome .cover__body { border-radius: 4px; background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--c) 70%, #b0543e), var(--c)); }
-  [data-experience='skills'] .cover--tome .cover__deco { inset: 0; border: 0; opacity: 1; background:
-    conic-gradient(from 90deg at calc(1.2rem * var(--cs)) calc(1.2rem * var(--cs)), transparent 75%, var(--a-brass) 0) 0 0 / 100% 100% no-repeat,
-    conic-gradient(from 180deg at calc(100% - 1.2rem * var(--cs)) calc(1.2rem * var(--cs)), transparent 75%, var(--a-brass) 0) 0 0 / 100% 100% no-repeat,
-    conic-gradient(from 0deg at calc(1.2rem * var(--cs)) calc(100% - 1.2rem * var(--cs)), transparent 75%, var(--a-brass) 0) 0 0 / 100% 100% no-repeat,
-    conic-gradient(from 270deg at calc(100% - 1.2rem * var(--cs)) calc(100% - 1.2rem * var(--cs)), transparent 75%, var(--a-brass) 0) 0 0 / 100% 100% no-repeat; }
-  [data-experience='skills'] .cover--tome .cover__body::after { content: ''; position: absolute; inset-inline-end: calc(-0.2rem * var(--cs)); inset-block-start: 44%; inline-size: calc(1.3rem * var(--cs)); block-size: calc(1.6rem * var(--cs)); background: linear-gradient(var(--a-brass-hi), var(--a-brass)); border-radius: 3px 0 0 3px; }
   /* Parchment scroll on wooden rods. */
   [data-experience='skills'] .cover--scroll { --c: light-dark(#ecdcb0, #d8c38e); --c-ink: #4a321b; }
   [data-experience='skills'] .cover--scroll .cover__body { inset-block: calc(0.8rem * var(--cs)); inset-inline: calc(0.4rem * var(--cs)); border-radius: 0; box-shadow: inset 0 calc(10px * var(--cs)) 10px -6px rgb(90 60 20 / 0.45), inset 0 calc(-10px * var(--cs)) 10px -6px rgb(90 60 20 / 0.45); background: repeating-linear-gradient(var(--c) 0 calc(1.1rem * var(--cs)), color-mix(in srgb, var(--c) 92%, #8a6a35) 0 calc(1.15rem * var(--cs))); }
@@ -383,36 +373,11 @@
     box-shadow: none; clip-path: polygon(0 0, 100% 0, 100% 86%, 86% 100%, 0 100%); }
   [data-experience='skills'] .cover--blueprint .cover__body::after { content: ''; position: absolute; inset-inline-end: 0; inset-block-end: 0; inline-size: 14%; block-size: 14%; background: linear-gradient(135deg, #b8cbe4 50%, transparent 50%); }
   [data-experience='skills'] .cover--blueprint .cover__body::before { content: ''; position: absolute; inset-block-start: calc(0.4rem * var(--cs)); inline-size: calc(0.7rem * var(--cs)); block-size: calc(0.7rem * var(--cs)); border-radius: 50%; background: #c0392b; box-shadow: 0 2px 2px rgb(0 0 0 / 0.4); }
-  /* Folded map in panels. */
-  [data-experience='skills'] .cover--map { --c: light-dark(#c9cf9e, #8d9568); --c-ink: #2a3018; }
-  [data-experience='skills'] .cover--map .cover__body { border-radius: 2px; box-shadow: none; background:
-    linear-gradient(90deg, rgb(0 0 0 / 0.12), transparent 8%, transparent 33%, rgb(0 0 0 / 0.14) 33.4%, transparent 40%, transparent 66%, rgb(0 0 0 / 0.14) 66.4%, transparent 74%),
-    radial-gradient(circle at 70% 70%, rgb(120 140 80 / 0.5), transparent 40%), radial-gradient(circle at 25% 30%, rgb(90 120 160 / 0.35), transparent 35%), var(--c); }
-  [data-experience='skills'] .cover--map .cover__deco { border-style: dotted; border-width: 2px; opacity: 0.6; }
-  /* Ledger: green cloth, leather corners, label panel. */
-  [data-experience='skills'] .cover--ledger { --c: light-dark(#244a3b, #1d3c30); --c-ink: #2a1d10; }
-  [data-experience='skills'] .cover--ledger .cover__body { background: linear-gradient(135deg, #6b2a20 0 14%, transparent 14% 86%, #6b2a20 86%), var(--c); }
-  [data-experience='skills'] .cover--ledger .cover__title, [data-experience='skills'] .cover--ledger .cover__call { background: #efe2c2; padding: calc(0.25rem * var(--cs)) calc(0.45rem * var(--cs)); border: 1px solid #8a6a35; }
-  [data-experience='skills'] .cover--ledger .cover__emblem { color: #e8c77a; }
-  [data-experience='skills'] .cover--ledger .cover__deco { opacity: 0; }
-  /* Atlas: navy, gilt border, large globe. */
-  [data-experience='skills'] .cover--atlas { --w: 9rem; --c: light-dark(#1d2b4f, #18233f); --c-ink: #e7c46d; }
-  [data-experience='skills'] .cover--atlas.cover--lg { --w: 13.5rem; } [data-experience='skills'] .cover--atlas.cover--sm { --w: 6.5rem; }
-  [data-experience='skills'] .cover--atlas .cover__deco { border-width: 2px; border-style: double; opacity: 0.8; inset: calc(0.5rem * var(--cs)); inset-inline-start: calc(0.95rem * var(--cs)); }
-  [data-experience='skills'] .cover--atlas .cover__emblem { inline-size: calc(3.8rem * var(--cs)); block-size: calc(3.8rem * var(--cs)); }
   /* Adventurer's journal: tan leather, wrap strap, a sprig tucked in. */
   [data-experience='skills'] .cover--journal { --c: light-dark(#9b6a3c, #7d5530); --c-ink: #fbefd2; }
   [data-experience='skills'] .cover--journal .cover__body { border-radius: 6px 12px 12px 6px; background: radial-gradient(circle at 30% 20%, rgb(255 230 180 / 0.25), transparent 50%), var(--c); }
   [data-experience='skills'] .cover--journal .cover__deco { border: 0; inset: 16% 0 auto 0; block-size: calc(0.55rem * var(--cs)); background: #4a2c14; opacity: 1; border-radius: 0; }
   [data-experience='skills'] .cover--journal .cover__body::after { content: ''; position: absolute; inset-inline-end: calc(0.3rem * var(--cs)); inset-block-start: calc(-0.2rem * var(--cs)); inline-size: calc(1rem * var(--cs)); block-size: calc(2.6rem * var(--cs)); background: var(--s-leaf2); border-radius: 0 100% 0 100%; transform: rotate(18deg); }
-  /* Palm-leaf manuscript (olai chuvadi): golden strips tied with cord, between wooden boards. */
-  [data-experience='skills'] .cover--palmleaf { --c: light-dark(#d9b56b, #b8954f); --c-ink: #3b2a12; }
-  [data-experience='skills'] .cover--palmleaf .cover__body { border-radius: 10px; box-shadow: none; background:
-    linear-gradient(#5d3a1b 0 calc(0.7rem * var(--cs)), transparent 0 calc(100% - 0.7rem * var(--cs)), #5d3a1b 0),
-    repeating-linear-gradient(var(--c) 0 calc(0.85rem * var(--cs)), color-mix(in srgb, var(--c) 75%, #6b4a1f) 0 calc(0.95rem * var(--cs))); }
-  [data-experience='skills'] .cover--palmleaf .cover__deco { border: 0; inset: 0 auto 0 50%; inline-size: 2px; background: #7a2a1e; opacity: 0.9; }
-  [data-experience='skills'] .cover--palmleaf .cover__title, [data-experience='skills'] .cover--palmleaf .cover__call { background: rgb(255 245 220 / 0.85); padding: calc(0.2rem * var(--cs)) calc(0.4rem * var(--cs)); border-radius: 2px; position: relative; }
-  [data-experience='skills'] .cover--palmleaf .cover__emblem { background: rgb(255 245 220 / 0.85); border-radius: 50%; padding: calc(0.25rem * var(--cs)); position: relative; }
 
   /* ---------- Ledger of recent updates, footer ---------- */
   [data-experience='skills'] .ledger__list { list-style: none; padding: 0; margin: 1.25rem 0 0.75rem; border-top: 2px solid var(--a-line); }
@@ -430,41 +395,45 @@
   [data-experience='skills'] .trail ol { list-style: none; display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; }
   [data-experience='skills'] .trail li:not(:last-child)::after { content: '›'; margin-inline-start: 0.35rem; color: var(--a-muted); }
   [data-experience='skills'] .trail a[aria-current] { color: var(--a-ink); text-decoration: none; font-weight: 600; }
-  [data-experience='skills'] .plate, [data-experience='skills'] .alcove, [data-experience='skills'] .guide { padding-block: 1.5rem 7rem; }
+  [data-experience='skills'] .plate, [data-experience='skills'] .alcove, [data-experience='skills'] .guide { padding-block: 1rem 5rem; }
+  [data-experience='skills'] .plate { font-size: 1.0625rem; line-height: 1.55; }
   [data-experience='skills'] .plate__head {
-    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(1.5rem, 5vw, 4rem); align-items: start; padding: clamp(1.25rem, 4vw, 2.75rem); margin-bottom: 1.5rem; border-radius: 8px;
+    display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(1.25rem, 3.5vw, 2.5rem); align-items: start; padding: clamp(1rem, 2.5vw, 1.75rem); margin-bottom: 1rem; border-radius: 8px;
     background: radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--a-lantern) 28%, transparent), transparent 45%), linear-gradient(160deg, var(--a-paper), var(--a-paper-2));
     border: 1px solid var(--a-line); box-shadow: 0 14px 34px var(--a-shadow);
   }
-  [data-experience='skills'] .plate__art { padding: 1rem 1rem 1.5rem; background: linear-gradient(transparent 82%, var(--a-wood) 82%, var(--a-wood-dark)); border-radius: 4px; }
+  [data-experience='skills'] .plate__art .cover { zoom: 0.8; }
+  [data-experience='skills'] .plate__art { padding: 0.6rem 0.6rem 1rem; background: linear-gradient(transparent 82%, var(--a-wood) 82%, var(--a-wood-dark)); border-radius: 4px; }
   [data-experience='skills'] .plate__kicker { margin: 0 0 0.35rem; font: 600 0.8rem/1.4 var(--f-mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--a-muted); }
-  [data-experience='skills'] .plate h1, [data-experience='skills'] .alcove h1, [data-experience='skills'] .guide h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); }
-  [data-experience='skills'] .plate__purpose { font: italic clamp(1.15rem, 2.2vw, 1.45rem)/1.4 var(--f-display); margin: 0.6rem 0 1.25rem; max-inline-size: 34em; }
+  [data-experience='skills'] .plate h1, [data-experience='skills'] .alcove h1, [data-experience='skills'] .guide h1 { font-size: clamp(1.9rem, 4.2vw, 2.75rem); }
+  [data-experience='skills'] .plate__purpose { font: italic clamp(1.05rem, 1.8vw, 1.25rem)/1.4 var(--f-display); margin: 0.4rem 0 0.9rem; max-inline-size: 36em; }
   [data-experience='skills'] .card {
-    margin: 0; padding: 0.4rem 1rem; background: var(--a-paper); border: 1px solid var(--a-line); border-radius: 3px;
-    background-image: repeating-linear-gradient(transparent 0 1.95rem, light-dark(rgb(140 170 200 / 0.35), rgb(120 150 180 / 0.18)) 1.95rem 2rem);
+    margin: 0; padding: 0.15rem 0.9rem 0.15rem 1.15rem; background: var(--a-paper); border: 1px solid var(--a-line); border-radius: 3px;
     box-shadow: inset 0.25rem 0 0 light-dark(#c9584a, #8f3b31);
   }
-  [data-experience='skills'] .card > div { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 0.75rem; padding: 0.4rem 0; }
-  [data-experience='skills'] .card dt { font: 700 0.75rem/1.9 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-muted); }
-  [data-experience='skills'] .card dd { margin: 0; font-size: 1rem; }
-  [data-experience='skills'] .plate__toc ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0.4rem 1.1rem; padding: 0; margin: 1rem 0 0; font-size: 0.95rem; }
-  [data-experience='skills'] .plate__toc a { display: inline-block; padding-block: 0.6rem; }
+  [data-experience='skills'] .card > div { display: grid; grid-template-columns: 7.75rem minmax(0, 1fr); gap: 0.6rem; padding: 0.4rem 0; }
+  [data-experience='skills'] .card > div + div { border-top: 1px dashed light-dark(rgb(140 170 200 / 0.6), rgb(120 150 180 / 0.3)); }
+  [data-experience='skills'] .card dt { font: 700 0.7rem/1.9 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--a-muted); }
+  [data-experience='skills'] .card dd { margin: 0; font-size: 0.95rem; line-height: 1.5; }
+  [data-experience='skills'] .plate__jump { margin: 0.9rem 0 0; }
+  [data-experience='skills'] .plate__toc ul { list-style: none; display: flex; flex-wrap: wrap; gap: 0 1rem; padding: 0; margin: 0.4rem 0 0; font-size: 0.92rem; }
+  [data-experience='skills'] .plate__toc a { display: inline-block; padding-block: 0.5rem; }
   @media (max-width: 46rem) {
     [data-experience='skills'] .plate__head { grid-template-columns: 1fr; }
     [data-experience='skills'] .plate__art { justify-self: center; }
+    [data-experience='skills'] .plate__art .cover { zoom: 0.68; }
     [data-experience='skills'] .card > div { grid-template-columns: 1fr; gap: 0; }
   }
-  [data-experience='skills'] .layer-note { margin: 0 0 2rem; padding: 0.9rem 1.1rem; border-inline-start: 4px solid var(--a-moss); background: var(--a-paper); font-size: 1rem; }
+  [data-experience='skills'] .layer-note { margin: 0 0 0.5rem; padding: 0.6rem 1rem; border-inline-start: 4px solid var(--a-moss); background: var(--a-paper); font-size: 0.95rem; }
 
-  [data-experience='skills'] .folio { padding-block: clamp(1.75rem, 4vw, 2.75rem); border-top: 1px solid var(--a-line); scroll-margin-top: 1rem; }
-  [data-experience='skills'] .folio h2 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 1.25rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.9rem; }
+  [data-experience='skills'] .folio { padding-block: clamp(1.1rem, 2.5vw, 1.75rem); border-top: 1px solid var(--a-line); scroll-margin-top: 1rem; }
+  [data-experience='skills'] .folio h2 { font-size: clamp(1.4rem, 2.4vw, 1.8rem); margin-bottom: 0.9rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 0.9rem; }
   [data-experience='skills'] .folio__n { font: italic 400 0.75em var(--f-display); color: var(--a-brass-text); min-inline-size: 1.6em; }
-  [data-experience='skills'] .folio h3 { font-size: 1.15rem; margin: 1.25rem 0 0.4rem; }
+  [data-experience='skills'] .folio h3 { font-size: 1.05rem; margin: 0.9rem 0 0.3rem; }
   [data-experience='skills'] .folio p, [data-experience='skills'] .folio li { max-inline-size: 40em; }
-  [data-experience='skills'] .folio p { margin: 0 0 0.75rem; }
+  [data-experience='skills'] .folio p { margin: 0 0 0.6rem; }
   [data-experience='skills'] .folio ul, [data-experience='skills'] .folio ol { padding-inline-start: 1.25rem; margin: 0 0 0.75rem; }
-  [data-experience='skills'] .folio li { margin-bottom: 0.35rem; }
+  [data-experience='skills'] .folio li { margin-bottom: 0.25rem; }
   [data-experience='skills'] .folio__cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 0 clamp(1.5rem, 4vw, 3rem); }
   [data-experience='skills'] .folio__cols > div > h3:first-child { margin-top: 0; }
   [data-experience='skills'] .ticks, [data-experience='skills'] .crosses { list-style: none; padding-inline-start: 0 !important; }
@@ -475,15 +444,15 @@
   /* The workflow as stepping stones along a path. */
   [data-experience='skills'] .path { list-style: none; counter-reset: step; padding: 0 !important; margin: 0 0 1.5rem; position: relative; }
   [data-experience='skills'] .path::before { content: ''; position: absolute; inset-block: 1rem; inset-inline-start: 1.15rem; border-inline-start: 3px dotted var(--a-moss); }
-  [data-experience='skills'] .path li { counter-increment: step; position: relative; padding: 0 0 1rem 3.5rem; max-inline-size: 44em; }
+  [data-experience='skills'] .path li { counter-increment: step; position: relative; padding: 0 0 0.7rem 3.1rem; max-inline-size: 46em; }
   [data-experience='skills'] .path li::before {
-    content: counter(step); position: absolute; inset-inline-start: 0; inset-block-start: -0.1rem; display: grid; place-items: center; inline-size: 2.35rem; block-size: 2.1rem;
+    content: counter(step); position: absolute; inset-inline-start: 0; inset-block-start: -0.1rem; display: grid; place-items: center; inline-size: 2.15rem; block-size: 1.95rem;
     border-radius: 48% 52% 45% 55% / 55% 45% 55% 45%; background: var(--a-paper-2); border: 2px solid var(--a-moss); font: 700 1rem var(--f-display); color: var(--a-ink);
   }
-  [data-experience='skills'] .path h3 { margin: 0 0 0.2rem; font-size: 1.1rem; }
+  [data-experience='skills'] .path h3 { margin: 0 0 0.1rem; font-size: 1.02rem; }
   [data-experience='skills'] .path p { margin: 0; }
 
-  [data-experience='skills'] .example-flag { padding: 0.7rem 1rem; background: light-dark(#fff2cf, #2e2614); border: 1px dashed var(--a-brass); border-radius: 4px; }
+  [data-experience='skills'] .example-flag { font-size: 0.95rem; padding: 0.55rem 0.9rem; background: light-dark(#fff2cf, #2e2614); border: 1px dashed var(--a-brass); border-radius: 4px; }
   [data-experience='skills'] .snippet { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; padding: 0.7rem 0.9rem; background: var(--a-code-bg); border: 1px solid var(--a-line); border-radius: 4px; }
   [data-experience='skills'] .snippet code { flex: 1 1 14rem; font-size: 0.95rem; }
   [data-experience='skills'] .request { margin: 0; padding: 0.75rem 1rem; border-inline-start: 3px solid var(--a-brass); background: var(--a-paper); font-style: italic; }
@@ -494,16 +463,12 @@
   [data-experience='skills'] .folio--source { --src-edge: var(--a-moss); }
   [data-experience='skills'] .actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1rem 0 1.25rem; }
   [data-experience='skills'] .actions__none { font-size: 0.95rem; color: var(--a-muted); }
-  [data-experience='skills'] .withheld { margin: 1rem 0; padding: 1rem 1.2rem; border: 2px solid light-dark(#a0422f, #e8907a); border-radius: 4px; background: light-dark(#fbeee7, #2a1915); }
-  [data-experience='skills'] .withheld h3 { margin-top: 0; }
-  [data-experience='skills'] .withheld p { margin: 0; }
   [data-experience='skills'] .tree { margin: 1rem 0 1.5rem; padding: 0.75rem 1rem; background: var(--a-paper); border: 1px solid var(--a-line); border-radius: 4px; font-size: 0.95rem; }
   [data-experience='skills'] .tree__root { margin: 0; }
   [data-experience='skills'] .tree ul { list-style: none; margin: 0.25rem 0 0; padding-inline-start: 1rem !important; border-inline-start: 1px solid var(--a-line); }
   [data-experience='skills'] .tree li { margin: 0.2rem 0; }
+  [data-experience='skills'] .tree__edited span { color: light-dark(#8a4b22, #e8a774); }
   [data-experience='skills'] .tree li span { font-size: 0.85rem; color: var(--a-muted); margin-inline-start: 0.4rem; }
-  [data-experience='skills'] .tree__withheld code { text-decoration: line-through; opacity: 0.75; }
-  [data-experience='skills'] .tree__added span { color: light-dark(#8a4b22, #e8a774); }
 
   [data-experience='skills'] .source { margin: 0 0 1rem; border: 1px solid var(--a-line); border-radius: 5px; background: var(--a-paper); }
   [data-experience='skills'] .source[open] { box-shadow: 0 8px 22px var(--a-shadow); }
@@ -513,8 +478,8 @@
   [data-experience='skills'] .source__note { margin: 0 1rem 0.5rem; font-size: 0.92rem; color: var(--a-muted); }
   [data-experience='skills'] .source__bar { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; padding: 0 1rem 0.8rem; }
   [data-experience='skills'] .source__hash { font-size: 0.85rem; color: var(--a-muted); }
-  [data-experience='skills'] .source__scroll { max-block-size: 70vh; overflow: auto; border-top: 1px solid var(--a-line); background: var(--a-code-bg); }
-  [data-experience='skills'] .code { margin: 0; padding: 0.9rem 0; counter-reset: ln; font: 0.86rem/1.6 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+  [data-experience='skills'] .source__scroll { max-block-size: 60vh; overflow: auto; border-top: 1px solid var(--a-line); background: var(--a-code-bg); }
+  [data-experience='skills'] .code { margin: 0; padding: 0.75rem 0; counter-reset: ln; font: 0.82rem/1.55 var(--f-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
   [data-experience='skills'] .code code { font-size: inherit; background: none; padding: 0; }
   [data-experience='skills'] .ln { counter-increment: ln; }
   [data-experience='skills'] .ln::before { content: counter(ln); display: inline-block; inline-size: 3.2em; margin-inline-end: 1em; padding-inline-end: 0.6em; text-align: end; color: var(--a-muted); opacity: 0.75; border-inline-end: 1px solid var(--a-line); user-select: none; }
@@ -540,10 +505,21 @@
   [data-experience='skills'] .limit { margin-top: 1rem; padding: 0.9rem 1.1rem; background: var(--a-paper); border: 1px dashed var(--a-brass); border-radius: 4px; }
   [data-experience='skills'] .limit h4 { font-size: 1.05rem; margin-bottom: 0.4rem; }
   [data-experience='skills'] .limit .snippet { margin: 0.5rem 0; }
-  [data-experience='skills'] .portability { padding: 0.8rem 1rem; background: var(--a-paper); border-inline-start: 4px solid var(--a-brass); }
+  [data-experience='skills'] .facets { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; margin: 0.25rem 0 0.75rem; }
+  @media (min-width: 40rem) { [data-experience='skills'] .facets { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 64rem) { [data-experience='skills'] .facets { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  [data-experience='skills'] .facet { padding: 0.7rem 0.9rem; background: var(--a-paper); border: 1px solid var(--a-line); border-radius: 4px; font-size: 0.95rem; }
+  [data-experience='skills'] .facet h3 { margin: 0 0 0.3rem !important; font-size: 0.98rem !important; }
+  [data-experience='skills'] .facet ul { margin: 0 !important; }
+  [data-experience='skills'] .more { margin: 0.5rem 0 0.75rem; background: var(--a-paper); border: 1px solid var(--a-line); border-radius: 4px; }
+  [data-experience='skills'] .more > summary { display: list-item; list-style-position: inside; min-height: var(--pu-target-min); box-sizing: border-box; padding: 0.4rem 0.9rem; cursor: pointer; font-weight: 600; font-size: 0.98rem; }
+  [data-experience='skills'] .more > summary::marker { color: var(--a-brass-text); }
+  [data-experience='skills'] .more[open] > summary { border-bottom: 1px solid var(--a-line); }
+  [data-experience='skills'] .more > :not(summary) { padding: 0.2rem 0.9rem 0.7rem; }
+  [data-experience='skills'] .portability { font-size: 0.98rem; padding: 0.65rem 0.9rem; background: var(--a-paper); border-inline-start: 4px solid var(--a-brass); }
 
-  [data-experience='skills'] .related { list-style: none; padding: 0 !important; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 1.25rem; }
-  [data-experience='skills'] .related > li { margin: 0; padding: 1rem; background: light-dark(#e9dcbc, #182621); border-radius: 6px; }
+  [data-experience='skills'] .related { list-style: none; padding: 0 !important; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 1rem; }
+  [data-experience='skills'] .related > li { margin: 0; padding: 0.75rem; background: light-dark(#e9dcbc, #182621); border-radius: 6px; }
   [data-experience='skills'] .related__why { margin: 0.5rem 0 0 !important; font-size: 0.92rem; color: var(--a-muted); }
 
   [data-experience='skills'] .alcove__head { padding: 1.5rem 0 1.25rem; }

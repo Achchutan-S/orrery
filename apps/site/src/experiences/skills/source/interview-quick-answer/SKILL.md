@@ -129,7 +129,7 @@ Check every answer silently before sending:
 
 ## Interpreting voice-typed questions
 
-The user often dictates. Read terms in a software-interview context: "pi" → API, "jay unit" → JUnit, "mock eto" → Mockito, "spring boat" → Spring Boot, "web flux" → WebFlux, "sequel" → SQL. When your reading isn't literal, show it in the heading: `### API (read "pi" as API)`. Ask only if no sensible reading exists.
+Questions may be dictated. Read terms in a software-interview context: "pi" → API, "jay unit" → JUnit, "mock eto" → Mockito, "spring boat" → Spring Boot, "web flux" → WebFlux, "sequel" → SQL. When your reading isn't literal, show it in the heading: `### API (read "pi" as API)`. Ask only if no sensible reading exists.
 
 ## Example
 

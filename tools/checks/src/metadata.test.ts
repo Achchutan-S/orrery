@@ -9,7 +9,7 @@ const real = loadPlatform();
 
 test('the real catalog, drafts included, is valid', () => {
   assert.deepEqual(real.issues, []);
-  assert.deepEqual(real.experiences.map((e) => e.id), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app', 'resume', 'skills', 'canary-draft', 'sample-hostile']);
+  assert.deepEqual(real.experiences.map((e) => e.id), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app', 'skills', 'resume', 'canary-draft', 'sample-hostile']);
 });
 
 const check = (entries: unknown[], release: unknown = { platform: {}, experiences: {} }, folders = ['good']) =>
