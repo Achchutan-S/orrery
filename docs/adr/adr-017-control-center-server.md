@@ -1,6 +1,6 @@
 # ADR-017 — Control Center server: cookie session, API shape, file store
 
-Status: accepted (1 November 2026) · Implements blueprint task 12 and ADR-006; refines blueprint §4.0 where listed. Reference: [control-center.md](../control-center.md).
+Status: accepted (1 November 2026) · Implements blueprint task 12 and ADR-006; refines blueprint §4.0 where listed. Reference: [Control Center README](../../apps/control/README.md).
 
 **Decision:** `apps/control` is one workspace package, `@pu/control`, with the server in `server/` (the frontend joins it as `web/` in task 13). Hono 4 on `@hono/node-server`, run directly by Node 22's type stripping, bound to `127.0.0.1:4318`. Rules come only from `platform-schema`; the release file is written only through `FileReleaseStore`.
 

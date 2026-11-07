@@ -5,7 +5,7 @@ export const Capability = z.enum([
   'multimedia', 'data', 'downloads', 'api', 'experimental',
 ]);
 
-// Canonical paths only (docs/architecture.md § Route paths): '/'-separated, lowercase ASCII,
+// Canonical paths only (docs/experience-contract.md § 2.3 Route paths): '/'-separated, lowercase ASCII,
 // every segment starts with a letter, digit or underscore. That rules out '.' and '..', empty segments,
 // backslashes, absolute paths, percent-encoding and look-alike characters, so a path means
 // the same thing to the schema, the filesystem, Vite and the URL layer.

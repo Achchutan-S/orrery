@@ -87,7 +87,7 @@ describe('Skills Archive: axe, layout and structure', () => {
   });
 });
 
-describe('Skills Archive: accessibility beyond axe (automated; manual rows 17–19 in docs/runbooks/accessibility.md)', () => {
+describe('Skills Archive: accessibility beyond axe (automated; manual rows 17–19 in docs/accessibility.md)', () => {
   test('keyboard: Tab from the top reaches the skip link, the nameplate actions, every volume once in shelf order, then the Beacon', async () => {
     const page = await open('/skills');
     const seen: string[] = [];

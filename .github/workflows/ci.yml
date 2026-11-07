@@ -1,4 +1,4 @@
-# Continuous integration: docs/runbooks/checks.md ("CI") and ADR-015.
+# Continuous integration: docs/repository-checks.md ("CI") and ADR-015.
 # Two parallel jobs on the same commit; every command is a repository script.
 name: CI
 

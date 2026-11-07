@@ -1,6 +1,6 @@
 # ADR-022 — Link-preview images from the catalog, environment-aware smoke tests, and what a public repository exposes
 
-Status: accepted (3 November 2026) · Engineering audit Phase C (F08, F17, F04). Supersedes [ADR-014](014-repository-checks.md) known limit 1 ("og:image is not enforced") and resolves tracker decision 4.
+Status: accepted (3 November 2026) · Engineering audit Phase C (F08, F17, F04). Supersedes [ADR-014](adr-014-repository-checks.md) known limit 1 ("og:image is not enforced") and resolves tracker decision 4.
 
 ## Context
 
@@ -37,4 +37,4 @@ Status: accepted (3 November 2026) · Engineering audit Phase C (F08, F17, F04).
 
 - No per-entry generation of link-preview images (Phase 2).
 - No validation of image dimensions in `check:metadata` (the platform card and the resume's card are both generated at 1200×630).
-- Hosted preview smoke not yet run on these changes (needs a push; [deploy runbook](../runbooks/deploy.md#deployment-procedure)).
+- Hosted preview smoke not yet run on these changes (needs a push; [deploy runbook](../deployment.md#deployment-procedure)).

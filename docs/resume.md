@@ -2,7 +2,7 @@
 
 Status: **published.** The owner set the release entry to `published`, `public`, `listed` on 3 November 2026 (commit `f49d6dc`); it is live at `/resume` and listed on the Index and in the Beacon palette. Content finalised from the owner's V3 resume on 2 November 2026 (task 15.1), with the owner's editorial decisions applied (task 15.2). Before publication it was a draft (`draft`, `owner`, `unlisted`), built in development and preview builds only.
 
-**What the release entry controlled.** While it was a draft, the release entry kept the resume off the deployed site (production answered `/resume`, `/resume/resume.pdf` and `/resume/og.png` with 404). It never hid the files in this repository, which is public: `content.ts`, the committed PDF and image, and this document can be read on GitHub (raw file URLs included), and earlier versions remain in the Git history. Preview deployments also contain the resume. The Control Center lists it on the owner's machine only. See [ADR-022](adr/022-link-previews-smoke-and-public-repository.md) for the four layers.
+**What the release entry controlled.** While it was a draft, the release entry kept the resume off the deployed site (production answered `/resume`, `/resume/resume.pdf` and `/resume/og.png` with 404). It never hid the files in this repository, which is public: `content.ts`, the committed PDF and image, and this document can be read on GitHub (raw file URLs included), and earlier versions remain in the Git history. Preview deployments also contain the resume. The Control Center lists it on the owner's machine only. See [ADR-022](adr/adr-022-link-previews-smoke-and-public-repository.md) for the four layers.
 
 ## One source, three outputs
 

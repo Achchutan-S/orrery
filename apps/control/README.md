@@ -1,6 +1,6 @@
-# Control Center (tasks 12 and 13)
+# Control Center
 
-The owner's tool for `config/release.json`: a local API (task 12) and the interface that uses it (task 13). It runs only on the owner's machine, on `127.0.0.1`, and is never deployed. Design: blueprint §4 and [ADR-006](adr/006-control-center.md); where this differs from the blueprint, [ADR-017](adr/017-control-center-server.md) (server) and [ADR-018](adr/018-control-center-ui.md) (interface).
+The owner's tool for `config/release.json`: a local API and the interface that uses it. It runs only on the owner's machine, on `127.0.0.1`, and is never deployed. Design: [blueprint § 7](../../docs/blueprint.md#7-control-center) and [ADR-006](../../docs/adr/adr-006-control-center.md); where this differs from the blueprint, [ADR-017](../../docs/adr/adr-017-control-center-server.md) (server) and [ADR-018](../../docs/adr/adr-018-control-center-ui.md) (interface).
 
 ```
 apps/control/server/
@@ -60,7 +60,7 @@ GET never writes. The server never runs Git, a shell or any client-supplied path
 - **Lifetime.** Until the server stops. A restart makes a new token, so old cookies get `UNAUTHORIZED`; the UI then calls `POST /api/session` again. There is no idle expiry and no logout endpoint.
 - **Not `Secure`.** The server speaks plain HTTP on loopback; a `Secure` cookie (and the `__Host-` prefix, which needs it) would depend on how each browser treats `http://127.0.0.1` as a secure context. SameSite and HttpOnly do not need it.
 
-What this is not: identity. Any page served from the UI origin can obtain a session; any program running as the owner can read and write the file anyway. It ensures requests come from the Control Center page in a browser and that sessions end with the process. Owner sign-in is Phase 4a.
+What this is not: identity. Any page served from the UI origin can obtain a session; any program running as the owner can read and write the file anyway. It ensures requests come from the Control Center page in a browser and that sessions end with the process. Owner sign-in belongs to the Identity phase (blueprint § 11; older documents call it Phase 4a).
 
 ### CSRF
 
@@ -92,7 +92,7 @@ How the UI tells states apart: *registered* = in the registry; *published/draft/
 
 `patch` is a `ReleasePatch`: `transition` (lifecycle; `canTransition` decides), `setAccess` (`public` or `owner` only in V1), `setDiscoverability`, `setFlag` (platform or one experience), `setNote` (`null` removes). The server checks the experience exists, applies the patch with `applyPatch`, then runs `validateRelease` on the whole result.
 
-**Promotion** is `transition`, previewed first. `POST /api/release/preview` with `{ op: 'transition', experienceId, to }` returns every failed rule and `changes`, the per-environment resolution diff, which shows exactly what production would gain. A draft promoted to `beta` with `owner` access shows no production change, because owner access is never deployed before Phase 4; the UI should say so (blueprint 4.2). There is no separate promote endpoint: it would duplicate `transition`.
+**Promotion** is `transition`, previewed first. `POST /api/release/preview` with `{ op: 'transition', experienceId, to }` returns every failed rule and `changes`, the per-environment resolution diff, which shows exactly what production would gain. A draft promoted to `beta` with `owner` access shows no production change, because owner access is never deployed before the Identity phase (Phase 4 in older documents); the UI should say so (blueprint revision 2 § 4.2). There is no separate promote endpoint: it would duplicate `transition`.
 
 **Pending changes** compare the file with the session baseline (the file as it was when the server started), not with Git `HEAD`: the server never runs Git (blueprint review point 1). `entries` lists each release entry (or the platform flags) that differs, before and after; `changes` lists resolution differences; `suggestedCommitMessage` and `commands` (`git add`, `git commit`) are text for the owner to run. After a commit the baseline stays until restart.
 
@@ -153,11 +153,11 @@ logfmt on stdout: `ready`, `shutdown`, `request method= path= status= ms=`, `req
 - `web/src/client.integration.test.ts`: the UI client against the real server, as a browser on the UI origin: session, reads, preview, write, stale write, pending, revert, server restart.
 - `test-browser/control.test.ts`: the built UI behind Vite preview and its proxy: overview, registry search/filter/sort and Back, detail and environment matrix, external entries, preview → confirm (Escape cancels, focus returns) → write, pending changes and revert, a stale write with no retry, rule violations at the controls, polling picks up editor edits, keyboard and focus, cookie unreachable from page scripts, no CORS and a strict CSP, axe (WCAG 2.2 AA) on every screen at desktop and phone widths in light and dark, no horizontal scroll on phones, server-unavailable screen and recovery. Screenshots in `apps/control/test-results/`.
 
-Mutation checks during task 12: removing the compare-and-swap, the pre-rename re-check, the write queue, the Host check, the Origin check, `HttpOnly`, or binding to `0.0.0.0` each made tests fail.
+Mutation checks when the server was built: removing the compare-and-swap, the pre-rename re-check, the write queue, the Host check, the Origin check, `HttpOnly`, or binding to `0.0.0.0` each made tests fail.
 
 ## Not deployed, and why
 
-No Vercel project points at `apps/control`; the site project's Root Directory is `apps/site`, and `apps/site` may not import `apps/control` (`site-control` boundary rule). The server refuses to run when `VERCEL` or `CI` is set. A deployed management API would need owner identity, which is Phase 4a (V2 on `control.<domain>`).
+No Vercel project points at `apps/control`; the site project's Root Directory is `apps/site`, and `apps/site` may not import `apps/control` (`site-control` boundary rule). The server refuses to run when `VERCEL` or `CI` is set. A deployed management API would need owner identity, which arrives in the Identity phase (blueprint § 11; V2 on `control.<domain>`).
 
 ## Known limitations
 
@@ -172,7 +172,7 @@ No Vercel project points at `apps/control`; the site project's Root Directory is
 - Absolute-form request targets (`GET http://other/...` with a valid Host) are answered by path; browsers never send them to an origin server.
 - IPv6 loopback is not served.
 
-## The interface (task 13)
+## The interface
 
 Five screens, reached from a header that also shows "Local session" (not a sign-in), whether the server answers, and the current revision.
 

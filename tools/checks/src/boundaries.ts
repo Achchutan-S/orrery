@@ -8,7 +8,7 @@
 // in .css files and Astro <style> blocks. Resolves relative and root-relative ('/src/…')
 // paths, backslashes and query suffixes ('?inline'), and @pu/* workspace packages. The
 // repository uses no tsconfig `paths` or Vite aliases; add them to `resolve()` if that
-// changes. Test files are not checked. docs/runbooks/checks.md § Boundaries lists the limits.
+// changes. Test files are not checked. docs/repository-checks.md § Boundaries lists the limits.
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { posix } from 'node:path';
 import type { Experience } from '@pu/platform-schema';

@@ -45,7 +45,7 @@ export function readSources(): SourceFile[] {
     .map((path) => ({ owner: /^src\/experiences\/([^/]+)\//.exec(path)?.[1] ?? 'platform', path, bytes: readFileSync(join(site, path)) })));
 }
 
-/** gzip at level 9: the one size unit every check reports (see docs/runbooks/checks.md). */
+/** gzip at level 9: the one size unit every check reports (see docs/repository-checks.md). */
 export const gzipBytes = (data: Buffer | string): number => (data.length === 0 ? 0 : gzipSync(data, { level: 9 }).length);
 
 /** Same rule as the site integration: a regular file at exactly this path, no symlink in it. */

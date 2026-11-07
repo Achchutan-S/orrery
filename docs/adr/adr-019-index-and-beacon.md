@@ -1,6 +1,6 @@
 # ADR-019 — The Index at `/` and the Beacon
 
-Status: accepted (1 November 2026) · Implements blueprint task 14; resolves ADR-012 choice 1. Reference: [architecture.md § Index and Beacon](../architecture.md#index-and-beacon).
+Status: accepted (1 November 2026) · Implements blueprint task 14; resolves ADR-012 choice 1. Reference: `apps/site/src/experiences/index/front-page.ts` (front-page rules), `apps/site/src/platform/beacon/` and [contract § 3.5](../experience-contract.md#35-the-beacon-platform-function-experience-presentation).
 
 **Decision:** `/` is an experience (`index`, `apps/site/src/experiences/index/`) with a catalog entry and a release entry, like any other. The Beacon is platform chrome (`src/platform/beacon/`) rendered by `ExperienceRoot` for `minimal` and `beacon` chrome and by the 404 page. Both read only `publicDiscoveryIndex()`.
 

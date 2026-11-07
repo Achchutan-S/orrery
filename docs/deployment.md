@@ -1,8 +1,8 @@
 # Deploying to Vercel
 
-One Vercel project serves `apps/site` as static files ([ADR-002](../adr/002-static-by-default.md), [ADR-016](../adr/016-vercel-deployment.md)). No adapter, no functions, no server runtime.
+One Vercel project serves `apps/site` as static files ([ADR-002](adr/adr-002-static-by-default.md), [ADR-016](adr/adr-016-vercel-deployment.md)). No adapter, no functions, no server runtime.
 
-The Control Center server (`apps/control`) is never deployed: no Vercel project points at it, it refuses to start when `VERCEL` or `CI` is set, and it binds only to 127.0.0.1 ([control-center.md](../control-center.md)). A deployed Control Center needs owner identity and its own origin (Phase 4a).
+The Control Center server (`apps/control`) is never deployed: no Vercel project points at it, it refuses to start when `VERCEL` or `CI` is set, and it binds only to 127.0.0.1 ([Control Center README](../apps/control/README.md)). A deployed Control Center needs owner identity and its own origin (the Identity phase, which older documents call Phase 4a).
 
 ## What is in the repository (automatic)
 
@@ -23,7 +23,7 @@ The Control Center server (`apps/control`) is never deployed: no Vercel project 
 1. **Import** the GitHub repository as a new project. **Root Directory:** `apps/site`. Keep **Include files outside the root directory in the Build Step** on: the build reads `config/release.json` and the workspace packages.
 2. **Environment variables** (Production and Preview): `ENABLE_EXPERIMENTAL_COREPACK=1`, so pnpm comes from the root `packageManager` (`pnpm@10.34.9`) instead of Vercel's lockfile guess. No application secrets exist.
 3. **System Environment Variables:** keep **Automatically expose System Environment Variables** on. `VERCEL_ENV` decides what is mounted; with `PU_DEPLOYMENT=1` a build without it fails rather than defaulting to development and mounting drafts.
-4. **Deployment Protection:** Vercel Authentication on previews (Standard Protection). Previews contain drafts. Protection is a convenience, not access control (blueprint 3.5a): a leaked shareable link exposes the whole preview. The repository is public as well, so drafts are readable on GitHub whatever the release state says ([ADR-022](../adr/022-link-previews-smoke-and-public-repository.md)); nothing that must stay private goes into a commit.
+4. **Deployment Protection:** Vercel Authentication on previews (Standard Protection). Previews contain drafts. Protection is a convenience, not access control (blueprint 3.5a): a leaked shareable link exposes the whole preview. The repository is public as well, so drafts are readable on GitHub whatever the release state says ([ADR-022](adr/adr-022-link-previews-smoke-and-public-repository.md)); nothing that must stay private goes into a commit.
 5. Optional, for smoke tests against protected previews: generate **Protection Bypass for Automation** and keep its value in your shell or CI secret store as `VERCEL_AUTOMATION_BYPASS_SECRET`. Never commit it.
 
 ## Production versus preview
@@ -39,21 +39,7 @@ The Control Center server (`apps/control`) is never deployed: no Vercel project 
 
 External experiences (KawaiUI, Dev X-Ray) are links in every environment and never routes here (`/kawaiui` is a 404).
 
-### Today's addresses
-
-From the current `config/release.json` (verified against local production and preview builds on 7 November 2026; the smoke test derives the same lists itself, so this table is for reading, not for the test):
-
-| Address | Production | Preview |
-| --- | --- | --- |
-| `/` (Index), `/journal` and its 8 chapters (`/journal/idea` … `/journal/ahead`) | 200 | 200 |
-| `/sample-content` | 200 | 200 |
-| `/sample-app`, `/sample-app/states`, `/sample-app/states/<lifecycle>` (7) | 200, inspector panel off | 200, inspector panel on |
-| `/favicon.svg`, `/og.png` (platform files from `public/`) | 200 | 200 |
-| `/resume`, `/resume/resume.pdf`, `/resume/og.png` (published 3 November 2026) | 200 | 200 |
-| `/canary-draft`, `/sample-hostile` (permanent fixtures) | **404** | 200 |
-| `/kawaiui`, `/devxray`, any unknown path | 404 (the site's Not found page) | 404 |
-
-A 404 is the site's own Not found page (`404.html`), served with status 404, noindex and `no-referrer`.
+The smoke test derives every expected address from the catalog and `config/release.json` ([Smoke test](#smoke-test-toolscheckssrcsmokets)), so no list is kept here. In production the permanent fixtures `/canary-draft` and `/sample-hostile` answer 404; in previews they answer 200. A 404 is the site's own Not found page (`404.html`), served with status 404, noindex and `no-referrer`.
 
 ## Production build gate
 
@@ -72,13 +58,13 @@ What the gate does not cover: unit and browser tests (`pnpm test`, `pnpm test:br
 ## Deployment procedure
 
 1. Local gate: `pnpm typecheck && pnpm test && pnpm check && pnpm test:browser` (what CI runs).
-2. Push a branch. Vercel builds a preview. In the build log, confirm: `node v22.x` (22.23.4 or later), `pnpm 10.34.9`, `deploy build (preview): build`, and `[pu:mount-experiences] preview: mounted index, journal, sample-content, sample-app, resume, canary-draft, sample-hostile` (today's release state).
+2. Push a branch. Vercel builds a preview. In the build log, confirm: `node v22.x` (22.23.4 or later), `pnpm 10.34.9`, `deploy build (preview): build`, and `[pu:mount-experiences] preview: mounted …` listing every experience that is not archived, drafts included.
 3. Smoke-test the preview (bypass secret exported if protected):
    ```sh
    pnpm smoke https://<preview-url> --env preview
    ```
-4. **Production gate**, all required: Task 9 checks pass (the production build also enforces them, see above); GitHub Actions CI passed on the commit; the preview smoke test passed; no leak reported; the owner approves.
-5. Merge to `main`. In the production build log, confirm `deploy build (production): typecheck → check:boundaries → build → check:metadata → check:leaks → check:budgets`, `[pu:mount-experiences] production: mounted index, journal, sample-content, sample-app, resume` (today's release state) and `✔ deploy build (production): all steps passed`. Then:
+4. **Production gate**, all required: The repository checks pass (the production build also enforces them, see above); GitHub Actions CI passed on the commit; the preview smoke test passed; no leak reported; the owner approves. A commit that publishes a new experience also needs the publishing prerequisites of [contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience), including a person's recorded manual accessibility check. Vercel does not wait for CI (decision D16), so the owner checks the CI result before merging to `main`.
+5. Merge to `main`. In the production build log, confirm `deploy build (production): typecheck → check:boundaries → build → check:metadata → check:leaks → check:budgets`, `[pu:mount-experiences] production: mounted …` listing exactly what `config/release.json` releases and `✔ deploy build (production): all steps passed`. Then:
    ```sh
    pnpm smoke https://<production-url> --env production --external
    ```
@@ -86,7 +72,7 @@ What the gate does not cover: unit and browser tests (`pnpm test`, `pnpm test:br
 
 ## Smoke test (`tools/checks/src/smoke.ts`)
 
-Real HTTP requests, with expectations derived from the catalog, `config/release.json` and `vercel.json` ([ADR-022](../adr/022-link-previews-smoke-and-public-repository.md)):
+Real HTTP requests, with expectations derived from the catalog, `config/release.json` and `vercel.json` ([ADR-022](adr/adr-022-link-previews-smoke-and-public-repository.md)):
 
 - `/` answers 200 with Astro's CSP `<meta>`.
 - Every route of every experience mounted in the target environment answers 200; every route of everything else answers 404 with the site's Not found page. Enumerated views are found by following the experience's own links; one is retried with a query string; an unknown view and an unknown path must be 404.

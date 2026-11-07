@@ -1,6 +1,6 @@
 # ADR-023 — Audit closure: complete budgets, durable Control Center writes, opener isolation, dependency and hygiene policy
 
-Status: accepted (7 November 2026) · Engineering audit Phase D (F12, F13, F18, F19, F20–F23). Extends [ADR-014](014-repository-checks.md) (budgets) and [ADR-017](017-control-center-server.md) (store, session).
+Status: accepted (7 November 2026) · Engineering audit Phase D (F12, F13, F18, F19, F20–F23). Extends [ADR-014](adr-014-repository-checks.md) (budgets) and [ADR-017](adr-017-control-center-server.md) (store, session).
 
 ## Context
 
@@ -14,7 +14,7 @@ The audit's remaining findings were low-risk but real: budgets ignored lazy chun
 4. **Dependencies:** patch and minor updates only, after reading each changelog; majors (TypeScript 7, `@types/node` 26) stay out (Node 22 policy, ADR-021). `esbuild` is overridden to `0.28.2` in `pnpm-workspace.yaml`; Vite 8 accepts `^0.28`, and with the override pnpm no longer auto-installs the optional peer at all (nothing in the build uses it). Remove the override once Vite resolves it on its own.
 5. **Hygiene is tested.** `tools/checks/src/hygiene.test.ts` fails on `noteId` front matter in any Markdown or MDX file Git would commit. `prompt.md` (the task 7 prompt, superseded by ADR-012 and the design notes; no references) is removed from the working tree, pending the owner's approval; its text stays in the Git history.
 6. **The cookie's port scope: proposed as an accepted risk, pending the owner's decision (F20).** Cookies are scoped by host, not port, so a browser also sends the session cookie to other servers on `127.0.0.1` under `/api`. Such a server learns the token and, outside a browser, could call the API with any Host and Origin. It is a program the owner runs, which can already write `config/release.json` directly, so this grants nothing new. A per-port cookie needs a different origin (a hostname per service) or a non-cookie credential, which the HttpOnly design deliberately avoids (ADR-017). The token dies with the server process. Practical mitigations considered and not taken: a per-session random path prefix for the API (narrows which requests carry the cookie, at the cost of changing every route and the proxy), `Secure`/`__Host-` cookies (depend on each browser treating `http://127.0.0.1` as secure), a separate loopback address (needs a manual `lo0` alias on macOS).
-7. **Accessibility evidence is split** ([runbooks/accessibility.md](../runbooks/accessibility.md)): automated checks run in CI (now also reflow at 320 and 640 px, WCAG text spacing, forced colours, heading and landmark structure, axe best practices, palette focus containment); the manual checklist is recorded separately and is not yet performed.
+7. **Accessibility evidence is split** ([accessibility.md](../accessibility.md)): automated checks run in CI (now also reflow at 320 and 640 px, WCAG text spacing, forced colours, heading and landmark structure, axe best practices, palette focus containment); the manual checklist is recorded separately and is not yet performed.
 
 ## Consequences
 

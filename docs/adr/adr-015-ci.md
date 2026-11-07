@@ -1,6 +1,6 @@
 # ADR-015 — GitHub Actions CI
 
-Status: accepted (1 November 2026) · Implements blueprint task 10. Details and local equivalents: [runbooks/checks.md § CI](../runbooks/checks.md#ci-githubworkflowsciyml).
+Status: accepted (1 November 2026) · Implements blueprint task 10. Details and local equivalents: [repository-checks.md § CI](../repository-checks.md#ci-githubworkflowsciyml).
 
 **Decision:** one workflow, `.github/workflows/ci.yml`, with two parallel jobs on `ubuntu-24.04`: `verify` (typecheck, tests, repository checks, clean-tree check) and `browser` (Playwright and axe). Both use only the repository's own scripts.
 
@@ -10,6 +10,6 @@ Status: accepted (1 November 2026) · Implements blueprint task 10. Details and 
 - **Least privilege:** `permissions: contents: read`, `persist-credentials: false`, no secrets, `pull_request` (never `pull_request_target`).
 - **Debugging:** the browser suite now writes a JUnit report and, when `PU_TRACE=1`, one Playwright trace per context; contexts left open by a failing test are closed in `after()` so their traces survive. Test scripts use the `spec` reporter explicitly, because Node 22 falls back to TAP when output is not a terminal.
 
-**Deviation:** the blueprint runs Playwright "against the preview URL" (Vercel). There is no Vercel project yet and CI must not need Vercel credentials, so the suite runs against local production and preview builds served by `astro preview`. Vercel-specific behaviour (`cleanUrls`, trailing-slash redirects, real 404s on Vercel) stays a manual check: [runbooks/deploy.md](../runbooks/deploy.md) (`pnpm smoke`).
+**Deviation:** the blueprint runs Playwright "against the preview URL" (Vercel). There is no Vercel project yet and CI must not need Vercel credentials, so the suite runs against local production and preview builds served by `astro preview`. Vercel-specific behaviour (`cleanUrls`, trailing-slash redirects, real 404s on Vercel) stays a manual check: [deployment.md](../deployment.md) (`pnpm smoke`).
 
 **Revisit when:** a Vercel project exists (add a preview-URL smoke job using deployment-status events, without secrets in pull-request jobs), or CI time grows enough to justify sharing builds or caching the Playwright browser.

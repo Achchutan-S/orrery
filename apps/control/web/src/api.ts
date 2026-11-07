@@ -1,4 +1,4 @@
-// The one client for the Control Center API (docs/control-center.md). Components never call
+// The one client for the Control Center API (apps/control/README.md). Components never call
 // fetch() themselves. The session lives in an HttpOnly cookie: this code never sees the token.
 import type {
   ApiErrorCode, Issue, PendingData, PreviewData, RegistryData, RegistryItem, ReleaseData, ReleasePatch,

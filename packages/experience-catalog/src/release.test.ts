@@ -25,7 +25,7 @@ test('config/release.json parses and is coherent with the catalog', () => {
 });
 
 // Real configuration: expectations come from each entry of config/release.json, by the rule
-// docs/architecture.md states, written out here independently of resolve().
+// docs/blueprint.md § 6.2 states, written out here independently of resolve().
 test('the real release file: production mounts and lists exactly what each entry allows', () => {
   const state = load();
   const entryOf = (id: string) => state.experiences[id] ?? { lifecycle: 'draft', access: { kind: 'owner' }, discoverability: 'unlisted' };

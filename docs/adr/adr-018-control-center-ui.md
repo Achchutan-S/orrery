@@ -1,6 +1,6 @@
 # ADR-018 — Control Center UI: one process, a built UI under CSP, no extra libraries
 
-Status: accepted (1 November 2026) · Implements blueprint task 13 and ADR-006. Reference: [control-center.md](../control-center.md).
+Status: accepted (1 November 2026) · Implements blueprint task 13 and ADR-006. Reference: [Control Center README](../../apps/control/README.md).
 
 **Decision:** the UI is React 19 in `apps/control/web`, built by Vite 8 and served by `vite preview` on `127.0.0.1:4317`, which proxies `/api` to the server. `pnpm control` is `vite build && vite preview`; a Vite plugin starts the server in the same Node process.
 

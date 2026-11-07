@@ -1,7 +1,7 @@
 // The Vercel build (apps/site/vercel.json). A production deployment builds only after the
 // source checks pass and is accepted only if the output checks pass: any failure exits
 // non-zero, so Vercel fails the deployment and production keeps serving the previous one.
-// Previews and local builds only build. docs/runbooks/deploy.md § Production build gate.
+// Previews and local builds only build. docs/deployment.md § Production build gate.
 import { spawnSync } from 'node:child_process';
 import { buildEnvironment, type Environment } from '@pu/platform-schema';
 import { isMain, repoRoot } from './repo.ts';

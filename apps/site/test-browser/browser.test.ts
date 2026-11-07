@@ -19,7 +19,7 @@ import { publicDiscoveryIndex } from '../src/platform/discovery/index.ts';
 import { views } from '../src/experiences/sample-app/views.ts';
 
 // The servers build from the real config/release.json, so lists of destinations are derived from
-// it rather than written out: these tests hold whatever is published (docs/runbooks/checks.md).
+// it rather than written out: these tests hold whatever is published (docs/repository-checks.md).
 const { experiences } = parseCatalog();
 const realState = parseRelease(JSON.parse(readFileSync(new URL('../../../config/release.json', import.meta.url), 'utf8'))).state!;
 const discovery = publicDiscoveryIndex(experiences, realState, 'production');
@@ -850,7 +850,7 @@ describe('CSS isolation (adversarial)', () => {
 });
 
 // Runs last: every page every test above opened, production and preview, under Astro's CSP.
-describe('accessibility beyond axe (automated; manual checks: docs/runbooks/accessibility.md)', () => {
+describe('accessibility beyond axe (automated; manual checks: docs/accessibility.md)', () => {
   // Every page production serves, the resume included when it is released.
   const PAGES = [...ROUTES, ...(resumeIn('production').mounted ? ['/resume'] : [])];
   const overflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);

@@ -1,6 +1,6 @@
 // Starts the Control Center server on the owner's machine:
 //   pnpm control:server        (or: pnpm --filter @pu/control dev)
-// It listens on 127.0.0.1 only and never on Vercel or in CI. See docs/control-center.md.
+// It listens on 127.0.0.1 only and never on Vercel or in CI. See apps/control/README.md.
 import { existsSync, readdirSync } from 'node:fs';
 import type { AddressInfo } from 'node:net';
 import { join } from 'node:path';

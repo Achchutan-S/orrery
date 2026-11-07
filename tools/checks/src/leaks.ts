@@ -3,7 +3,7 @@
 // Route-aware where it can be: draft routes are checked as file paths, flag-gated UI
 // by its data-pu-flag marker, metadata by exact catalog strings. Every output file must
 // also be on the allowlist, and nothing may copy or quote a file of an unreleased experience
-// (docs/runbooks/checks.md § Leaks).
+// (docs/repository-checks.md § Leaks).
 import { createHash } from 'node:crypto';
 import { CANARY } from '@pu/experience-catalog';
 import {

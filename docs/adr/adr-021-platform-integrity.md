@@ -1,6 +1,6 @@
 # ADR-021 — Platform integrity: implemented chrome only, a permanent island fixture, one Node policy, a committed platform font
 
-Status: accepted (2 November 2026) · Engineering audit Phase B (F16, F09, F10, F14, F15). Supersedes [ADR-012](012-platform-layer.md) decisions 4 and 7 and [ADR-016](016-vercel-deployment.md) decision 5 in the points below.
+Status: accepted (2 November 2026) · Engineering audit Phase B (F16, F09, F10, F14, F15). Supersedes [ADR-012](adr-012-platform-layer.md) decisions 4 and 7 and [ADR-016](adr-016-vercel-deployment.md) decision 5 in the points below.
 
 **Decision.**
 

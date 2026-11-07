@@ -1,6 +1,6 @@
 # ADR-014 — Repository checks in `tools/checks`
 
-Status: accepted (1 November 2026); known limit 1 (og:image) superseded by [ADR-022](022-link-previews-smoke-and-public-repository.md) · Implements blueprint task 9 (§5 `tools/checks`, 3.8, 3.12, 7.2). How to run them: [runbooks/checks.md](../runbooks/checks.md).
+Status: accepted (1 November 2026); known limit 1 (og:image) superseded by [ADR-022](adr-022-link-previews-smoke-and-public-repository.md) · Implements blueprint task 9 (§5 `tools/checks`, 3.8, 3.12, 7.2). How to run them: [repository-checks.md](../repository-checks.md).
 
 **Decision:** four checks — leaks, budgets, metadata, boundaries — live in the workspace package `@pu/checks` (`tools/checks`), each a pure function plus a small CLI. They read build output and source files; they change nothing at runtime.
 

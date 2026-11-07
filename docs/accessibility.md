@@ -22,6 +22,8 @@ Two kinds of evidence, never mixed: what the browser suites prove automatically 
 
 ## Manual checklist
 
+**New experiences.** The pages the automated checks visit are listed by hand in the suites, so a new experience is covered only when its pages are added (decision D12 proposes deriving them from the build). Covering its pages and recording a person's manual check below are both prerequisites for publishing it ([contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience), P1 and P2).
+
 About 90 minutes. Use the live site (https://orrery-teal.vercel.app) once this tree is deployed, or a local production build: `pnpm build:production`, then `pnpm --filter @pu/site preview` (http://localhost:4321). The Control Center: `pnpm control` (http://127.0.0.1:4317). Record each check as pass or fail with a note in [Results](#results); a failure gets an issue, a fix and, where a browser can detect it, an automated regression test.
 
 ### A. Keyboard only (Safari or Chrome; no mouse or trackpad)
@@ -80,4 +82,4 @@ Record only what a person actually did. One row per session.
 | --- | --- | --- | --- | --- | --- |
 | — | 1–19 | — | — | — | — |
 
-Until a row is filled in, nothing here is manually verified (tracker decision 3).
+Until a row is filled in, nothing here is manually verified ([tracker § Open work](tracker.md#open-work)).

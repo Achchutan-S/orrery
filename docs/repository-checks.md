@@ -1,6 +1,6 @@
 # Repository checks
 
-Guardrails from task 9 ([ADR-014](../adr/014-repository-checks.md)). No network, no credentials. All four run after a clean `pnpm install --frozen-lockfile`.
+Guardrails for every change ([ADR-014](adr/adr-014-repository-checks.md)). No network, no credentials. All four run after a clean `pnpm install --frozen-lockfile`.
 
 | Command | What it checks | Needs |
 | --- | --- | --- |
@@ -63,7 +63,6 @@ Fails when any Markdown or MDX file Git would commit has `noteId` front matter, 
 
 The resume's PDF and link-preview image are committed, generated from `content.ts` (docs/resume.md). The tests fail when `source.sha256` no longer matches `content.ts`, when any statement in `content.ts` is missing from the PDF's extracted text, when an e-mail other than the approved one, a phone number, an internal address or the word "rating" appears, when a term from the owner's private list appears (only with `PU_PRIVATE_TERMS` set; docs/resume.md § Privacy check), when a link leaves the verified list, or when prototype work is listed as production. Fix by editing `content.ts` and running `pnpm --filter @pu/site resume:assets`.
 
-Last full verification (engineering audit Phase D, 7 November 2026, Node 22.23.4, local, uncommitted working tree): typecheck 0 errors, warnings and hints; tests schema 45, catalog 20, checks 85, Control Center 76, site 55 (54 passed, 1 skipped: the private-term test, which passed separately with `PU_PRIVATE_TERMS`); browser site 61, Control Center 12; `pnpm check` boundaries (124 files), metadata, leaks (34 files) and budgets (42 page limits, 34 emitted files) passed; `build:deployment` passed for production and preview and refused a deployment build without `VERCEL_ENV`; `pnpm audit` found nothing. Hosted CI has not run on this tree. Earlier record (Phase C, 3 November 2026): typecheck 0 errors, warnings and hints; tests schema 45, catalog 20, checks 78, Control Center 71, site 55 (54 passed, 1 skipped: the private-term test, which passed separately with `PU_PRIVATE_TERMS`); browser site 55, Control Center 11; `pnpm check` boundaries (123 files), metadata, leaks (30 files) and budgets (25 limits) passed; `build:deployment` passed for production and preview and refused a deployment build without `VERCEL_ENV`. Hosted CI has not run on this tree. Earlier record, for history: (task 15.1, 2 November 2026, Node 22.23.4, local): typecheck 0 errors; tests schema 40, catalog 16, checks 50, Control Center 71, site 48; browser site 52, Control Center 11; `pnpm check` boundaries, metadata, leaks and budgets passed; the production build contains no resume file and no file naming the owner; `config/release.json` unchanged (resume still `draft`, `owner`, `unlisted`).
 
 ## Metadata (`tools/checks/src/metadata.ts`)
 
