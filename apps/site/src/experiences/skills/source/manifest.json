@@ -1,0 +1,160 @@
+{
+  "skills": {
+    "conceptcast": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-10-09",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "c39d83ad0adb6c8a6ee11b181e71fe4807afbc7673c4e350977abb0c07bd4580",
+          "bytes": 23430
+        }
+      ]
+    },
+    "deep-dive-audio": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-10-08",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "7a8523400e6f46e4410b87d4d3b6de0588dc947eb855642ffea224a363faae1c",
+          "bytes": 9046
+        },
+        {
+          "path": "references/spoken-style.md",
+          "sha256": "6474abba0cd2ca940ae086356013d8fcf1153256cbb0322b806c7c596179413f",
+          "bytes": 5735
+        },
+        {
+          "path": "references/topic-playbooks.md",
+          "sha256": "f5531e1e3ffb284098f2e30f7f5a6bb9bbcf4a7e10662324e30bfa049dc35df8",
+          "bytes": 4046
+        }
+      ]
+    },
+    "problem-finder": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-10-02",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "3f02ac7ef71752a955c5a714418a2986af1cda9bfd798a2580ac5edf25fedb4e",
+          "bytes": 11500
+        }
+      ]
+    },
+    "sidequest": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-10-02",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "ef62ab0ca10bbf61c3016ebf7af187735c724e55dd6bc851370e8acf52f21c9a",
+          "bytes": 9834
+        },
+        {
+          "path": "config.json",
+          "sha256": "c30f846dd6d0850bd20d869f3c6fe1b3847e7302bc8d67ae455e56930e691dae",
+          "bytes": 2132
+        },
+        {
+          "path": "scripts/quest.py",
+          "sha256": "79536511494097819e6a2e7790cddb51b746f4bdd4678cf09c2cb7320761a7b2",
+          "bytes": 17166
+        }
+      ]
+    },
+    "vedic-astrology-tamil": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-10-01",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "7233434d226998d71817d10b4a2c43b948253c366dd0407405cf91c15505efee",
+          "bytes": 6667
+        }
+      ],
+      "withheld": {
+        "count": 4,
+        "paths": [
+          "scripts/ashtakavarga.py",
+          "scripts/calculate_chart.py",
+          "scripts/chart_analysis.py",
+          "scripts/today_view.py"
+        ],
+        "reason": "The usage examples in two of these scripts give a birth date and time that may be a real person's, and the scripts import pyswisseph (AGPL-3.0) over the Swiss Ephemeris (AGPL or a commercial licence), which needs a licence decision before redistribution. SKILL.md is published; the scripts it runs are not, so no working package is offered."
+      }
+    },
+    "interview-quick-answer": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-10-01",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "06750a8c1a7adc384d98c2455bcf45c03db0ea9a98b2a95161dfb019c701d1fa",
+          "bytes": 8805
+        }
+      ]
+    },
+    "system-design-prep": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-09-19",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "bf2677654320c1fb4de1e521ef1f2c0a35d4969035859d701568a4049c4b58d1",
+          "bytes": 8660
+        },
+        {
+          "path": "references/output-format-example.md",
+          "sha256": "1da393a14ced3d5f2f607d882f90e3fe4b3c86fa152cbfa8fd6a770c47edfd04",
+          "bytes": 1991
+        },
+        {
+          "path": "references/tradeoffs-cheatsheet.md",
+          "sha256": "886f35e8193d740b3ca22930179349f764ed07a873f40bb33a5ce941ce043596",
+          "bytes": 4555
+        }
+      ]
+    },
+    "india-product-gap-finder": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-08-12",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "6eedd2e991284b4b4fee5ce42355bdfb49699869e7688c977bb5493e608fcb1c",
+          "bytes": 8579
+        }
+      ]
+    },
+    "wayfinder": {
+      "origin": "Claude.ai account, under “Created by you” (uploaded copy of a skill by Matt Pocock, github.com/mattpocock/skills, MIT)",
+      "updated": "2026-08-12",
+      "files": [
+        {
+          "path": "SKILL.md",
+          "sha256": "e9c3f90093692047b1c8133d29d7208dc59ef4edefd02a7dc676eb6d54fce3d8",
+          "bytes": 11859
+        }
+      ],
+      "added": [
+        {
+          "path": "LICENSE.txt",
+          "sha256": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+          "bytes": 1068,
+          "why": "The MIT licence of github.com/mattpocock/skills requires its copyright and permission notice in every copy. Added by this archive; not part of the original skill."
+        }
+      ]
+    },
+    "moral-oratory": {
+      "origin": "Claude.ai account, under “Created by you”",
+      "updated": "2026-10-12",
+      "files": [],
+      "withheld": {
+        "count": 10,
+        "reason": "Its SKILL.md names the author's city and personal motivation and refers to specific current political events and organisations, and one reference file is a dated fact file of graded allegations about those events. The archive never edits an original, so the source stays private and this page explains the method only."
+      }
+    }
+  }
+}

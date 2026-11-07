@@ -50,10 +50,10 @@ test('the fixture release state is valid; production mounts the public samples a
     ['/', '/journal', '/journal/[chapter]', '/sample-content', '/sample-app', '/sample-app/[...path]']);
 });
 
-test('preview and development also mount the two draft fixtures, but never list them', () => {
+test('preview and development also mount the drafts (the two fixtures and the Skills Archive), but never list them', () => {
   for (const env of ['development', 'preview'] as const) {
-    assert.deepEqual(ids(env, 'mounted'), ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'canary-draft', 'sample-hostile']);
-    assert.ok(!ids(env, 'listed').some((id) => id === 'canary-draft' || id === 'sample-hostile'));
+    assert.deepEqual(ids(env, 'mounted'), ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'skills', 'canary-draft', 'sample-hostile']);
+    assert.ok(!ids(env, 'listed').some((id) => id === 'canary-draft' || id === 'sample-hostile' || id === 'skills'));
   }
 });
 

@@ -1,0 +1,192 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Layout from '../Layout.astro';
+import Cover from '../components/Cover.astro';
+import SourceViewer from '../components/SourceViewer.astro';
+import Volume from '../components/Volume.astro';
+import { longDate, skillBySlug, skills, SURFACE_LABEL, type Skill } from '../library.ts';
+import { CLAUDE_AI_DESCRIPTION_MAX } from '../validate.ts';
+
+export const getStaticPaths = (() => skills.map((s) => ({ params: { skill: s.slug } }))) satisfies GetStaticPaths;
+const s = skillBySlug(Astro.params.skill!) as Skill;
+const related = s.related.map((r) => ({ ...r, skill: skillBySlug(r.slug)! }));
+const shelfmates = skills.filter((k) => k.shelf === s.shelf && k.slug !== s.slug && !s.related.some((r) => r.slug === k.slug));
+const original = s.files.filter((f) => !f.added);
+const zipName = `${s.slug}.zip`;
+const tree = [...s.files.map((f) => ({ path: f.path, state: f.added ? 'added' : 'published' })), ...(s.source.withheld?.paths ?? []).map((p) => ({ path: p, state: 'withheld' }))]
+  .sort((a, b) => (a.path === 'SKILL.md' ? -1 : b.path === 'SKILL.md' ? 1 : a.path.localeCompare(b.path)));
+const descLength = s.declared?.description.length;
+const where = s.runs.surfaces.map((x) => SURFACE_LABEL[x]).join(' and ');
+const sourceState = original.length === 0 ? 'Withheld' : s.source.withheld ? 'Partly published' : 'Published in full';
+---
+<Layout page="skill" title={`${s.title} · The Claude Skills Archive`} description={s.purpose}>
+  <nav class="trail" aria-label="Breadcrumb">
+    <ol>
+      <li><a href="/skills">The Archive</a></li>
+      <li><a href={`/skills/shelf/${s.shelf}`}>{s.shelfInfo.name}</a></li>
+      <li><a href={`/skills/${s.slug}`} aria-current="page">{s.title}</a></li>
+    </ol>
+  </nav>
+  <main id="main" class="plate">
+    <header class={`plate__head plate__head--${s.artefact}`}>
+      <div class="plate__art"><Cover slug={s.slug} title={s.title} call={s.call} artefact={s.artefact} size="lg" /></div>
+      <div class="plate__intro">
+        <p class="plate__kicker">{s.shelfInfo.name} · {s.call}</p>
+        <h1>{s.title}</h1>
+        <p class="plate__purpose">{s.purpose}</p>
+        <dl class="card" aria-label="Catalogue card">
+          <div><dt>Provenance</dt><dd><span class:list={['stamp', `stamp--${s.provenance.kind}`]}>{s.provenance.kind === 'original' ? 'Original' : 'Collected'}</span> {s.provenance.note}{s.provenance.upstream && <> Source: <a href={s.provenance.upstream.href}>{s.provenance.upstream.label}</a> ({s.provenance.upstream.licence}).</>}</dd></div>
+          <div><dt>Runs in</dt><dd>{where}. {s.runs.note}</dd></div>
+          <div><dt>Last updated</dt><dd><time datetime={s.source.updated}>{longDate(s.source.updated)}</time>, in its {s.source.origin.split(',')[0]}. No version number is recorded.</dd></div>
+          <div><dt>Original source</dt><dd>{sourceState}{original.length > 0 && `: ${original.length} file${original.length === 1 ? '' : 's'}, ${original.reduce((n, f) => n + f.lines, 0)} lines, unedited`}.</dd></div>
+          <div><dt>Invoke as</dt><dd><code translate="no">{s.declared?.name ? `/${s.declared.name}` : `/${s.slug}`}</code>, or describe the task and let Claude choose it.</dd></div>
+        </dl>
+        <nav class="plate__toc" aria-label="On this page">
+          <ul>
+            <li><a href="#understanding">Understanding</a></li>
+            <li><a href="#how">How it works</a></li>
+            <li><a href="#use">Practical use</a></li>
+            <li><a href="#source">Original source</a></li>
+            <li><a href="#install">Installing it</a></li>
+            <li><a href="#related">Related</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <div class="layer-note" role="note"><strong>Two layers.</strong> The sections up to <a href="#source">Original source</a> are this archive’s explanation, written from the skill’s text. The original follows, exactly as its author wrote it.</div>
+
+    <section id="understanding" class="folio" aria-labelledby="understanding-h">
+      <h2 id="understanding-h"><span class="folio__n">I</span> Understanding the skill</h2>
+      <div class="folio__cols">
+        <div>
+          <h3>Why it exists</h3><p>{s.why}</p>
+          <h3>The problem it solves</h3><p>{s.problem}</p>
+          <h3>Who it helps</h3><p>{s.benefits}</p>
+        </div>
+        <div>
+          <h3>Reach for it when</h3><ul class="ticks">{s.useWhen.map((x) => <li>{x}</li>)}</ul>
+          <h3>Leave it on the shelf when</h3><ul class="crosses">{s.avoidWhen.map((x) => <li>{x}</li>)}</ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="folio" aria-labelledby="how-h">
+      <h2 id="how-h"><span class="folio__n">II</span> How it works</h2>
+      <ol class="path">{s.workflow.map((w) => <li><h3>{w.step}</h3><p>{w.detail}</p></li>)}</ol>
+      <div class="folio__cols">
+        <div>
+          <h3>What it asks of you</h3><ul>{s.inputs.map((x) => <li>{x}</li>)}</ul>
+          <h3>What you get back</h3><ul>{s.outputs.map((x) => <li>{x}</li>)}</ul>
+          <h3>Decision points</h3><ul>{s.decisions.map((x) => <li>{x}</li>)}</ul>
+        </div>
+        <div>
+          <h3>What is distinctive</h3><ul>{s.distinctive.map((x) => <li>{x}</li>)}</ul>
+          <h3>Tools and dependencies</h3><ul>{s.dependencies.map((x) => <li>{x}</li>)}</ul>
+          <h3>Limitations</h3><ul>{s.limitations.map((x) => <li>{x}</li>)}</ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="use" class="folio" aria-labelledby="use-h">
+      <h2 id="use-h"><span class="folio__n">III</span> Practical use</h2>
+      <p class="example-flag"><strong>Examples, not recordings.</strong> Everything in this section was written for the archive to show the shape of a session. None of it is output from a real run.</p>
+      <div class="folio__cols">
+        <div>
+          <h3>An invocation</h3>
+          <div class="snippet"><code id={`inv-${s.slug}`} translate="no">{s.example.invocation}</code><button type="button" class="btn btn--small" data-copy={`inv-${s.slug}`} data-label="the example invocation" hidden>Copy invocation</button></div>
+          <h3>An example request</h3>
+          <blockquote class="request"><p>{s.example.request}</p></blockquote>
+          <h3>A scenario</h3><p>{s.example.scenario}</p>
+        </div>
+        <div>
+          <h3>What the answer is shaped like</h3>
+          <ol class="shape">{s.example.outputShape.map((x) => <li>{x}</li>)}</ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="source" class="folio folio--source" aria-labelledby="source-h">
+      <h2 id="source-h"><span class="folio__n">IV</span> Original source</h2>
+      {original.length > 0 ? (
+        <>
+          <p>These are the files of the skill as it exists in its {s.source.origin.split(',')[0]}, copied byte for byte. Each one’s SHA-256 is recorded in the archive’s manifest and checked on every build; if a copy here ever differed from that record, the site would not build.</p>
+          <div class="actions">
+            <button type="button" class="btn btn--brass" data-copy={`src-${s.slug}-skill-md`} data-label="SKILL.md" hidden>Copy SKILL.md</button>
+            <a class="btn" href={`/skills/${s.slug}/files/SKILL.md`} download="SKILL.md">Download SKILL.md</a>
+            {s.packaged ? <a class="btn" href={`/skills/${s.slug}/package.zip`} download={zipName} type="application/zip">Download the whole skill ({zipName})</a>
+              : <span class="actions__none">No complete package: {s.source.withheld?.reason ? 'files it needs are withheld (below).' : 'see below.'}</span>}
+          </div>
+        </>
+      ) : <p>The original is not published.</p>}
+      {s.source.withheld && (
+        <div class="withheld" role="note">
+          <h3>Withheld: {s.source.withheld.count} file{s.source.withheld.count === 1 ? '' : 's'}</h3>
+          <p>{s.source.withheld.reason}</p>
+        </div>
+      )}
+      <div class="tree" aria-label="Files in this skill">
+        <p class="tree__root"><code>{s.slug}/</code></p>
+        <ul>
+          {tree.map((t) => <li class={`tree__${t.state}`}><code>{t.path}</code> <span>{t.state === 'published' ? 'original' : t.state === 'added' ? 'added by this archive' : 'withheld'}</span></li>)}
+          {s.source.withheld && !s.source.withheld.paths && <li class="tree__withheld"><code>…</code> <span>{s.source.withheld.count} files withheld</span></li>}
+        </ul>
+      </div>
+      {s.files.map((f, i) => <SourceViewer slug={s.slug} file={f} open={i === 0} />)}
+      {s.files.length > 0 && (
+        <details class="integrity">
+          <summary>Integrity record</summary>
+          <table>
+            <caption>SHA-256 of every published file, as recorded in the manifest and verified at build</caption>
+            <thead><tr><th scope="col">File</th><th scope="col">Bytes</th><th scope="col">SHA-256</th></tr></thead>
+            <tbody>{s.files.map((f) => <tr><td><code>{f.path}</code></td><td>{f.bytes}</td><td><code class="hash" translate="no">{f.sha256}</code></td></tr>)}</tbody>
+          </table>
+        </details>
+      )}
+    </section>
+
+    <section id="install" class="folio" aria-labelledby="install-h">
+      <h2 id="install-h"><span class="folio__n">V</span> Installing it yourself</h2>
+      <p class="portability"><strong>Before you download:</strong> {s.portability}</p>
+      {s.packaged || original.length > 0 ? (
+        <div class="folio__cols">
+          <div>
+            <h3>In Claude Code</h3>
+            <ol>
+              <li>Unzip {s.packaged ? <code>{zipName}</code> : 'the files above'} so the folder is <code translate="no">~/.claude/skills/{s.declared?.name || s.slug}/</code> (for every project) or <code translate="no">.claude/skills/{s.declared?.name || s.slug}/</code> (one project), with <code>SKILL.md</code> directly inside.</li>
+              <li>Keep the relative paths as they are: the instructions refer to their supporting files by path.</li>
+              <li>Start a session. Claude picks the skill when a request matches its description, or run it directly with <code translate="no">/{s.declared?.name || s.slug}</code>.</li>
+            </ol>
+          </div>
+          <div>
+            <h3>In Claude.ai</h3>
+            <ol>
+              <li>Turn on code execution: Settings › Capabilities. Skills need it.</li>
+              <li>Open Customize › Skills, choose “+”, then “Create skill”, then “Upload a skill”.</li>
+              <li>Upload {s.packaged ? <code>{zipName}</code> : 'a ZIP of the skill folder'}. Its root is the <code>{s.slug}/</code> folder, as Claude.ai asks.</li>
+            </ol>
+            {descLength !== undefined && descLength > CLAUDE_AI_DESCRIPTION_MAX && s.claudeAiDescription && (
+              <div class="limit" role="note" data-limit>
+                <h4>The 200-character description limit</h4>
+                <p>Claude.ai’s help page for custom skills limits an uploaded skill’s description to 200 characters. This skill’s original description is {descLength} characters, and the archive keeps it unchanged in <code>SKILL.md</code> and in the ZIP. The Agent Skills API allows 1,024 and Claude Code reads longer ones, so the limit only matters for a Claude.ai upload.</p>
+                <p>If Claude.ai refuses the upload, replace the <code>description:</code> line in your unzipped copy of <code>SKILL.md</code> with this one, then zip the folder again. <strong>This line is written by the archive, not by the skill’s author.</strong></p>
+                <div class="snippet"><code id={`desc-${s.slug}`} translate="no">description: '{s.claudeAiDescription}'</code><button type="button" class="btn btn--small" data-copy={`desc-${s.slug}`} data-label="the shorter description line" hidden>Copy this line</button></div>
+                <p class="fine">{s.claudeAiDescription.length} characters. A shorter description gives Claude fewer cues for when to use the skill; the original is long because it lists the phrases that should trigger it.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : <p>Nothing to install from this archive; the method above is the part that is shared.</p>}
+      <p class="fine">Sources for these steps: <a href="https://code.claude.com/docs/en/skills">Claude Code skills documentation</a>, <a href="https://support.claude.com/en/articles/12512180-using-skills-in-claude">Using Skills in Claude</a>, <a href="https://support.claude.com/en/articles/12512198-how-to-create-custom-skills">How to create custom skills</a> (read 7 November 2026).</p>
+    </section>
+
+    <section id="related" class="folio" aria-labelledby="related-h">
+      <h2 id="related-h"><span class="folio__n">VI</span> Related volumes</h2>
+      <ul class="related">
+        {related.map((r) => <li><Volume skill={r.skill} heading="h3" size="sm" /><p class="related__why">{r.why}</p></li>)}
+        {shelfmates.map((k) => <li><Volume skill={k} heading="h3" size="sm" /><p class="related__why">On the same shelf.</p></li>)}
+      </ul>
+      <p><a class="link-arrow link-arrow--back" href="/skills#stacks">Back to the stacks</a></p>
+    </section>
+  </main>
+</Layout>

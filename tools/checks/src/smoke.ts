@@ -37,6 +37,9 @@ const MEDIA: Record<string, string[]> = {
   html: ['text/html'], pdf: ['application/pdf'], png: ['image/png'], jpg: ['image/jpeg'], jpeg: ['image/jpeg'],
   svg: ['image/svg+xml'], css: ['text/css'], js: ['text/javascript', 'application/javascript'], mjs: ['text/javascript', 'application/javascript'],
   woff2: ['font/woff2'], json: ['application/json'], txt: ['text/plain'], xml: ['application/xml', 'text/xml'],
+  // The Skills Archive's downloads. Python has no registered media type, and astro preview sends none
+  // for it; what matters is that it is never an HTML fallback.
+  md: ['text/markdown', 'text/plain'], zip: ['application/zip'], py: ['text/x-python', 'text/x-script.python', 'text/plain', 'application/octet-stream', ''],
 };
 const extension = (path: string) => new URL(path, 'http://x').pathname.match(/\.(\w+)$/)?.[1]?.toLowerCase() ?? 'html';
 

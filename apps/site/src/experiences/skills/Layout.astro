@@ -1,0 +1,20 @@
+---
+// The Skills Archive's presentation: a reading room in a forest library. Its own palette (day in
+// parchment and moss, night by lantern), system serif faces, and one small script for copying,
+// search and the lanterns. Nothing here is shared with any other experience.
+import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
+import './styles/archive.css';
+
+interface Props { title?: string; description?: string; page: string }
+const { title, description, page } = Astro.props;
+---
+<ExperienceRoot experience="skills" title={title} description={description}>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class={`archive archive--${page}`}>
+    <slot />
+  </div>
+  <div class="toast" role="status" aria-live="polite" data-toast></div>
+  <script>
+    import './archive.ts';
+  </script>
+</ExperienceRoot>

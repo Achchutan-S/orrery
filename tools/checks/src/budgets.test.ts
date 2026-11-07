@@ -156,5 +156,5 @@ test('every emitted file is accounted for: missing references, unsized images, f
     'app/og.png: link-preview image is OVER',
     '_astro/orphan.js: emitted but loaded by no page and in no FILE_BUDGETS entry, so its size is unchecked',
   ]);
-  assert.deepEqual(FILE_BUDGETS.map((b) => b.kind), ['link-preview image', 'document']);
+  assert.deepEqual(FILE_BUDGETS.map((b) => b.kind), ['link-preview image', 'document', 'text download', 'archive']);
 });

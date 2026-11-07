@@ -38,6 +38,14 @@ function site(env: 'production' | 'preview') {
     files.set('resume.html', html('Resume', '<a href="/resume/resume.pdf">PDF</a>', '/resume/og.png'));
     files.set('resume/resume.pdf', '%PDF-1.4');
     files.set('resume/og.png', 'png');
+    files.set('skills.html', html('The Claude Skills Archive', '<a href="/skills/guide">g</a><a href="/skills/shelf/learning">s</a><a href="/skills/sidequest">q</a>', '/skills/og.png'));
+    files.set('skills/guide.html', html('How skills work', '', '/skills/og.png'));
+    files.set('skills/og.png', 'png');
+    files.set('skills/shelf/learning.html', html('Learning', '<a href="/skills/sidequest">q</a>', '/skills/og.png'));
+    files.set('skills/sidequest.html', html('Side Quest', '<a href="/skills/sidequest/package.zip">zip</a><a href="/skills/sidequest/files/SKILL.md">md</a><a href="/skills/sidequest/files/scripts/quest.py">py</a>', '/skills/og.png'));
+    files.set('skills/sidequest/package.zip', 'PK');
+    files.set('skills/sidequest/files/SKILL.md', '---');
+    files.set('skills/sidequest/files/scripts/quest.py', 'print()');
   }
   return files;
 }
@@ -46,7 +54,7 @@ type Mutate = {
   files?: (f: Map<string, string>) => void; noHeaders?: boolean; noRedirects?: boolean; mutableAssets?: boolean; spaFallback?: boolean;
   /** Overrides the Content-Type for one path. */ types?: Record<string, string>; noHeadersOn404?: boolean; cachedHtml?: boolean;
 };
-const TYPES: Record<string, string> = { js: 'text/javascript; charset=utf-8', woff2: 'font/woff2', svg: 'image/svg+xml', png: 'image/png', pdf: 'application/pdf' };
+const TYPES: Record<string, string> = { js: 'text/javascript; charset=utf-8', woff2: 'font/woff2', svg: 'image/svg+xml', png: 'image/png', pdf: 'application/pdf', md: 'text/markdown', zip: 'application/zip', py: '' };
 
 function deployment(env: 'production' | 'preview', m: Mutate = {}): Fetch {
   const files = site(env);

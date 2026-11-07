@@ -1,0 +1,110 @@
+{
+  "realms": [
+    {
+      "name": "History & Civilization",
+      "realm": "The Old Kingdoms",
+      "emoji": "🏛️",
+      "weight": 1.0
+    },
+    {
+      "name": "Natural Sciences & Math",
+      "realm": "The Observatory",
+      "emoji": "🔭",
+      "weight": 1.0
+    },
+    {
+      "name": "Arts & Music",
+      "realm": "The Atelier",
+      "emoji": "🎨",
+      "weight": 1.0
+    },
+    {
+      "name": "Philosophy, Psychology & Ideas",
+      "realm": "The Owl's Library",
+      "emoji": "🦉",
+      "weight": 1.0
+    },
+    {
+      "name": "World Cultures, Geography & Language",
+      "realm": "The Far Roads",
+      "emoji": "🧭",
+      "weight": 1.0
+    },
+    {
+      "name": "Economics, Society & Institutions",
+      "realm": "The Market Square",
+      "emoji": "⚖️",
+      "weight": 1.0
+    },
+    {
+      "name": "Practical & Hands-On Skills",
+      "realm": "The Workshop",
+      "emoji": "🔨",
+      "weight": 1.0
+    },
+    {
+      "name": "Bodies & Nature",
+      "realm": "The Wildwood",
+      "emoji": "🌿",
+      "weight": 1.0
+    }
+  ],
+  "formats": {
+    "Read": {
+      "quest": "Scroll",
+      "emoji": "📜"
+    },
+    "Watch": {
+      "quest": "Scrying",
+      "emoji": "🔮"
+    },
+    "Listen": {
+      "quest": "Bard's Tale",
+      "emoji": "🎧"
+    },
+    "Do": {
+      "quest": "Craft",
+      "emoji": "⚒️"
+    },
+    "Quiz-Recall": {
+      "quest": "Riddle",
+      "emoji": "🧠"
+    },
+    "Reflect-Discuss": {
+      "quest": "Campfire",
+      "emoji": "🔥"
+    }
+  },
+  "rarities": [
+    {
+      "name": "Common",
+      "emoji": "⚪",
+      "chance": 0.6,
+      "mult": 1.0
+    },
+    {
+      "name": "Rare",
+      "emoji": "🔵",
+      "chance": 0.25,
+      "mult": 1.5
+    },
+    {
+      "name": "Epic",
+      "emoji": "🟣",
+      "chance": 0.12,
+      "mult": 2.0
+    },
+    {
+      "name": "Legendary",
+      "emoji": "🟡",
+      "chance": 0.03,
+      "mult": 3.0
+    }
+  ],
+  "cooldown_days_realm": 5,
+  "cooldown_days_subtopic": 270,
+  "echo_day_probability": 0.142857,
+  "grace_days_per_month": 2,
+  "compact_after_entries": 50,
+  "keep_raw_days": 45
+}

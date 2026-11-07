@@ -1,0 +1,22 @@
+---
+// One skill standing on a shelf: its artefact, a title that links to it (the whole volume is the
+// click target), its purpose and a library tag with provenance, where it runs and when it was updated.
+import { longDate, SURFACE_LABEL, type Skill } from '../library.ts';
+import Cover from './Cover.astro';
+
+interface Props { skill: Skill; heading?: 'h2' | 'h3' | 'h4'; size?: 'sm' | 'md' }
+const { skill: s, heading: H = 'h3', size = 'md' } = Astro.props;
+const haystack = [s.title, s.slug, s.purpose, s.shelfInfo.name, s.provenance.kind, ...s.tags, ...s.runs.surfaces.map((x) => SURFACE_LABEL[x])].join(' ');
+---
+<article class:list={['volume', `volume--${s.artefact}`, `volume--${size}`]} data-volume data-search={haystack} data-href={`/skills/${s.slug}`}>
+  <Cover slug={s.slug} title={s.title} call={s.call} artefact={s.artefact} size={size} />
+  <div class="volume__label">
+    <H class="volume__title"><a href={`/skills/${s.slug}`}>{s.title}</a></H>
+    <p class="volume__purpose">{s.purpose}</p>
+    <p class="volume__tag">
+      <span class:list={['stamp', `stamp--${s.provenance.kind}`]}>{s.provenance.kind === 'original' ? 'Original' : 'Collected'}</span>
+      <span>{s.runs.surfaces.map((x) => SURFACE_LABEL[x]).join(' · ')}</span>
+      <span>Updated <time datetime={s.source.updated}>{longDate(s.source.updated)}</time></span>
+    </p>
+  </div>
+</article>

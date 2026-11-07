@@ -18,6 +18,7 @@ Two kinds of evidence, never mixed: what the browser suites prove automatically 
 | Touch targets of 44 px on phones | site § The Index; error fallback | Index headlines, the island error fallback's button |
 | Island errors: an `alert` fallback with focus on its heading | site § island error boundary | `sample-app` |
 | Works without JavaScript | site § The Index, Resume | Index, resume |
+| Skills Archive (preview build, a draft): axe light and dark on desktop and phone; reflow at 320 px; WCAG text spacing; forced-colours focus; Tab order through every volume; one `h1`, `main` and skip link; source regions focusable and labelled; copy announced in a polite status; reduced motion; works without JavaScript | `apps/site/test-browser/skills.test.ts` | `/skills`, guide, a shelf, four skill pages |
 
 ## Manual checklist
 
@@ -63,12 +64,20 @@ Start VoiceOver with ⌘F5. VO = Control+Option.
 | 15 | `/`, palette, Control Center | macOS: System Settings → Accessibility → Display → Reduce motion, then reload | No animated transitions |
 | 16 | `/`, `/resume`, palette | A real iPhone (Safari) and Android phone (Chrome) | Every link and button can be hit without zooming; the Beacon button opens and closes the palette; the PDF downloads; then read `/`, `/resume` and one Journal chapter for plain language and link text that makes sense alone |
 
+### E. The Claude Skills Archive (`/skills`; a draft, so use a preview build: `VERCEL_ENV=preview pnpm build`, then `pnpm --filter @pu/site preview`)
+
+| # | Route | Action | Expected |
+| --- | --- | --- | --- |
+| 17 | `/skills` | Keyboard only: Tab from the address bar; press `/`; type "audio"; Tab to a volume; Enter | Skip link first, then "Enter the archive" and "Light the lanterns"; `/` puts focus in the search; the count is announced; the volume opens |
+| 18 | `/skills/sidequest` | VoiceOver: VO+U Headings and Landmarks; activate "Copy SKILL.md", then a section button; VO into the SKILL.md region | Six numbered sections in order; each copy is announced ("Copied SKILL.md: 188 lines, exactly as written.") without focus moving; the region reads as "SKILL.md, original text" and its lines read as text, without line numbers |
+| 19 | `/skills`, `/skills/conceptcast` | Reduce motion on, then off; 200% and 400% zoom; "Light the lanterns" | No drifting dust, light or blinking with reduced motion; nothing cut off or sideways at 400%; night mode keeps readable contrast, and the button says "Let in the daylight" when pressed |
+
 ## Results
 
 Record only what a person actually did. One row per session.
 
 | Date | Checks | Browser and assistive technology | Pass | Fail (with note) | By |
 | --- | --- | --- | --- | --- | --- |
-| — | 1–16 | — | — | — | — |
+| — | 1–19 | — | — | — | — |
 
 Until a row is filled in, nothing here is manually verified (tracker decision 3).

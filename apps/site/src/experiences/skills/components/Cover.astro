@@ -1,0 +1,18 @@
+---
+// A skill as an object on the shelf: book, tome, scroll, notebook, blueprint, map, ledger, atlas,
+// journal or palm-leaf bundle. Pure CSS and one emblem; decorative, because the title beside it is
+// the accessible name.
+import type { Artefact } from '../types.ts';
+import Emblem from './Emblem.astro';
+
+interface Props { slug: string; title: string; call: string; artefact: Artefact; size?: 'sm' | 'md' | 'lg' }
+const { slug, title, call, artefact, size = 'md' } = Astro.props;
+---
+<div class:list={['cover', `cover--${artefact}`, `cover--${size}`]} aria-hidden="true">
+  <span class="cover__body">
+    <span class="cover__deco"></span>
+    <Emblem slug={slug} class="cover__emblem" />
+    <span class="cover__title">{title}</span>
+    <span class="cover__call">{call}</span>
+  </span>
+</div>

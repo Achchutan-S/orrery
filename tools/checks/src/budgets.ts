@@ -72,6 +72,9 @@ export const BUDGETS: Record<BudgetClass, Record<Metric, number>> = {
 export const FILE_BUDGETS: { kind: string; kb: number; why: string; matches: (path: string, ogImages: ReadonlySet<string>) => boolean }[] = [
   { kind: 'link-preview image', kb: 150, why: 'fetched by link-preview crawlers, never by a page; about three times the generated 1200×630 cards', matches: (p, og) => og.has(p) },
   { kind: 'document', kb: 400, why: 'a download the reader asks for (the resume PDF); about twice its size today', matches: (p) => p.endsWith('.pdf') },
+  // Measured 7 November 2026 (Skills Archive, preview build): largest source file 9 KB gzip (conceptcast/SKILL.md), largest package 11 KB.
+  { kind: 'text download', kb: 64, why: 'an original file the reader views or downloads (a skill\'s SKILL.md, references, scripts); several times the largest today', matches: (p) => /\.(md|py|json|txt)$/.test(p) },
+  { kind: 'archive', kb: 100, why: 'a ZIP the reader downloads (a whole skill folder); several times the largest today', matches: (p) => p.endsWith('.zip') },
 ];
 
 const FONT = /\.(woff2?|ttf|otf)$/;

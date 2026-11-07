@@ -124,11 +124,11 @@ test('registry: search, filters, sort, external entries and the environment matr
   await p.getByRole('link', { name: 'Experiences' }).click();
   await p.getByRole('heading', { level: 1, name: 'Experiences' }).waitFor();
   const rows = p.locator('table.registry tbody tr');
-  assert.equal(await rows.count(), 9);
+  assert.equal(await rows.count(), experiences.length);
 
   await p.getByLabel('Search by name or id').fill('jour');
   assert.deepEqual(await rows.evaluateAll((r) => r.map((x) => x.getAttribute('data-id'))), ['journal']);
-  assert.match(await p.getByRole('status').filter({ hasText: 'Showing' }).textContent() ?? '', /Showing 1 of 9/);
+  assert.match(await p.getByRole('status').filter({ hasText: 'Showing' }).textContent() ?? '', new RegExp(`Showing 1 of ${experiences.length}`));
   await p.getByLabel('Search by name or id').fill('');
 
   await p.getByRole('radio', { name: 'Draft' }).check({ force: true });

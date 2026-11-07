@@ -1,0 +1,68 @@
+---
+import Layout from '../Layout.astro';
+import { skillBySlug } from '../library.ts';
+type L = { href: string; title: string };
+const link = (slug: string): L => ({ href: `/skills/${slug}`, title: skillBySlug(slug)!.title });
+const [sq, vat, pf, iqa, mo, dda, sdp, wf] = (['sidequest', 'vedic-astrology-tamil', 'problem-finder', 'interview-quick-answer', 'moral-oratory', 'deep-dive-audio', 'system-design-prep', 'wayfinder'] as const).map(link) as [L, L, L, L, L, L, L, L];
+---
+<Layout page="guide" title="How skills work · The Claude Skills Archive" description="What a Claude skill is, how SKILL.md and supporting files work, how to install one, and the design patterns behind this collection.">
+  <nav class="trail" aria-label="Breadcrumb">
+    <ol><li><a href="/skills">The Archive</a></li><li><a href="/skills/guide" aria-current="page">How skills work</a></li></ol>
+  </nav>
+  <main id="main" class="guide">
+    <header class="alcove__head">
+      <p class="plate__kicker">The archive’s handbook</p>
+      <h1>How skills work, and what makes a good one</h1>
+      <p class="alcove__blurb">Two kinds of writing on one page, kept apart on purpose: what Anthropic’s documentation says the platform does, and what I have learned writing the skills on these shelves.</p>
+    </header>
+
+    <section class="folio folio--official" aria-labelledby="official-h">
+      <h2 id="official-h"><span class="folio__n">I</span> What the platform does <span class="badge">From the documentation</span></h2>
+      <dl class="facts">
+        <div><dt>A skill is a folder</dt><dd>Its entry point is <code>SKILL.md</code>: YAML frontmatter, then Markdown instructions. The folder can also hold reference files, templates and scripts. <a href="https://code.claude.com/docs/en/skills">Claude Code docs</a></dd></div>
+        <div><dt>The description decides when it runs</dt><dd>Claude uses a skill when it is relevant, judged from its description, or you invoke it directly with <code>/skill-name</code>. Setting <code>disable-model-invocation: true</code> stops Claude from choosing it on its own. <a href="https://code.claude.com/docs/en/skills">Claude Code docs</a></dd></div>
+        <div><dt>Only what is needed is loaded</dt><dd>Skill descriptions are available up front; the body of <code>SKILL.md</code> is read when the skill is used, and supporting files only when the instructions call for them. Scripts are run, not read into context. <a href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview">Agent Skills overview</a></dd></div>
+        <div><dt>Where Claude Code finds skills</dt><dd><code translate="no">~/.claude/skills/&lt;name&gt;/SKILL.md</code> for you everywhere; <code translate="no">.claude/skills/&lt;name&gt;/SKILL.md</code> for one project; plugins can bring their own. The documentation suggests keeping <code>SKILL.md</code> under 500 lines and moving detail into supporting files. <a href="https://code.claude.com/docs/en/skills">Claude Code docs</a></dd></div>
+        <div><dt>Claude.ai takes a ZIP</dt><dd>With code execution turned on, upload under Customize › Skills. The ZIP holds the skill folder at its root, and the folder name matches the skill’s name. <a href="https://support.claude.com/en/articles/12512198-how-to-create-custom-skills">How to create custom skills</a></dd></div>
+        <div><dt>Names and descriptions have limits</dt><dd>A name is at most 64 characters of lowercase letters, numbers and hyphens. Descriptions: at most 1,024 characters in the Agent Skills API; Claude.ai’s help page gives 200; Claude Code truncates long ones in its listing at 1,536. <a href="https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices">Best practices</a></dd></div>
+      </dl>
+      <p class="fine">Read on 7 November 2026. Platforms change; the linked pages are the authority.</p>
+    </section>
+
+    <section class="folio folio--opinion" aria-labelledby="patterns-h">
+      <h2 id="patterns-h"><span class="folio__n">II</span> Patterns from this collection <span class="badge badge--opinion">My opinion</span></h2>
+      <ol class="patterns">
+        <li><h3>Name the failure the skill exists to prevent</h3><p>The most useful paragraph in a skill is often the one that says what goes wrong without it. <a href={mo.href}>{mo.title}</a> opens with the two failures it guards against; everything after serves them.</p></li>
+        <li><h3>Let a script own what the model gets wrong</h3><p>Probabilities, cooldowns, scores and ephemeris positions drift when a model computes them. In <a href={sq.href}>{sq.title}</a> the engine owns every number and Claude is told never to recompute one; <a href={vat.href}>{vat.title}</a> forbids estimating a planet’s position at all.</p></li>
+        <li><h3>Force a decision at the end</h3><p>A ranked list hands the work back to the reader. <a href={pf.href}>{pf.title}</a> ends every run with “build now, investigate, avoid”, one pick each, and then waits.</p></li>
+        <li><h3>Choose the format by the kind of question</h3><p><a href={iqa.href}>{iqa.title}</a> keeps four templates (concept, comparison, scenario, behavioural) instead of one, so a comparison gets a table and a story question gets a structure, not an invented story.</p></li>
+        <li><h3>Load references only for the mode that needs them</h3><p>A table of modes, each naming the one file it reads, keeps a large skill fast. <a href={dda.href}>{dda.title}</a> reads its spoken-style guide only when it starts writing.</p></li>
+        <li><h3>Keep the output format you tested</h3><p><a href={sdp.href}>{sdp.title}</a> says plainly that its Q&amp;A layout “was tested and preferred over a plain evaluation table”, and includes a worked example as a reference file.</p></li>
+        <li><h3>Plan, don’t do, when the route is unclear</h3><p><a href={wf.href}>{wf.title}</a>, collected from Matt Pocock, treats the urge to start building as the sign that planning has reached the edge of the map.</p></li>
+      </ol>
+    </section>
+
+    <section class="folio folio--opinion" aria-labelledby="mistakes-h">
+      <h2 id="mistakes-h"><span class="folio__n">III</span> Common mistakes <span class="badge badge--opinion">My opinion</span></h2>
+      <ul class="crosses">
+        <li><strong>A vague description.</strong> If the trigger phrases are not in the description, the skill is never chosen. Write the words people actually type.</li>
+        <li><strong>No “when not to”.</strong> Sibling skills collide. Say which one owns which request, as Problem Finder and India Product Gap Finder do.</li>
+        <li><strong>Asking the model to keep score.</strong> Anything that must be exact belongs in a script.</li>
+        <li><strong>Letting it invent the user.</strong> Behavioural answers, birth details and personal history must come from the user, never from the model.</li>
+        <li><strong>One giant file.</strong> Move reference material out of <code>SKILL.md</code> and point to it by path.</li>
+      </ul>
+    </section>
+
+    <section class="folio folio--opinion" aria-labelledby="build-h">
+      <h2 id="build-h"><span class="folio__n">IV</span> From a repeated workflow to a skill <span class="badge badge--opinion">My practice</span></h2>
+      <ol class="path">
+        <li><h3>Do it by hand three times</h3><p>Notice what you keep re-explaining to Claude. That explanation is the skill’s first draft.</p></li>
+        <li><h3>Start as a command</h3><p>{sq.title} and {pf.title} both began as Claude Code slash commands in August 2026, before they became skills.</p></li>
+        <li><h3>Write the description last</h3><p>Once the instructions settle, list the phrases that should trigger them, and the neighbouring requests that should not.</p></li>
+        <li><h3>Move the mechanical parts into files</h3><p>Reference notes beside the instructions; arithmetic and state into a script with plain JSON output.</p></li>
+        <li><h3>Keep the original as the source of truth</h3><p>This archive copies each skill byte for byte and records its SHA-256, so an explanation can improve without the skill quietly changing.</p></li>
+      </ol>
+    </section>
+    <p><a class="link-arrow link-arrow--back" href="/skills#stacks">Back to the stacks</a></p>
+  </main>
+</Layout>

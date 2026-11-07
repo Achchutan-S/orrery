@@ -1,0 +1,102 @@
+---
+import Layout from '../Layout.astro';
+import Scene from '../components/Scene.astro';
+import Cover from '../components/Cover.astro';
+import Volume from '../components/Volume.astro';
+import { featured, longDate, recent, shelves, skills, totals, SURFACE_LABEL } from '../library.ts';
+const originals = skills.filter((s) => s.provenance.kind === 'original').length;
+---
+<Layout page="landing">
+  <header class="entrance" data-entrance>
+    <div class="entrance__room"><Scene /></div>
+    <div class="nameplate">
+      <p class="nameplate__eyebrow">A reading room in Orrery</p>
+      <h1 class="nameplate__title"><span>The Claude</span> Skills Archive</h1>
+      <p class="nameplate__lede">A living library of the skills I’ve created and collected for Claude: what each one does, how it works, and its original instructions, kept exactly as written.</p>
+      <div class="nameplate__actions">
+        <a class="btn btn--brass btn--large" href="#stacks">Enter the archive</a>
+        <button type="button" class="btn btn--lantern" data-lanterns hidden aria-pressed="false">Light the lanterns</button>
+      </div>
+      <dl class="nameplate__count">
+        <div><dt>Volumes</dt><dd>{totals.skills}</dd></div>
+        <div><dt>Shelves</dt><dd>{totals.shelves}</dd></div>
+        <div><dt>Original files kept</dt><dd>{totals.files}</dd></div>
+      </dl>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="primer" aria-labelledby="primer-h">
+      <div class="primer__text">
+        <h2 id="primer-h">What lives on these shelves</h2>
+        <p>A <strong>Claude skill</strong> is a folder of instructions, a <code>SKILL.md</code> with a short description on top, sometimes with reference files and scripts beside it. Claude reads the description to decide when a skill applies, then follows the instructions inside. Each volume here pairs <em>my explanation</em> of a skill with <em>the skill itself</em>: the original files, unedited, to read, copy or download.</p>
+        <p class="primer__note">{originals} of the {totals.skills} volumes are my own work; {totals.skills - originals === 1 ? 'one is' : `${totals.skills - originals} are`} collected from another author and say so on the cover.</p>
+        <p><a class="link-arrow" href="/skills/guide">How skills work, and what makes a good one</a></p>
+      </div>
+      <aside class="companion" aria-label="A note from the archive owl">
+        <svg viewBox="0 0 80 80" aria-hidden="true" focusable="false" class="companion__owl"><path class="o-body" d="M14 74 q-8 -54 26 -64 q34 10 26 64 z" /><path class="o-body" d="M20 20 l-6 -14 l14 10 z M60 20 l6 -14 l-14 10 z" /><ellipse class="o-belly" cx="40" cy="54" rx="15" ry="18" /><circle class="o-face" cx="31" cy="32" r="10" /><circle class="o-face" cx="49" cy="32" r="10" /><circle class="o-eye" cx="31" cy="32" r="4.5" /><circle class="o-eye" cx="49" cy="32" r="4.5" /><path class="o-beak" d="M40 37 l-3 4 l3 5 l3 -5 z" /><path class="o-leaf" d="M40 10 q-2 -9 7 -10 q0 8 -7 10 z" /></svg>
+        <p><span class="companion__name">Wick, the archive owl:</span> <span data-hint>Every volume has two parts. The explanation is ours to improve; the original is never touched. Each file carries its SHA-256 so you can check.</span></p>
+      </aside>
+    </section>
+
+    <section class="desk" aria-labelledby="desk-h">
+      <h2 id="desk-h" class="section-title"><span class="section-title__kicker">On the reading desk</span> {featured.title}</h2>
+      <div class="desk__spread">
+        <a class="desk__cover" href={`/skills/${featured.slug}`} tabindex="-1" aria-hidden="true"><Cover slug={featured.slug} title={featured.title} call={featured.call} artefact={featured.artefact} size="lg" /></a>
+        <div class="desk__page">
+          <p class="desk__purpose">{featured.purpose}</p>
+          <p>{featured.why}</p>
+          <ul class="desk__facts">
+            <li><strong>Shelf</strong> {featured.shelfInfo.name}</li>
+            <li><strong>Runs in</strong> {featured.runs.surfaces.map((x) => SURFACE_LABEL[x]).join(' and ')}</li>
+            <li><strong>Original</strong> {featured.files.filter((f) => !f.added).reduce((n, f) => n + f.lines, 0)} lines, unedited</li>
+          </ul>
+          <a class="btn btn--brass" href={`/skills/${featured.slug}`}>Open {featured.title}</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="stacks" class="stacks" aria-labelledby="stacks-h" tabindex="-1">
+      <div class="stacks__head">
+        <h2 id="stacks-h" class="section-title"><span class="section-title__kicker">The stacks</span> Every volume, by shelf</h2>
+        <form class="finder" role="search" data-finder hidden action="/skills" method="get">
+          <label for="finder-q">Search the archive</label>
+          <div class="finder__row">
+            <input id="finder-q" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="Try “interview”, “audio” or “India”" aria-describedby="finder-count" />
+            <kbd class="finder__key" aria-hidden="true">/</kbd>
+          </div>
+          <p id="finder-count" class="finder__count" aria-live="polite" data-finder-count>{totals.skills} volumes on {totals.shelves} shelves</p>
+        </form>
+        <nav class="shelf-nav" aria-label="Shelves">
+          <ul>{shelves.map((s) => <li><a class="chip" href={`/skills/shelf/${s.id}`}><span class="chip__call">{s.call}</span> {s.name} <span class="chip__n">{s.skills.length}</span></a></li>)}</ul>
+        </nav>
+      </div>
+      <div class="bookcase">
+        {shelves.map((s) => (
+          <section class="shelf" aria-labelledby={`shelf-${s.id}`} data-shelf>
+            <header class="shelf__plate">
+              <h3 id={`shelf-${s.id}`}><a href={`/skills/shelf/${s.id}`}><span class="shelf__call">{s.call}</span> {s.name}</a></h3>
+              <p>{s.blurb}</p>
+            </header>
+            <div class="shelf__row">{s.skills.map((k) => <Volume skill={k} heading="h4" />)}</div>
+          </section>
+        ))}
+        <p class="bookcase__empty" data-finder-empty hidden>No volume matches that search. Try fewer words, or <a href="/skills/guide">read how skills work</a> instead.</p>
+      </div>
+      <p class="stacks__random"><a class="link-arrow" href={`/skills/${featured.slug}`} data-random={JSON.stringify(skills.map((s) => s.slug))}>Take a volume down at random</a></p>
+    </section>
+
+    <section class="ledger" aria-labelledby="recent-h">
+      <h2 id="recent-h" class="section-title"><span class="section-title__kicker">Recently re-bound</span> Last updated</h2>
+      <ol class="ledger__list">
+        {recent.slice(0, 4).map((s) => (
+          <li><time datetime={s.source.updated}>{longDate(s.source.updated)}</time> <a href={`/skills/${s.slug}`}>{s.title}</a> <span class="ledger__shelf">{s.shelfInfo.name}</span></li>
+        ))}
+      </ol>
+      <p class="ledger__note">Dates are when each skill was last updated in the Claude.ai account it comes from. No usage figures are kept or shown.</p>
+    </section>
+  </main>
+  <footer class="archive-foot">
+    <p>Explanations on these pages are written for this archive and may improve over time. The original skill files are byte-for-byte copies, each checked against a recorded SHA-256 at every build.</p>
+  </footer>
+</Layout>

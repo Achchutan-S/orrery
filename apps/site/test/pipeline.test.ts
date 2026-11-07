@@ -13,6 +13,7 @@ import { fixtureRelease } from '@pu/experience-catalog/fixture-release';
 import { parseRelease, resolveAll } from '@pu/platform-schema';
 import { planMount } from '../integrations/mount-experiences.ts';
 import { views } from '../src/experiences/sample-app/views.ts';
+import { SHELVES } from '../src/experiences/skills/shelves.ts';
 import { scanLeaks } from '@pu/checks/leaks';
 import { readSources } from '@pu/checks/repo';
 import { pageFindings, productionOwners } from '@pu/checks/metadata';
@@ -52,6 +53,8 @@ const distFiles = (o: Output) => o.files.map((path) => {
 const journalPages = ['journal.html', ...readdirSync(new URL('../src/experiences/journal/chapters/', import.meta.url))
   .map((f) => `journal/${f.replace(/^\d+-/, '').replace(/\.mdx$/, '.html')}`)];
 const appPages = views.map((v) => `sample-app/${v.path}.html`);
+const skillsPages = ['skills.html', 'skills/guide.html', ...SHELVES.map((s) => `skills/shelf/${s.id}.html`),
+  ...readdirSync(new URL('../src/experiences/skills/entries/', import.meta.url)).map((f) => `skills/${f.replace(/\.ts$/, '.html')}`)];
 /** The Beacon's script, recognised by the marker the budget check uses; every other script on a page. */
 const scripts = (html: string) => [...html.matchAll(/<script\b[^>]*>([^]*?)<\/script>/g)].map((m) => m[0]);
 const isBeacon = (script: string) => script.includes(BEACON_MARKER);
@@ -65,13 +68,13 @@ const mounted = (env: 'production' | 'preview') => resolveAll(parseCatalog().exp
 /** The pages each experience builds (code, not release state). */
 const PAGES: Record<string, string[]> = {
   index: ['index.html'], journal: journalPages, 'sample-content': ['sample-content.html'], 'sample-app': ['sample-app.html', ...appPages],
-  resume: ['resume.html'], 'canary-draft': ['canary-draft.html'], 'sample-hostile': ['sample-hostile.html'],
+  resume: ['resume.html'], skills: skillsPages, 'canary-draft': ['canary-draft.html'], 'sample-hostile': ['sample-hostile.html'],
 };
 /** Experiences that load the platform font (opt in), besides the platform's own pages. */
 const FONT = new Set(['index', 'journal', 'resume']);
 
 describe('planMount (pure)', () => {
-  const folders = ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'canary-draft', 'sample-hostile'];
+  const folders = ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'skills', 'canary-draft', 'sample-hostile'];
   const input = { catalog, release, folders, fileExists: () => true };
 
   test('production plans only the public internal experiences; externals are never mounted', () => {
@@ -118,11 +121,13 @@ describe('production build', () => {
     }
   });
 
-  test('every page runs exactly one Beacon script; React and any other script only with a React island', () => {
+  test('every page runs exactly one Beacon script; React only with a React island; other scripts only on the Skills Archive', () => {
     for (const f of htmlOf(out)) assert.equal(scripts(out.text(f)).filter(isBeacon).length, 1, f);
     const withScript = htmlOf(out).filter((f) => scripts(out.text(f)).some((s) => !isBeacon(s))).sort();
-    assert.deepEqual(withScript, mounted('production').includes('sample-app') ? [...appPages].sort() : []);
-    for (const f of withScript) assert.match(out.text(f), /<astro-island/);
+    const expected = [...(mounted('production').includes('sample-app') ? appPages : []), ...(mounted('production').includes('skills') ? skillsPages : [])].sort();
+    assert.deepEqual(withScript, expected);
+    for (const f of withScript.filter((x) => x.startsWith('sample-app'))) assert.match(out.text(f), /<astro-island/);
+    for (const f of htmlOf(out).filter((x) => !x.startsWith('sample-app'))) assert.doesNotMatch(out.text(f), /<astro-island/, f);
   });
 
   test('the views are server-rendered, so their content is in the HTML before JavaScript runs', () => {
