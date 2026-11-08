@@ -129,8 +129,10 @@ test('the audit reproducer (F01): the draft PDF under a released experience\'s p
 test('the output allowlist: released routes, platform files and hashed assets pass; anything else fails', () => {
   const favicon = source('public/favicon.svg');
   assert.deepEqual(scan([...clean(), binary('favicon.svg', favicon), binary('_astro/fonts/7a0defe7a878018e.woff2', Buffer.from('wOF2')),
-    file('_astro/client.Cd-EeyjT.js', 'x()'), file('_astro/SeoHead.DXHcJ6_d.css', 'a{}'), file('journal/today.html', '<p>Journal</p>'), file('sample-app/states/beta.html')]), []);
-  for (const path of ['robots.txt', 'notes.html', '_astro/notes.txt', '_astro/client.js', '_astro/x.Ab12Cd34.pdf', 'journal/notes.pdf', 'sample-content/notes.html', 'index/x.html']) {
+    file('_astro/client.Cd-EeyjT.js', 'x()'), file('_astro/SeoHead.DXHcJ6_d.css', 'a{}'), file('journal/today.html', '<p>Journal</p>'), file('sample-app/states/beta.html'),
+    file('_astro/index.astro_astro_type_script_index_0_lang.B9txREQF.js', 'x()')]), []);
+  for (const path of ['robots.txt', 'notes.html', '_astro/notes.txt', '_astro/client.js', '_astro/x.Ab12Cd34.pdf', 'journal/notes.pdf', 'sample-content/notes.html', 'index/x.html',
+    '_astro/index.astro.B9txREQF.js', '_astro/index.astro_astro_type_script_index_0_lang.js', '_astro/a.b.B9txREQF.js']) {
     assert.deepEqual(scan([...clean(), file(path)]), [`${path}: ${ALLOWLIST}`], path);
   }
 });

@@ -33,3 +33,4 @@ One file per decision, named `adr-NNN-short-description.md`. Numbers are permane
 | [022](adr-022-link-previews-smoke-and-public-repository.md) | Link-preview images from the catalog, environment-aware smoke tests, and what a public repository exposes | accepted |
 | [023](adr-023-audit-closure.md) | Audit closure: complete budgets, durable Control Center writes, opener isolation, dependency and hygiene policy | accepted |
 | [024](adr-024-experience-contract.md) | The Experience Contract, blueprint revision 3 and the new roadmap | **proposed**, pending the owner |
+| [025](adr-025-lazy-chunk-detection.md) | The checks recognise the output of the first immersive experience: lazy chunks written as `` import(`./x.js`) ``, external page-script names | **proposed**, pending the owner |

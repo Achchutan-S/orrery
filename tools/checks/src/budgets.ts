@@ -81,7 +81,8 @@ const FONT = /\.(woff2?|ttf|otf)$/;
 const IMAGE = /\.(png|jpe?g|gif|webp|avif|svg|ico)$/;
 
 export type PageSize = { page: string; owner: string; budgetClass: BudgetClass } & Record<Metric, number>;
-export type PageLoad = Record<Metric, number> & { files: string[]; missing: string[]; unsized: number };
+/** `files` loads with the page; `later` is every lazy chunk it may load afterwards (measured as `lazy`). */
+export type PageLoad = Record<Metric, number> & { files: string[]; later: string[]; missing: string[]; unsized: number };
 
 /** A same-site URL as a dist path ('/a/b.png' from '/x/y.css' or 'b.png' from 'x/y.css'); undefined for data:, http:, //. */
 function localPath(url: string, from: string): string | undefined {
@@ -110,9 +111,10 @@ export function measurePage(html: DistFile, byPath: Map<string, DistFile>): Page
     const body = byPath.get(path)!.text ?? '';
     if (path.endsWith('.js')) {
       const dir = path.slice(0, path.lastIndexOf('/') + 1);
-      // Static imports load now: `import"./a.js"`, `from"./a.js"`. import("./a.js") loads later.
+      // Static imports load now: `import"./a.js"`, `from"./a.js"`. import("./a.js") loads later;
+      // Vite writes dynamic imports with a template literal, import(`./a.js`), so backticks count too.
       for (const m of body.matchAll(/(?:\bfrom|\bimport)\s*["'](\.\/[^"']+)["']/g)) visit(dir + m[1]!.slice(2), into);
-      for (const m of body.matchAll(/\bimport\(\s*["'](\.\/[^"']+)["']\s*\)/g)) lazyRoots.add(dir + m[1]!.slice(2));
+      for (const m of body.matchAll(/\bimport\(\s*["'`](\.\/[^"'`]+)["'`]\s*\)/g)) lazyRoots.add(dir + m[1]!.slice(2));
     }
     // Fonts and images a stylesheet pulls in load with it.
     if (path.endsWith('.css')) for (const p of cssUrls(body, path)) visit(p, into);
@@ -126,10 +128,12 @@ export function measurePage(html: DistFile, byPath: Map<string, DistFile>): Page
   }
   // Each lazy chunk with its own static imports, minus what the page already has.
   let lazy = 0;
+  const laterAll = new Set<string>();
   for (const root of lazyRoots) {
     if (files.has(root)) continue;
     const later = new Set<string>();
     visit(root, later);
+    for (const p of later) laterAll.add(p);
     lazy = Math.max(lazy, [...later].filter((p) => !files.has(p)).reduce((n, p) => n + gzipBytes(byPath.get(p)!.bytes), 0));
   }
   const sum = (pred: (p: string) => boolean) =>
@@ -142,7 +146,7 @@ export function measurePage(html: DistFile, byPath: Map<string, DistFile>): Page
   const fonts = sum((p) => FONT.test(p));
   const images = sum((p) => IMAGE.test(p));
   const transfer = gzipBytes(html.bytes) + sum((p) => p.endsWith('.js') || p.endsWith('.css') || FONT.test(p) || IMAGE.test(p));
-  return { js, beacon, css, fonts, images, lazy, transfer, files: [...files], missing: [...missing], unsized };
+  return { js, beacon, css, fonts, images, lazy, transfer, files: [...files], later: [...laterAll].filter((p) => !files.has(p)), missing: [...missing], unsized };
 }
 
 export function measure(files: DistFile[], experiences: readonly Experience[]): (PageSize & PageLoad)[] {
@@ -160,7 +164,7 @@ export function measure(files: DistFile[], experiences: readonly Experience[]): 
  */
 export function fileFindings(files: DistFile[], pages: readonly (PageSize & PageLoad)[], experiences: readonly Experience[]): Finding[] {
   const findings: Finding[] = [];
-  const loaded = new Set(pages.flatMap((p) => p.files));
+  const loaded = new Set(pages.flatMap((p) => [...p.files, ...p.later]));
   const ogImages = new Set(['og.png', ...experiences.flatMap((e) => (e.kind === 'internal' && e.ogImage ? [e.ogImage.slice(1)] : []))]);
   for (const p of pages) {
     for (const m of p.missing) findings.push({ file: p.page, reason: `references ${m}, which the build did not emit` });

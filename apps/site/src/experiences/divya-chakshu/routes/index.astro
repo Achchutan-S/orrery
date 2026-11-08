@@ -1,0 +1,108 @@
+---
+// Divya Chakshu: Bhagavad Gita chapter 11 as one continuous scroll. The text below is the whole
+// experience in reading form; the canvas behind it (client/engine.ts) and the CSS stills are its
+// image, and are hidden from assistive technology, which gets each sequence's scene in words.
+import ExperienceRoot from '../../../platform/root/ExperienceRoot.astro';
+import '../styles/divya.css';
+import { ADAPTATION, SEQUENCES, type Beat } from '../content.ts';
+
+const tone = (b: Beat) => ('tone' in b && b.tone ? ` beat--${b.tone}` : '');
+---
+<ExperienceRoot experience="divya-chakshu" title="Divya Chakshu: the infinite revealed" description="Arjuna’s vision of the universal form in Bhagavad Gita chapter 11: an immersive journey of light, scale and time, with the Sanskrit verses and their meaning.">
+  <div class="dc-stage" data-stage data-seq="0" aria-hidden="true"></div>
+  <canvas class="dc-canvas" data-canvas aria-hidden="true"></canvas>
+
+  <main id="main" class="dc">
+    {SEQUENCES.map((seq, si) => (
+      <section class={`seq seq--${seq.id}`} id={`seq-${seq.id}`} aria-labelledby={`h-${seq.id}`}>
+        {seq.beats.map((beat, bi) => (
+          <div class={`beat beat--${beat.kind}${tone(beat)}`} data-seq={si} data-beat={bi}>
+            {beat.kind === 'title' && si === 0 && (
+              <header class="beat__in title">
+                <p class="title__source">Bhagavad Gita, chapter 11</p>
+                <h1 id={`h-${seq.id}`} class="title__name" tabindex="-1">Divya Chakshu</h1>
+                <p class="title__sub">The infinite revealed</p>
+                <button type="button" class="dc-enter" data-enter data-js-only hidden>Enter the experience</button>
+                <p class="title__hint" data-nojs-only>Scroll to begin.</p>
+                <p class="title__cue" data-js-only hidden>Scroll to continue</p>
+                <p class="title__legend">Verses carry their numbers. Everything else is narration: an interpretation, not scripture.</p>
+              </header>
+            )}
+            {beat.kind === 'title' && si > 0 && (
+              <div class="beat__in card">
+                <h2 id={`h-${seq.id}`} class="card__h" tabindex="-1"><span class="card__num">{seq.numeral}</span> <span class="card__title">{seq.title}</span></h2>
+                {seq.sanskrit && <p class="card__sa" translate="no"><span lang="sa">{seq.sanskrit.sa}</span> <span lang="sa-Latn" class="card__iast">{seq.sanskrit.iast}</span></p>}
+              </div>
+            )}
+            {beat.kind === 'title' && <p class="dc-vh">In the picture: {seq.scene}</p>}
+            {beat.kind === 'narration' && (
+              <div class="beat__in narration">{beat.text.map((t) => <p>{t}</p>)}</div>
+            )}
+            {beat.kind === 'note' && (
+              <div class="beat__in note">{beat.text.map((t) => <p>{t}</p>)}</div>
+            )}
+            {beat.kind === 'verse' && (
+              <figure class="beat__in verse">
+                <blockquote>
+                  {beat.verse.sa && <p class="verse__sa" lang="sa" translate="no">{beat.verse.sa.map((l, i) => <>{i > 0 && <br />}{l}</>)}</p>}
+                  {beat.verse.iast && <p class="verse__iast" lang="sa-Latn" translate="no">{beat.verse.iast.map((l, i) => <>{i > 0 && <br />}{l}</>)}</p>}
+                  <p class="verse__en">{beat.verse.en}</p>
+                </blockquote>
+                <figcaption class="verse__ref">{beat.verse.speaker}, {beat.verse.ref}{beat.verse.part && beat.verse.sa ? ` (Sanskrit: ${beat.verse.part})` : ''}</figcaption>
+              </figure>
+            )}
+            {beat.kind === 'sight' && (
+              <div class="beat__in sight">
+                <p>Krishna does not make himself smaller to be seen. He changes how Arjuna sees.</p>
+                <button type="button" class="dc-sight" data-sight data-js-only hidden>
+                  <svg viewBox="0 0 64 32" aria-hidden="true" focusable="false"><path d="M2 16 Q32 -6 62 16 Q32 38 2 16 Z" /><circle cx="32" cy="16" r="7" /></svg>
+                  <span data-sight-label>Receive divine sight</span>
+                </button>
+                <p class="sight__hint" data-js-only hidden>Or keep scrolling: the sight will come.</p>
+              </div>
+            )}
+            {beat.kind === 'end' && (
+              <div class="beat__in end">
+                <p class="end__silence">Silence.</p>
+                <button type="button" class="dc-replay" data-replay data-js-only hidden>Return to the battlefield</button>
+                <div class="end__sources">
+                  <p>Verse numbers follow the standard 700-verse numbering of the Bhagavad Gita (Mahabharata, Bhishma Parva). Sanskrit is given in Devanagari with IAST transliteration; where only part of a verse is quoted in Sanskrit, the caption says which part.</p>
+                  <p>{ADAPTATION} The narration, the images and the sound are an artistic interpretation. Where commentarial traditions read a passage differently, the page says so rather than choosing.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </section>
+    ))}
+  </main>
+
+  <div class="dc-controls" data-controls hidden>
+    <nav id="dc-chapters" class="dc-chapters" aria-label="Sequences" hidden>
+      <ol>
+        {SEQUENCES.map((s) => <li><a href={`#seq-${s.id}`} data-chapter={s.id}><span class="dc-chapters__num">{s.numeral ?? ''}</span> {s.title}</a></li>)}
+      </ol>
+    </nav>
+    <div class="dc-bar" role="group" aria-label="Experience controls">
+      <button type="button" class="dc-ctl" data-sound aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9h4l5-4v14l-5-4H4z" /><path class="dc-ctl__wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" /></svg>
+        <span class="dc-ctl__label">Sound</span>
+      </button>
+      <button type="button" class="dc-ctl" data-motion aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 5v14M16 5v14" /></svg>
+        <span class="dc-ctl__label">Pause motion</span>
+      </button>
+      <button type="button" class="dc-ctl" data-chapters-toggle aria-expanded="false" aria-controls="dc-chapters">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 7h14M5 12h14M5 17h9" /></svg>
+        <span class="dc-ctl__label">Sequences</span>
+      </button>
+      <p class="dc-bar__now" data-progress-label>Before the infinite</p>
+    </div>
+  </div>
+  <div class="dc-rail" aria-hidden="true"><span data-progress-fill></span></div>
+  <p class="dc-vh" role="status" aria-live="polite" data-status></p>
+
+  <script>
+    import '../client/boot.ts';
+  </script>
+</ExperienceRoot>

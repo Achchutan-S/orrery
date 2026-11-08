@@ -132,6 +132,18 @@ test('lazy chunks: the largest dynamic import with its static imports, minus wha
   assert.equal(size.js, gz('_astro/entry.js') + gz('_astro/shared.js'));
 });
 
+test('lazy chunks written as Vite writes them, import(`./x.js`), are measured too', () => {
+  const files = [
+    file('app.html', '<script type="module" src="/_astro/entry.js"></script>'),
+    file('_astro/entry.js', 'import(`./engine.js`).then((m)=>m.start())'),
+    bin('_astro/engine.js', 4000),
+  ];
+  const byPath = new Map(files.map((f) => [f.path, f]));
+  const size = measurePage(files[0]!, byPath);
+  assert.equal(size.lazy, gzipBytes(byPath.get('_astro/engine.js')!.bytes));
+  assert.deepEqual(fileFindings(files, [{ page: 'app.html', owner: 'app', budgetClass: 'interactive', ...size }], []), [], 'the lazy chunk is not "loaded by no page"');
+});
+
 test('the lazy budget: 100 KB passes, one byte more fails; content pages may load nothing lazily (F13)', () => {
   const at = { ...page(0), lazy: BUDGETS.interactive.lazy * 1024 };
   assert.deepEqual(evaluate([at], [app]).findings, []);

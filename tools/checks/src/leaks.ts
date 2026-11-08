@@ -16,8 +16,12 @@ const PRODUCTION_HINT = ' (is this a development or preview build? run `pnpm bui
 
 /** Platform output that no route produces: the Not found page and the files in apps/site/public. */
 export const PLATFORM_FILES = ['404.html', 'favicon.svg', 'og.png'];
-/** Vite's content-hashed assets: `_astro/<name>.<8-character hash>.js|css`, fonts as `_astro/fonts/<16 hex>.woff2`. */
-const ASTRO_ASSET = /^_astro\/(?:[\w-]+\.[\w-]{8}\.(?:js|css)|fonts\/[0-9a-f]{16}\.woff2)$/;
+/**
+ * Vite's content-hashed assets: `_astro/<name>.<8-character hash>.js|css`, fonts as `_astro/fonts/<16 hex>.woff2`.
+ * A page `<script>` too large to inline is named after its component, with a fixed Astro suffix:
+ * `_astro/index.astro_astro_type_script_index_0_lang.<hash>.js` (ADR-025).
+ */
+const ASTRO_ASSET = /^_astro\/(?:[\w-]+(?:\.astro_astro_type_script_index_\d+_lang)?\.[\w-]{8}\.(?:js|css)|fonts\/[0-9a-f]{16}\.woff2)$/;
 
 const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 const codePoint = (n: number, raw: string) => (n <= 0x10ffff ? String.fromCodePoint(n) : raw);

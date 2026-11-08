@@ -20,6 +20,14 @@
       "discoverability": "listed",
       "note": "Independent project at devxray-one.vercel.app; linked, never built here."
     },
+    "divya-chakshu": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "note": "Divya Chakshu (Bhagavad Gita chapter 11). Prepared for publication on 8 November 2026; contract § 8.5 prerequisites P2–P4 to be met by the owner before this reaches main."
+    },
     "index": {
       "lifecycle": "published",
       "access": {

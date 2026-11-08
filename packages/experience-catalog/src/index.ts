@@ -2,6 +2,7 @@
 import { validateCatalog, type ExperienceInput } from '@pu/platform-schema';
 import canaryDraft from './entries/canary-draft.ts';
 import devxray from './entries/devxray.ts';
+import divyaChakshu from './entries/divya-chakshu.ts';
 import frontPage from './entries/index.ts';
 import journal from './entries/journal.ts';
 import kawaiui from './entries/kawaiui.ts';
@@ -20,6 +21,7 @@ export const catalog: readonly ExperienceInput[] = [
   sampleContent,
   sampleApp,
   skills,
+  divyaChakshu,
   resume,
   canaryDraft,
   sampleHostile,

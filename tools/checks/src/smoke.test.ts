@@ -46,6 +46,7 @@ function site(env: 'production' | 'preview') {
     files.set('skills/sidequest/package.zip', 'PK');
     files.set('skills/sidequest/files/SKILL.md', '---');
     files.set('skills/sidequest/files/scripts/quest.py', 'print()');
+    files.set('divya-chakshu.html', html('Divya Chakshu'));
   }
   return files;
 }

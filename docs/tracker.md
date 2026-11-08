@@ -6,7 +6,7 @@ Evidence words, used only in this sense: **implemented** (the code exists), **lo
 
 ## Live (checked 7 November 2026)
 
-Production is https://orrery-teal.vercel.app, built from `main`. The latest commit, `c7ec5cd`, passed hosted CI (run 42369237313) and has GitHub commit status "Vercel: success".
+Production is https://orrery-teal.vercel.app, built from `main`. The latest commit, `0934115`, passed hosted CI (run 42386038962) and has GitHub commit status "Vercel: success".
 
 | Experience | Production | Notes |
 | --- | --- | --- |
@@ -25,8 +25,9 @@ Production is https://orrery-teal.vercel.app, built from `main`. The latest comm
 | --- | --- | --- |
 | Manual accessibility checks (audit F12, decision 3) | **not performed** for any experience; automated checks pass, which is not proof | [accessibility.md](accessibility.md) |
 | Hosted preview smoke run (audit F17) | not recorded; production smoke runs passed | [deployment.md § Smoke test](deployment.md#smoke-test-toolscheckssrcsmokets) |
-| Editor `noteId` stamping (audit F18) | the notes extension still adds front matter to Markdown files in this workspace; `hygiene.test.ts` fails until it is removed | turn the extension off for this folder |
-| Phase 1 documents | contract 1.0, blueprint revision 3, the architecture review and ADR-024 are drafted and **not committed**; waiting for the owner | [blueprint § 11](blueprint.md#11-roadmap) |
+| Editor `noteId` stamping (audit F18) | the notes extension is still on: it stamped this file when it was edited on 7 November 2026. `hygiene.test.ts` passes only while no stamped file is left; remove the front matter after every edit until the extension is off | turn the extension off for this folder |
+| Divya Chakshu (`/divya-chakshu`) publication | **prepared, not committed** (8 November 2026): release entry published, public, listed in `config/release.json`; typecheck, unit and browser tests, `pnpm check` and the production build pass locally. Contract § 8.5 still open: **P2** manual accessibility check (not performed), **P3** hosted CI on the publishing commit, **P4** preview smoke test, **P6** the owner's commit. Not yet checked on a real GPU or phone | [README](../apps/site/src/experiences/divya-chakshu/README.md), [ADR-025](adr/adr-025-lazy-chunk-detection.md) |
+| Phase 1 documents | contract 1.0, blueprint revision 3, the architecture review and ADR-024 are committed (`0934115`) and **not accepted**; waiting for the owner | [blueprint § 11](blueprint.md#11-roadmap) |
 
 ## Roadmap phases
 
@@ -34,7 +35,7 @@ From [blueprint § 11](blueprint.md#11-roadmap) (revision 3, proposed). A phase 
 
 | Phase | Status | Depends on |
 | --- | --- | --- |
-| 1 — Architecture and Experience Contract | drafted and amended; waiting for the owner | owner acceptance and decision D10 |
+| 1 — Architecture and Experience Contract | drafted, amended and committed; waiting for the owner | owner acceptance and decision D10 |
 | 2A — Design methodology, Art Director and Experience Builder skills, aesthetic registry, one dry run | not started | Phase 1 |
 | 2B — Design Laboratory (local visual experimentation) | not started; nothing built | 2A; its location is its first decision |
 | 3 — Independent experience prototypes | not started | 2A, 2B; the owner deciding D11, D12 and D16 |

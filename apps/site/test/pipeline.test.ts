@@ -68,13 +68,13 @@ const mounted = (env: 'production' | 'preview') => resolveAll(parseCatalog().exp
 /** The pages each experience builds (code, not release state). */
 const PAGES: Record<string, string[]> = {
   index: ['index.html'], journal: journalPages, 'sample-content': ['sample-content.html'], 'sample-app': ['sample-app.html', ...appPages],
-  resume: ['resume.html'], skills: skillsPages, 'canary-draft': ['canary-draft.html'], 'sample-hostile': ['sample-hostile.html'],
+  resume: ['resume.html'], skills: skillsPages, 'divya-chakshu': ['divya-chakshu.html'], 'canary-draft': ['canary-draft.html'], 'sample-hostile': ['sample-hostile.html'],
 };
 /** Experiences that load the platform font (opt in), besides the platform's own pages. */
 const FONT = new Set(['index', 'journal', 'resume']);
 
 describe('planMount (pure)', () => {
-  const folders = ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'skills', 'canary-draft', 'sample-hostile'];
+  const folders = ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'skills', 'divya-chakshu', 'canary-draft', 'sample-hostile'];
   const input = { catalog, release, folders, fileExists: () => true };
 
   test('production plans only the public internal experiences; externals are never mounted', () => {
@@ -121,10 +121,11 @@ describe('production build', () => {
     }
   });
 
-  test('every page runs exactly one Beacon script; React only with a React island; other scripts only on the Skills Archive', () => {
+  test('every page runs exactly one Beacon script; React only with a React island; other scripts only on the Skills Archive and Divya Chakshu', () => {
     for (const f of htmlOf(out)) assert.equal(scripts(out.text(f)).filter(isBeacon).length, 1, f);
     const withScript = htmlOf(out).filter((f) => scripts(out.text(f)).some((s) => !isBeacon(s))).sort();
-    const expected = [...(mounted('production').includes('sample-app') ? appPages : []), ...(mounted('production').includes('skills') ? skillsPages : [])].sort();
+    const expected = [...(mounted('production').includes('sample-app') ? appPages : []), ...(mounted('production').includes('skills') ? skillsPages : []),
+      ...(mounted('production').includes('divya-chakshu') ? ['divya-chakshu.html'] : [])].sort();
     assert.deepEqual(withScript, expected);
     for (const f of withScript.filter((x) => x.startsWith('sample-app'))) assert.match(out.text(f), /<astro-island/);
     for (const f of htmlOf(out).filter((x) => !x.startsWith('sample-app'))) assert.doesNotMatch(out.text(f), /<astro-island/, f);
