@@ -1,0 +1,32 @@
+---
+// The museum building around every page: the document (through ExperienceRoot), a skip link,
+// the Sightline and the house script. Each page brings its own <main id="main"> and its own art
+// direction; the house adds only wayfinding. House pages (opening, map, lab, compare, sources)
+// also import house.css's house-page styles; chapters import only what they need.
+import ExperienceRoot from '../../../platform/root/ExperienceRoot.astro';
+import Sightline from './Sightline.astro';
+import './house.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** The chapter or house page the visitor is on; marks the Sightline. */
+  here: string;
+  /** Font files this page uses above the fold, preloaded. */
+  preload?: string[];
+  /** The Sightline's tone against the page it sits on. */
+  tone?: 'light' | 'dark';
+}
+const { title, description, here, preload = [], tone = 'dark' } = Astro.props;
+---
+<ExperienceRoot experience="seeing" title={title} description={description}>
+  <Fragment slot="head">
+    {preload.map((f) => <link rel="preload" as="font" type="font/woff2" crossorigin href={`/seeing/fonts/${f.replace(/\.woff2$/, '')}/face.woff2`} />)}
+  </Fragment>
+  <a class="see-skip" href="#main">Skip to content</a>
+  <Sightline here={here} tone={tone} />
+  <slot />
+  <script>
+    import './house.ts';
+  </script>
+</ExperienceRoot>

@@ -1,0 +1,150 @@
+/* Cyberpunk: night sky in violet-black, sodium amber, LED cyan, neon red and magenta. Condensed
+   signage type. The density control adds layers; the reading panel never loses contrast. */
+@layer experience {
+  @font-face { font-family: 'C Barlow Condensed'; src: url('/seeing/fonts/barlow-condensed-500/face.woff2') format('woff2'); font-weight: 500; font-display: swap; }
+  @font-face { font-family: 'C Barlow Condensed'; src: url('/seeing/fonts/barlow-condensed-700/face.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  @font-face { font-family: 'C Barlow'; src: url('/seeing/fonts/barlow-400/face.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+
+  [data-experience='seeing'] {
+    color-scheme: dark;
+    --c-night: #08070d;
+    --c-panel: #0f0d17;
+    --c-text: #e8e6f0;
+    --c-dim: #b4b0c6;
+    --c-cyan: #5ee6ff;
+    --c-red: #ff4d6a;
+    --c-amber: #ffb347;
+    --c-magenta: #ff5ce1;
+    --c-sign: 'C Barlow Condensed', 'Arial Narrow', sans-serif;
+    --c-read: 'C Barlow', 'Segoe UI', Arial, sans-serif;
+  }
+  [data-experience='seeing'] body { margin: 0; background: var(--c-night); color: var(--c-text); font: 400 1.125rem/1.6 var(--c-read); }
+  [data-experience='seeing'] .c a { color: var(--c-cyan); text-underline-offset: 0.18em; }
+
+  [data-experience='seeing'] .c-city { position: relative; display: grid; min-block-size: 100svh; }
+  [data-experience='seeing'] .c-layers { position: absolute; inset: 0; overflow: hidden; view-transition-name: see-aperture; }
+  [data-experience='seeing'] .c-towers { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+  [data-experience='seeing'] .c-rain { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; pointer-events: none; }
+
+  /* Signs: neon on dark boxes, placed across the right two thirds of the city. */
+  [data-experience='seeing'] .c-sign {
+    position: absolute;
+    padding: 0.2em 0.5em;
+    border: 2px solid currentColor;
+    background: rgb(5 4 10 / 0.7);
+    font: 700 clamp(0.75rem, 1.5vw, 1.25rem)/1 var(--c-sign);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-shadow: 0 0 8px currentColor;
+    box-shadow: 0 0 14px -2px currentColor, inset 0 0 10px -4px currentColor;
+  }
+  [data-experience='seeing'] .c-sign--cyan { color: var(--c-cyan); }
+  [data-experience='seeing'] .c-sign--red { color: var(--c-red); }
+  [data-experience='seeing'] .c-sign--amber { color: var(--c-amber); }
+  [data-experience='seeing'] .c-sign--magenta { color: var(--c-magenta); }
+  [data-experience='seeing'] .c-sign--white { color: #f4f4ff; }
+  [data-experience='seeing'] .c-sign--0 { inset: 18% auto auto 52%; writing-mode: vertical-rl; }
+  [data-experience='seeing'] .c-sign--1 { inset: 30% 6% auto auto; }
+  [data-experience='seeing'] .c-sign--2 { inset: 46% auto auto 58%; }
+  [data-experience='seeing'] .c-sign--3 { inset: 12% 14% auto auto; }
+  [data-experience='seeing'] .c-sign--4 { inset: auto 3% 18% auto; font-size: clamp(0.7rem, 1vw, 0.95rem); }
+  [data-experience='seeing'] .c-sign--5 { inset: 58% 20% auto auto; }
+  [data-experience='seeing'] .c-sign--6 { inset: 22% auto auto 66%; }
+  [data-experience='seeing'] .c-sign--7 { inset: 66% auto auto 48%; writing-mode: vertical-rl; }
+  [data-experience='seeing'] .c-sign--8 { inset: 38% auto auto 74%; }
+  [data-experience='seeing'] .c-sign--9 { inset: 8% auto auto 44%; }
+
+  [data-experience='seeing'] .c-screens span {
+    position: absolute;
+    background: linear-gradient(135deg, #2a0f3d, #c2185b 40%, #1e88e5 70%, #0d0d24);
+    background-size: 300% 300%;
+    box-shadow: 0 0 40px rgb(194 24 91 / 0.45);
+    opacity: 0.85;
+    animation: c-ad 9s ease-in-out infinite alternate;
+  }
+  [data-experience='seeing'] .c-screens span:nth-child(1) { inset: 6% 30% auto auto; inline-size: 14%; aspect-ratio: 16 / 9; }
+  [data-experience='seeing'] .c-screens span:nth-child(2) { inset: 40% auto auto 42%; inline-size: 8%; aspect-ratio: 9 / 16; animation-delay: -3s; }
+  [data-experience='seeing'] .c-screens span:nth-child(3) { inset: 50% 2% auto auto; inline-size: 12%; aspect-ratio: 4 / 3; animation-delay: -6s; }
+  @keyframes c-ad { to { background-position: 100% 100%; } }
+  [data-experience='seeing'] .c-drones span { position: absolute; inline-size: 6px; block-size: 6px; border-radius: 50%; background: var(--c-red); box-shadow: 0 0 10px var(--c-red); animation: c-blink 1.2s steps(2) infinite; }
+  [data-experience='seeing'] .c-drones span:nth-child(1) { inset: 16% auto auto 60%; }
+  [data-experience='seeing'] .c-drones span:nth-child(2) { inset: 26% auto auto 84%; animation-delay: -0.6s; }
+  @keyframes c-blink { 50% { opacity: 0.2; } }
+  [data-experience='seeing'] .c-watch span { position: absolute; inset-block-start: 84%; inline-size: 5.2%; block-size: 9%; border: 2px dashed var(--c-red); }
+  [data-experience='seeing'] .c-watch span::after { content: 'ID?'; position: absolute; inset: -1.3em auto auto 0; font: 700 0.7rem/1 var(--c-sign); color: var(--c-red); }
+  [data-experience='seeing'] .c-watch span:nth-child(1) { inset-inline-start: 14.5%; }
+  [data-experience='seeing'] .c-watch span:nth-child(2) { inset-inline-start: 34.5%; }
+  [data-experience='seeing'] .c-watch span:nth-child(3) { inset-inline-start: 52.8%; }
+  [data-experience='seeing'] .c-watch span:nth-child(4) { inset-inline-start: 74.5%; }
+  [data-experience='seeing'] .c-watch span:nth-child(5) { inset-inline-start: 87.8%; }
+  [data-experience='seeing'] .c-scan { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgb(255 255 255 / 0.035) 0 1px, transparent 1px 3px); mix-blend-mode: screen; }
+
+  /* Density: each level adds the layers above it. */
+  [data-experience='seeing'] :is(.c-l2, .c-l3, .c-l4) { display: none; }
+  [data-experience='seeing'] .c:has(#c-d2:checked) .c-l2,
+  [data-experience='seeing'] .c:has(#c-d3:checked) :is(.c-l2, .c-l3),
+  [data-experience='seeing'] .c:has(#c-d4:checked) :is(.c-l2, .c-l3, .c-l4) { display: block; }
+  [data-experience='seeing'] .c:has(#c-d1:checked) .c-far { opacity: 0.5; }
+
+  /* The reading panel. */
+  [data-experience='seeing'] .c-panel {
+    position: relative;
+    align-self: end;
+    margin: 6rem clamp(1rem, 4vw, 3rem) 3rem;
+    max-inline-size: 34rem;
+    padding: 1.75rem;
+    background: var(--c-panel);
+    border-inline-start: 4px solid var(--c-cyan);
+  }
+  [data-experience='seeing'] .c-title {
+    margin: 0;
+    font: 700 clamp(3rem, 9vw, 6rem)/0.9 var(--c-sign);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #fff;
+    text-shadow: 0 0 6px var(--c-magenta), 0 0 22px var(--c-magenta);
+    animation: c-flicker 2.4s steps(1) 0.3s 1;
+  }
+  @keyframes c-flicker { 0%, 12%, 30% { opacity: 1; } 8%, 24% { opacity: 0.3; } }
+  [data-experience='seeing'] .c-thesis { margin: 0.25rem 0 1.25rem; font: 500 1.4rem/1.2 var(--c-sign); color: var(--c-amber); }
+  [data-experience='seeing'] .c-density { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0 0 1.25rem; padding: 0; border: 0; }
+  [data-experience='seeing'] .c-density legend { margin-block-end: 0.4rem; font: 700 0.95rem/1 var(--c-sign); letter-spacing: 0.08em; text-transform: uppercase; color: var(--c-dim); }
+  [data-experience='seeing'] .c-density label { display: inline-flex; align-items: center; gap: 0.4rem; min-block-size: 44px; padding-inline: 0.75rem; border: 1px solid #3c3852; font: 500 1.05rem/1 var(--c-sign); cursor: pointer; }
+  [data-experience='seeing'] .c-density label:has(input:checked) { border-color: var(--c-cyan); color: var(--c-cyan); box-shadow: 0 0 12px -2px var(--c-cyan); }
+  [data-experience='seeing'] .c-density input { margin: 0; accent-color: var(--c-cyan); }
+  [data-experience='seeing'] .c-label { display: grid; gap: 0.2rem; margin: 0 0 1rem; font-size: 0.9375rem; color: var(--c-dim); }
+  [data-experience='seeing'] .c-label div { display: flex; gap: 0.6rem; }
+  [data-experience='seeing'] .c-label dt { color: var(--c-amber); }
+  [data-experience='seeing'] .c-label dd { margin: 0; }
+  [data-experience='seeing'] .c-panel p { margin: 0 0 1rem; }
+  [data-experience='seeing'] .c-fiction { font-size: 0.875rem; color: var(--c-dim); }
+
+  [data-experience='seeing'] .c-body { max-inline-size: 46rem; margin: 0 auto; padding: 4rem clamp(1rem, 4vw, 2rem) 5rem; }
+  [data-experience='seeing'] .c-h2 { margin: 3rem 0 1.5rem; font: 700 clamp(2rem, 5vw, 3rem)/1 var(--c-sign); text-transform: uppercase; color: #fff; }
+  [data-experience='seeing'] .c .see-block { margin-block-end: 2rem; padding-inline-start: 1rem; border-inline-start: 2px solid #2b2840; }
+  [data-experience='seeing'] .c .see-block__title { margin: 0 0 0.5rem; font: 700 1.5rem/1.1 var(--c-sign); color: var(--c-cyan); }
+  [data-experience='seeing'] .c .see-block p { margin: 0 0 1rem; }
+  [data-experience='seeing'] .c .see-block--interpretation, [data-experience='seeing'] .c .see-block--editor { border-inline-start-color: var(--c-amber); }
+  [data-experience='seeing'] .c .see-block__kind { color: var(--c-amber); font-style: normal; font: 500 0.95rem/1 var(--c-sign); text-transform: uppercase; letter-spacing: 0.08em; }
+  [data-experience='seeing'] .c-study { margin-block: 3rem; border-block: 1px solid #2b2840; }
+  [data-experience='seeing'] .c-study summary { display: flex; align-items: center; min-block-size: 3.25rem; font: 700 1.3rem/1 var(--c-sign); text-transform: uppercase; cursor: pointer; }
+  [data-experience='seeing'] .c-study[open] summary { margin-block-end: 1.5rem; }
+  [data-experience='seeing'] .c-works ol { margin: 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .c-works li { display: grid; grid-template-columns: 4rem 1fr; padding-block: 0.5rem; border-block-end: 1px solid #22202f; }
+  [data-experience='seeing'] .c-works__when { grid-row: span 2; font: 700 1.1rem/1.5 var(--c-sign); color: var(--c-amber); }
+  [data-experience='seeing'] .c-works__who { color: var(--c-dim); font-size: 0.9375rem; }
+  [data-experience='seeing'] .c-recognise { margin-block: 3rem 0; font-size: 1.25rem; }
+  [data-experience='seeing'] .c-recognise span { color: var(--c-cyan); }
+
+  @media (max-width: 52rem) {
+    [data-experience='seeing'] .c-sign { white-space: normal; max-inline-size: 42%; }
+    [data-experience='seeing'] .c-city { min-block-size: auto; }
+    [data-experience='seeing'] .c-layers { position: relative; block-size: 72svh; }
+    [data-experience='seeing'] .c-panel { margin: -3rem 1rem 2rem; }
+  }
+
+  /* Arriving: the city's lights come on. */
+  ::view-transition-new(root) { animation: c-on 0.7s steps(4, end) both; }
+  @keyframes c-on { 0% { filter: brightness(0.1); } 50% { filter: brightness(1.4); } 75% { filter: brightness(0.6); } 100% { filter: none; } }
+}

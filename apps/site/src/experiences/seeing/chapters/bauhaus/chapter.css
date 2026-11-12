@@ -1,0 +1,146 @@
+/* Bauhaus: a visible twelve-column module, black rules that carry hierarchy, a geometric sans,
+   lowercase by default. The primaries appear in the hero and the exercise only. */
+@layer experience {
+  @font-face { font-family: 'B Jost'; src: url('/seeing/fonts/jost-300-700/face.woff2') format('woff2'); font-weight: 300 700; font-display: swap; }
+
+  [data-experience='seeing'] {
+    color-scheme: light;
+    --b-paper: #f7f6f2;
+    --b-ink: #000;
+    --b-grey: #5a5a58;
+    --b-module: rgb(0 0 0 / 0.06);
+    --b-yellow: #f0b81c;
+    --b-red: #d2322d;
+    --b-blue: #1e4fa3;
+    --b-type: 'B Jost', 'Futura', 'Century Gothic', sans-serif;
+  }
+  [data-experience='seeing'] body {
+    margin: 0;
+    background-color: var(--b-paper);
+    color: var(--b-ink);
+    font: 400 1.1875rem/1.55 var(--b-type);
+  }
+  [data-experience='seeing'] .b {
+    --gutter: clamp(1rem, 3vw, 2rem);
+    padding: 5.5rem var(--gutter) 4rem;
+    background-image: repeating-linear-gradient(90deg, var(--b-module) 0 1px, transparent 1px calc((100% - 1px) / 12));
+    background-origin: content-box;
+  }
+  [data-experience='seeing'] .b:has(#b-lower:checked) { text-transform: lowercase; }
+  [data-experience='seeing'] .b a { color: var(--b-blue); text-underline-offset: 0.15em; }
+
+  /* The hero: the poster Bauhaus, on purpose. */
+  [data-experience='seeing'] .b-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 0;
+    row-gap: 1.25rem;
+    view-transition-name: see-aperture;
+  }
+  [data-experience='seeing'] .b-title {
+    grid-column: 1 / -1;
+    margin: 0;
+    font: 700 clamp(4rem, 17vw, 15rem)/0.8 var(--b-type);
+    letter-spacing: -0.04em;
+    position: relative;
+    z-index: 1;
+  }
+  [data-experience='seeing'] .b-shapes { grid-column: 7 / -1; grid-row: 2 / span 3; position: relative; min-block-size: clamp(12rem, 32vw, 26rem); }
+  [data-experience='seeing'] .b-shapes span { position: absolute; display: block; }
+  [data-experience='seeing'] .b-sq { inset: 0 auto auto 8%; inline-size: 44%; aspect-ratio: 1; background: var(--b-red); }
+  [data-experience='seeing'] .b-ci { inset: 18% 4% auto auto; inline-size: 46%; aspect-ratio: 1; border-radius: 50%; background: var(--b-blue); mix-blend-mode: multiply; }
+  [data-experience='seeing'] .b-tri { inset: auto auto 0 30%; inline-size: 42%; aspect-ratio: 1.15; background: var(--b-yellow); clip-path: polygon(50% 0, 100% 100%, 0 100%); mix-blend-mode: multiply; }
+  [data-experience='seeing'] .b-bar { inset: auto 0 22% 0; block-size: 10px; background: var(--b-ink); }
+  [data-experience='seeing'] .b-thesis { grid-column: 1 / span 6; margin: 0; font-size: clamp(1.4rem, 2.6vw, 2rem); font-weight: 500; line-height: 1.2; }
+  [data-experience='seeing'] .b-label { grid-column: 1 / span 6; display: grid; gap: 0.25rem; margin: 0; border-block-start: 4px solid var(--b-ink); padding-block-start: 0.75rem; font-size: 1rem; }
+  [data-experience='seeing'] .b-label div { display: grid; grid-template-columns: 7rem 1fr; }
+  [data-experience='seeing'] .b-label dt { font-weight: 600; }
+  [data-experience='seeing'] .b-label dd { margin: 0; }
+  [data-experience='seeing'] .b-lower { grid-column: 1 / span 6; display: inline-flex; align-items: center; gap: 0.6rem; min-block-size: 44px; font-size: 1rem; cursor: pointer; }
+  [data-experience='seeing'] .b-lower input { inline-size: 1.25rem; block-size: 1.25rem; margin: 0; accent-color: var(--b-ink); }
+
+  [data-experience='seeing'] .b-intro {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    margin-block-start: 4rem;
+    border-block-start: 12px solid var(--b-ink);
+    padding-block-start: 1.5rem;
+  }
+  [data-experience='seeing'] .b-encounter { grid-column: 1 / span 7; margin: 0 0 1rem; max-inline-size: 42rem; }
+  [data-experience='seeing'] .b-encounter--lead { font-size: clamp(1.35rem, 2.2vw, 1.7rem); line-height: 1.35; font-weight: 500; }
+  [data-experience='seeing'] .b-encounter:not(.b-encounter--lead) { grid-column: 8 / -1; grid-row: 1; padding-inline-start: 1.5rem; border-inline-start: 2px solid var(--b-ink); align-self: start; font-size: 1.0625rem; }
+
+  [data-experience='seeing'] .b-h2 {
+    margin: 5rem 0 1.5rem;
+    font: 700 clamp(2rem, 5vw, 3.75rem)/1 var(--b-type);
+    letter-spacing: -0.02em;
+  }
+  [data-experience='seeing'] .b-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 2rem var(--gutter);
+  }
+  [data-experience='seeing'] .b-module { border-block-start: 4px solid var(--b-ink); padding-block-start: 0.75rem; }
+  [data-experience='seeing'] .b-module .see-block__title { margin: 0 0 0.5rem; font-size: 1.25rem; font-weight: 600; }
+  [data-experience='seeing'] .b-module p { margin: 0 0 0.9rem; font-size: 1.0625rem; }
+  [data-experience='seeing'] .b .see-block__kind { font-style: normal; font-weight: 600; color: var(--b-red); }
+
+  /* The exercise. */
+  [data-experience='seeing'] .b-quiz__ask { max-inline-size: 40rem; }
+  [data-experience='seeing'] .b-quiz__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); gap: var(--gutter); margin-block: 1.5rem; }
+  [data-experience='seeing'] .b-q { margin: 0; padding: 1rem; border: 4px solid var(--b-ink); background: #fff; }
+  [data-experience='seeing'] .b-q legend { padding-inline: 0.5rem; font-weight: 700; font-size: 1.25rem; }
+  [data-experience='seeing'] .b-q__shape { display: block; inline-size: 60%; margin: 0.5rem auto 1rem; overflow: visible; }
+  [data-experience='seeing'] .b-q__shape > * { fill: transparent; stroke: var(--b-ink); stroke-width: 4; transition: fill 0.3s; }
+  [data-experience='seeing'] .b-q__colours { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  [data-experience='seeing'] .b-swatch { display: inline-flex; align-items: center; gap: 0.4rem; min-block-size: 44px; padding-inline: 0.6rem 0.8rem; border: 2px solid var(--b-ink); font-size: 1rem; cursor: pointer; }
+  [data-experience='seeing'] .b-swatch::before { content: ''; inline-size: 1rem; block-size: 1rem; border: 1px solid var(--b-ink); }
+  [data-experience='seeing'] .b-swatch--y::before { background: var(--b-yellow); }
+  [data-experience='seeing'] .b-swatch--r::before { background: var(--b-red); }
+  [data-experience='seeing'] .b-swatch--b::before { background: var(--b-blue); }
+  [data-experience='seeing'] .b-swatch:has(input:checked) { background: var(--b-ink); color: #fff; }
+  [data-experience='seeing'] .b-swatch input { margin: 0; accent-color: var(--b-ink); }
+  [data-experience='seeing'] .b-q:has(input[id$='-y']:checked) .b-q__shape > * { fill: var(--b-yellow); }
+  [data-experience='seeing'] .b-q:has(input[id$='-r']:checked) .b-q__shape > * { fill: var(--b-red); }
+  [data-experience='seeing'] .b-q:has(input[id$='-b']:checked) .b-q__shape > * { fill: var(--b-blue); }
+  [data-experience='seeing'] .b-q__match { visibility: hidden; margin: 0.75rem 0 0; font-weight: 600; }
+  [data-experience='seeing'] .b-quiz:has(.b-answer[open]) .b-q--tri:has(#b-tri-y:checked) .b-q__match,
+  [data-experience='seeing'] .b-quiz:has(.b-answer[open]) .b-q--sq:has(#b-sq-r:checked) .b-q__match,
+  [data-experience='seeing'] .b-quiz:has(.b-answer[open]) .b-q--ci:has(#b-ci-b:checked) .b-q__match { visibility: visible; }
+  [data-experience='seeing'] .b-answer { border-block: 4px solid var(--b-ink); }
+  [data-experience='seeing'] .b-answer summary { display: flex; align-items: center; min-block-size: 3.25rem; font-weight: 600; font-size: 1.25rem; cursor: pointer; }
+  [data-experience='seeing'] .b-answer__list { display: flex; flex-wrap: wrap; gap: 1.5rem; margin: 1rem 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .b-answer__item { display: flex; align-items: center; gap: 0.75rem; font-size: 1.125rem; }
+  [data-experience='seeing'] .b-answer__item svg { inline-size: 3.5rem; overflow: visible; }
+  [data-experience='seeing'] .b-answer__item svg > * { stroke: var(--b-ink); stroke-width: 4; }
+  [data-experience='seeing'] .b-answer__item--y svg > * { fill: var(--b-yellow); }
+  [data-experience='seeing'] .b-answer__item--r svg > * { fill: var(--b-red); }
+  [data-experience='seeing'] .b-answer__item--b svg > * { fill: var(--b-blue); }
+  [data-experience='seeing'] .b-answer p { max-inline-size: 42rem; }
+  [data-experience='seeing'] .b-quiz__note { max-inline-size: 42rem; font-size: 1rem; color: var(--b-grey); }
+
+  [data-experience='seeing'] .b-study { margin-block: 4rem; border-block-start: 12px solid var(--b-ink); }
+  [data-experience='seeing'] .b-study summary { display: flex; align-items: center; min-block-size: 3.5rem; margin-block-end: 1rem; font-weight: 700; font-size: 1.5rem; cursor: pointer; }
+  [data-experience='seeing'] .b-works__list { margin: 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .b-works__list li { display: grid; grid-template-columns: 7rem 1fr; gap: 0 1rem; padding-block: 0.7rem; border-block-start: 2px solid var(--b-ink); }
+  [data-experience='seeing'] .b-works__when { grid-row: span 2; font-weight: 700; }
+  [data-experience='seeing'] .b-works__who { color: var(--b-grey); font-size: 1rem; }
+  [data-experience='seeing'] .b-recognise { margin-block: 4rem 0; max-inline-size: 48rem; font-size: 1.375rem; line-height: 1.4; }
+  [data-experience='seeing'] .b-recognise span { font-weight: 700; }
+
+  @media (max-width: 48rem) {
+    [data-experience='seeing'] .b-shapes { grid-column: 1 / -1; grid-row: auto; }
+    [data-experience='seeing'] .b-thesis,
+    [data-experience='seeing'] .b-label,
+    [data-experience='seeing'] .b-lower,
+    [data-experience='seeing'] .b-encounter,
+    [data-experience='seeing'] .b-encounter:not(.b-encounter--lead) { grid-column: 1 / -1; grid-row: auto; }
+    [data-experience='seeing'] .b-encounter:not(.b-encounter--lead) { padding-inline-start: 1rem; }
+  }
+
+  /* Arriving: a hard geometric snap, no fade. */
+  ::view-transition-old(root) { animation: none; opacity: 0; }
+  ::view-transition-new(root) { animation: b-snap 0.35s steps(3, end) both; }
+  @keyframes b-snap { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+}

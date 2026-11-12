@@ -1,0 +1,102 @@
+---
+// Brutalism: the page is still. Monumental type cropped by the edge of the screen, horizontal
+// bands of mass, text set in deep recesses, and no motion at all (not even on arrival: a hard cut).
+// The experiment shows one imagined slab block three ways: as drawn, as weathered, as
+// photographed. Radio buttons and CSS; no script.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const study = blocks(text.study);
+const sources = notes();
+
+// An imagined slab block, 1000 × 600: pilotis, nine floors, access decks every third floor.
+const FLOORS = Array.from({ length: 9 }, (_, i) => 470 - i * 44);
+const DECKS = FLOORS.filter((_, i) => i % 3 === 1);
+const BAYS = Array.from({ length: 14 }, (_, i) => 120 + i * 52);
+const PILOTI = Array.from({ length: 8 }, (_, i) => 130 + i * 100);
+const READINGS = [
+  { id: 'drawn', label: 'As drawn', caption: 'The architect’s drawing: thin lines, trees, people meeting on the decks. The building as a promise.' },
+  { id: 'weathered', label: 'As weathered', caption: 'Thirty years on: rain has streaked the concrete below every ledge and repairs have been deferred. The same building as a maintenance budget.' },
+  { id: 'photographed', label: 'As photographed', caption: 'The photographer’s view: hard sun, black shadow, no people. The same building as a sublime image, the one that circulates online.' },
+] as const;
+---
+<Layout title="Brutalism: the beauty of weight" description="Brutalism as weight and stillness: raw materials, deep shadow, the social programme behind the concrete, and one building seen three ways." here="brutalism" tone="dark" preload={['archivo-black-400.woff2']}>
+  <main id="main" class="x">
+    <section class="x-hero" aria-labelledby="x-title">
+      <h1 id="x-title" class="x-title">Brutalism</h1>
+      <p class="x-thesis">{text.thesis}</p>
+    </section>
+
+    <section class="x-pilotis" aria-label="Encounter">
+      <div class="x-columns" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+      <div class="x-slab">
+        <dl class="x-label">
+          <div><dt>Movement</dt><dd>Part I, the history of art and design</dd></div>
+          <div><dt>Period</dt><dd>{text.period}</dd></div>
+          <div><dt>Where</dt><dd>{text.place}</dd></div>
+        </dl>
+        <div class="x-recess x-recess--lead">{encounter.map((p) => <p set:html={p} />)}</div>
+        <p class="x-board">The faint vertical lines on these slabs are the trace of formwork: the timber boards concrete is poured against leave their grain in it.</p>
+      </div>
+    </section>
+
+    <section class="x-understand" aria-labelledby="x-understand-title">
+      <h2 id="x-understand-title" class="x-h2">Material, structure, society</h2>
+      <div class="x-voids"><Blocks blocks={understand} class="x-recess" /></div>
+    </section>
+
+    <section class="x-readings" aria-labelledby="x-readings-title">
+      <h2 id="x-readings-title" class="x-h2">One building, three ways of seeing it</h2>
+      <p class="x-readings__intro">An imagined slab block, drawn for this page. The building never changes. Choose who is looking.</p>
+      <fieldset class="x-pick">
+        <legend class="see-vh">Who is looking</legend>
+        {READINGS.map((r, i) => <label><input type="radio" name="x-reading" id={`x-r-${r.id}`} checked={i === 0} /> {r.label}</label>)}
+      </fieldset>
+      <figure class="x-fig">
+        <svg viewBox="0 0 1000 600" aria-hidden="true">
+          <rect class="x-sky" width="1000" height="600" />
+          <g class="x-shadow-cast"><polygon points="900,520 1000,470 1000,600 860,600" /></g>
+          <rect class="x-mass" x="100" y="78" width="760" height="436" />
+          <rect class="x-tower" x="860" y="40" width="70" height="474" />
+          {FLOORS.map((y) => <rect class="x-band" x="100" y={y} width="760" height="8" />)}
+          {FLOORS.flatMap((y) => BAYS.map((x) => <rect class="x-window" x={x} y={y - 32} width="34" height="26" />))}
+          {DECKS.map((y) => <g><rect class="x-deck" x="90" y={y - 6} width="780" height="14" /><line class="x-rail" x1="90" x2="870" y1={y - 20} y2={y - 20} /></g>)}
+          {PILOTI.map((x) => <rect class="x-piloti" x={x} y="514" width="26" height="66" />)}
+          <rect class="x-ground" y="580" width="1000" height="20" />
+          <g class="x-only x-only--drawn">
+            {DECKS.map((y, i) => <g>{[200 + i * 140, 520 - i * 60, 700].map((x) => <path class="x-person" d={`M${x} ${y - 30} a5 5 0 1 1 .1 0 M${x - 5} ${y - 24} h10 l2 18 h-14Z`} />)}</g>)}
+            {[60, 960, 40].map((x, i) => <g><line class="x-trunk" x1={x} x2={x} y1="580" y2={540 - i * 10} /><circle class="x-tree" cx={x} cy={520 - i * 10} r={28 + i * 4} /></g>)}
+          </g>
+          <g class="x-only x-only--weathered">
+            {FLOORS.flatMap((y) => [150, 330, 470, 610, 780].map((x, i) => <rect class="x-stain" x={x + (y % 7) * 3} y={y + 8} width={10 + (i % 3) * 6} height={22 + (i % 2) * 14} />))}
+            {[[172, 394], [536, 262], [692, 438]].map(([x, y]) => <rect class="x-board-up" x={x} y={y} width="34" height="26" />)}
+          </g>
+          <g class="x-only x-only--photographed">
+            <polygon class="x-hard" points="100,78 860,78 860,140 100,300" />
+            {FLOORS.map((y) => <rect class="x-hard" x="100" y={y + 8} width="760" height="10" />)}
+          </g>
+        </svg>
+        <figcaption>{READINGS.map((r) => <p class={`x-cap x-cap--${r.id}`}><strong>{r.label}.</strong> {r.caption}</p>)}</figcaption>
+      </figure>
+    </section>
+
+    <details class="x-study">
+      <summary>Study: ethic or aesthetic, blame, a second look</summary>
+      <div class="x-voids"><Blocks blocks={study} class="x-recess" /></div>
+    </details>
+
+    <section class="x-works" aria-labelledby="x-works-title">
+      <h2 id="x-works-title" class="x-h2">Buildings to know</h2>
+      <ul>{text.works.map((w) => <li><span class="x-works__what">{w.what}</span> <span class="x-works__meta">{w.who}. {w.when}. {w.where}.</span></li>)}</ul>
+    </section>
+    <p class="x-recognise"><span>How to recognise it.</span> {text.recognise}</p>
+  </main>
+  <ChapterFoot id="brutalism" notes={sources} />
+</Layout>

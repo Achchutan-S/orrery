@@ -1,0 +1,227 @@
+/* The house: the museum's signage, present on every page. It is deliberately plain (system sans,
+   two inks) so every chapter's own language is louder than the building around it. */
+@layer experience {
+  [data-experience='seeing'] {
+    --see-bistre: #2b221d;
+    --see-wash: #dce0d9;
+    --see-pin: #f7f3e8;
+    --see-soot: #a89a90;
+    --see-line: #5a4a40;
+    --see-sign: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  [data-experience='seeing'] .see-vh {
+    position: absolute !important;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  [data-experience='seeing'] .see-skip {
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline-start: 0.5rem;
+    z-index: 30;
+    padding: 0.75rem 1rem;
+    background: var(--see-pin);
+    color: var(--see-bistre);
+    font: 600 1rem/1 var(--see-sign);
+    transform: translateY(-200%);
+  }
+  [data-experience='seeing'] .see-skip:focus { transform: none; }
+
+  /* The Sightline: a small sign at the top of every page, never fixed, so it never covers text. */
+  [data-experience='seeing'] .see-sightline {
+    position: absolute;
+    inset-block-start: max(0.75rem, env(safe-area-inset-top));
+    inset-inline-start: max(0.75rem, env(safe-area-inset-left));
+    z-index: 20;
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    max-inline-size: calc(100vw - 1.5rem);
+    border-radius: 2px;
+    background: var(--see-bistre);
+    color: var(--see-wash);
+    font: 500 0.8125rem/1.2 var(--see-sign);
+    letter-spacing: 0.01em;
+  }
+  [data-experience='seeing'] .see-sightline[data-tone='light'] {
+    background: #f4f2ee;
+    color: var(--see-bistre);
+    box-shadow: 0 0 0 1px rgb(43 34 29 / 0.18);
+  }
+  [data-experience='seeing'] .see-sightline > * {
+    display: flex;
+    align-items: center;
+    min-block-size: 44px;
+    padding-inline: 0.875rem;
+  }
+  [data-experience='seeing'] .see-sightline__home {
+    color: inherit;
+    font-weight: 650;
+    text-decoration: none;
+  }
+  [data-experience='seeing'] .see-sightline__home:hover { text-decoration: underline; }
+  [data-experience='seeing'] .see-sightline__here {
+    border-inline-start: 1px solid currentColor;
+    opacity: 0.85;
+  }
+  [data-experience='seeing'] .see-sightline__open {
+    border: 0;
+    border-inline-start: 1px solid currentColor;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-weight: 650;
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .see-sightline__open:hover { text-decoration: underline; }
+  @media (max-width: 30rem) {
+    [data-experience='seeing'] .see-sightline__here { display: none; }
+  }
+
+  /* The atlas: the whole journey, opened from the Sightline. */
+  [data-experience='seeing'] .see-atlas {
+    inset: 0 auto 0 0;
+    inline-size: min(56rem, 100vw);
+    block-size: 100dvh;
+    max-block-size: none;
+    margin: 0;
+    padding: clamp(1.25rem, 4vw, 3rem);
+    overflow-y: auto;
+    border: 0;
+    background: var(--see-bistre);
+    color: var(--see-wash);
+    font: 400 1rem/1.45 var(--see-sign);
+  }
+  [data-experience='seeing'] .see-atlas::backdrop { background: rgb(20 15 12 / 0.6); }
+  [data-experience='seeing'] .see-atlas:not(:popover-open) { display: none; }
+  [data-experience='seeing'] .see-atlas__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  [data-experience='seeing'] .see-atlas__title { margin: 0; font-size: 1.5rem; font-weight: 650; }
+  [data-experience='seeing'] .see-atlas__close {
+    min-block-size: 44px;
+    min-inline-size: 44px;
+    padding-inline: 1rem;
+    border: 1px solid var(--see-soot);
+    border-radius: 2px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .see-atlas__note { color: var(--see-soot); max-inline-size: 40rem; }
+  [data-experience='seeing'] .see-atlas__parts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 2rem;
+    margin-block-start: 1.5rem;
+  }
+  [data-experience='seeing'] .see-atlas__part h3 {
+    margin: 0 0 0.5rem;
+    padding-block-end: 0.5rem;
+    border-block-end: 1px solid var(--see-line);
+    font-size: 0.9375rem;
+    font-weight: 650;
+  }
+  [data-experience='seeing'] .see-atlas__numeral { color: var(--see-soot); margin-inline-end: 0.25rem; }
+  [data-experience='seeing'] .see-atlas ol,
+  [data-experience='seeing'] .see-atlas ul { margin: 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .see-atlas li { min-block-size: 2rem; }
+  [data-experience='seeing'] .see-atlas li a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    color: var(--see-pin);
+    text-underline-offset: 0.2em;
+  }
+  [data-experience='seeing'] .see-atlas li a[aria-current='page'] { font-weight: 700; text-decoration-thickness: 3px; }
+  [data-experience='seeing'] .see-atlas li.is-closed { display: flex; align-items: center; color: var(--see-soot); }
+  @media (min-width: 40rem) {
+    [data-experience='seeing'] .see-atlas li.is-open { min-block-size: 44px; }
+  }
+
+  /* Editorial blocks: defaults that chapters restyle. */
+  [data-experience='seeing'] .see-block__kind {
+    margin: 0 0 0.25rem;
+    font-style: italic;
+  }
+  [data-experience='seeing'] .see-cite { font-size: 0.68em; line-height: 0; }
+  [data-experience='seeing'] .see-cite a { margin-inline-start: 0.08em; color: inherit; }
+
+  /* The corridor after each chapter. */
+  [data-experience='seeing'] .see-foot {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    gap: 2.5rem;
+    padding: clamp(2rem, 6vw, 4.5rem) clamp(1rem, 5vw, 4rem) 6rem;
+    background: var(--see-bistre);
+    color: var(--see-wash);
+    font: 400 1rem/1.55 var(--see-sign);
+  }
+  [data-experience='seeing'] .see-foot > * { max-inline-size: 64rem; margin-inline: auto; inline-size: 100%; }
+  [data-experience='seeing'] .see-foot a { color: var(--see-pin); text-underline-offset: 0.2em; }
+  [data-experience='seeing'] .see-foot h3 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 650;
+    color: var(--see-pin);
+  }
+  [data-experience='seeing'] .see-foot h4 { margin: 1.5rem 0 0.5rem; font-size: 0.9375rem; }
+  [data-experience='seeing'] .see-foot__walk {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--see-line);
+    border: 1px solid var(--see-line);
+  }
+  [data-experience='seeing'] .see-foot__walk a {
+    display: grid;
+    gap: 0.25rem;
+    padding: 1.25rem;
+    background: var(--see-bistre);
+    font-size: 1.25rem;
+    text-decoration: none;
+  }
+  [data-experience='seeing'] .see-foot__walk a[rel='next'] { text-align: end; }
+  [data-experience='seeing'] .see-foot__walk a:hover { text-decoration: underline; }
+  [data-experience='seeing'] .see-foot__walk span { font-size: 0.8125rem; color: var(--see-soot); }
+  [data-experience='seeing'] .see-foot__links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 1.5rem 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  [data-experience='seeing'] .see-foot__links li { padding-block-start: 0.75rem; border-block-start: 1px solid var(--see-line); }
+  [data-experience='seeing'] .see-foot__links p { margin: 0 0 0.5rem; max-inline-size: 38rem; }
+  [data-experience='seeing'] .see-foot__kind { font-weight: 650; color: var(--see-pin); }
+  [data-experience='seeing'] .see-foot__compare { margin: 0; padding-inline-start: 1.25rem; }
+  [data-experience='seeing'] .see-foot__compare li { margin-block-end: 0.5rem; }
+  [data-experience='seeing'] .see-foot__door { font-size: 1.125rem; }
+  [data-experience='seeing'] .see-foot__door span { color: var(--see-soot); }
+  [data-experience='seeing'] .see-foot__sources { font-size: 0.875rem; }
+  [data-experience='seeing'] .see-foot__sources ol { padding-inline-start: 1.5rem; }
+  [data-experience='seeing'] .see-foot__sources li { margin-block-end: 0.5rem; max-inline-size: 60rem; }
+  [data-experience='seeing'] .see-foot__sources li:target { outline: 2px solid var(--see-pin); outline-offset: 4px; }
+  [data-experience='seeing'] .see-foot__source-kind,
+  [data-experience='seeing'] .see-foot__status,
+  [data-experience='seeing'] .see-foot__source-note { color: var(--see-soot); }
+  @media (max-width: 34rem) {
+    [data-experience='seeing'] .see-foot__walk { grid-template-columns: 1fr; }
+    [data-experience='seeing'] .see-foot__walk a[rel='next'] { text-align: start; }
+  }
+
+  /* Cross-document transitions: every page opts in; each page styles its own arrival. */
+  @view-transition { navigation: auto; }
+  [data-experience='seeing'] .see-sightline { view-transition-name: see-sightline; }
+}

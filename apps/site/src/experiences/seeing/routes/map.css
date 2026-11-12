@@ -1,0 +1,55 @@
+/* The map: kinds of relationship told by line pattern and end mark first, colour second. */
+@layer experience {
+  [data-experience='seeing'] .mp-filters { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin: 2rem 0 1rem; padding: 0.75rem 1rem; border: 1px solid var(--see-line); font: 400 0.9375rem/1.2 var(--see-sign); }
+  [data-experience='seeing'] .mp-filters legend { padding-inline: 0.4rem; color: var(--see-soot); }
+  [data-experience='seeing'] .mp-filter { display: inline-flex; align-items: center; gap: 0.5rem; min-block-size: 44px; cursor: pointer; }
+  [data-experience='seeing'] .mp-filter svg { inline-size: 3.5rem; block-size: 0.9rem; overflow: visible; }
+  [data-experience='seeing'] .mp-filter input { margin: 0; accent-color: var(--see-pin); }
+
+  [data-experience='seeing'] .mp-frame { overflow-x: auto; border: 1px solid var(--see-line); background: #241c18; view-transition-name: see-aperture; }
+  [data-experience='seeing'] .mp-svg { display: block; inline-size: 100%; min-inline-size: 52rem; block-size: auto; }
+  [data-experience='seeing'] .mp-axis text { fill: #8d7f75; font: 400 13px var(--see-sign); }
+
+  [data-experience='seeing'] .mp-edge { fill: none; stroke: var(--see-wash); stroke-width: 1.6; opacity: 0.85; transition: opacity 0.2s; }
+  [data-experience='seeing'] .mp-edge--succession { stroke-width: 1.4; }
+  [data-experience='seeing'] .mp-edge--influence { stroke: #f2d98a; stroke-width: 3; }
+  [data-experience='seeing'] .mp-edge--reaction { stroke: #e58a74; stroke-width: 2.2; stroke-dasharray: 3 5; }
+  [data-experience='seeing'] .mp-edge--revival { stroke: #9fc3d6; stroke-width: 2.2; stroke-dasharray: 12 6; }
+  [data-experience='seeing'] .mp-edge--ancestry { stroke: #b9d39a; stroke-width: 2.6; stroke-dasharray: 0.5 6; stroke-linecap: round; }
+  [data-experience='seeing'] .mp-edge--resemblance { stroke: #a89a90; stroke-width: 1.4; stroke-dasharray: 1 10; stroke-linecap: round; opacity: 0.7; }
+  [data-experience='seeing'] .mp-marker { stroke: none; }
+  [data-experience='seeing'] .mp-marker path, [data-experience='seeing'] .mp-marker circle { fill: var(--see-wash); stroke: var(--see-wash); stroke-width: 2; }
+  [data-experience='seeing'] .mp-marker--influence :is(path, circle) { fill: #f2d98a; stroke: #f2d98a; }
+  [data-experience='seeing'] .mp-marker--reaction :is(path, circle) { stroke: #e58a74; stroke-width: 3; }
+  [data-experience='seeing'] .mp-marker--revival :is(path, circle) { fill: #9fc3d6; stroke: #9fc3d6; }
+  [data-experience='seeing'] .mp-marker--ancestry :is(path, circle) { fill: #b9d39a; stroke: #b9d39a; }
+  [data-experience='seeing'] .mp-marker--resemblance :is(path, circle) { fill: #a89a90; stroke: #a89a90; }
+
+  [data-experience='seeing'] .mp-dot { fill: #6b5b50; stroke: var(--see-wash); stroke-width: 1.5; }
+  [data-experience='seeing'] .mp-label { fill: #a99a8e; font: 400 14px var(--see-sign); text-anchor: middle; paint-order: stroke; stroke: #241c18; stroke-width: 4px; }
+  [data-experience='seeing'] .mp-node.is-open .mp-dot { fill: var(--see-pin); }
+  [data-experience='seeing'] .mp-node.is-open .mp-label { fill: var(--see-pin); font-weight: 650; text-decoration: underline; }
+  [data-experience='seeing'] .mp-node.is-context .mp-label { font-style: italic; }
+  [data-experience='seeing'] .mp-node.is-context .mp-dot { fill: none; stroke-dasharray: 2 2; }
+  [data-experience='seeing'] .mp-svg.is-focusing .mp-edge:not(.is-lit) { opacity: 0.12; }
+  [data-experience='seeing'] .mp-edge.is-lit { stroke-width: 3.2; opacity: 1; }
+  [data-experience='seeing'] .mp-node.is-lit .mp-label { fill: #fff; }
+
+  /* Filters: unchecked kinds leave the map and the list. */
+  [data-experience='seeing'] .mp:has(#mp-k-succession:not(:checked)) :is(.mp-edges .mp-edge--succession, .mp-group--succession),
+  [data-experience='seeing'] .mp:has(#mp-k-influence:not(:checked)) :is(.mp-edges .mp-edge--influence, .mp-group--influence),
+  [data-experience='seeing'] .mp:has(#mp-k-reaction:not(:checked)) :is(.mp-edges .mp-edge--reaction, .mp-group--reaction),
+  [data-experience='seeing'] .mp:has(#mp-k-revival:not(:checked)) :is(.mp-edges .mp-edge--revival, .mp-group--revival),
+  [data-experience='seeing'] .mp:has(#mp-k-ancestry:not(:checked)) :is(.mp-edges .mp-edge--ancestry, .mp-group--ancestry),
+  [data-experience='seeing'] .mp:has(#mp-k-resemblance:not(:checked)) :is(.mp-edges .mp-edge--resemblance, .mp-group--resemblance) { display: none; }
+
+  [data-experience='seeing'] .mp-key { margin-block-start: 0.5rem; font-size: 0.9375rem; }
+  [data-experience='seeing'] .mp-group h3 { margin-block: 2rem 0.75rem; }
+  [data-experience='seeing'] .mp-group ul { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: 1rem 2rem; }
+  [data-experience='seeing'] .mp-group li { padding-block-start: 0.75rem; border-block-start: 1px solid var(--see-line); font-size: 1rem; }
+  [data-experience='seeing'] .mp-group li p { margin: 0 0 0.4rem; }
+  [data-experience='seeing'] .mp-pair { font-weight: 700; color: var(--see-pin); }
+  [data-experience='seeing'] .mp-verb { font-weight: 400; font-style: italic; color: var(--see-soot); }
+  [data-experience='seeing'] .mp-sources { margin-block-start: 3rem; font: 400 0.875rem/1.5 var(--see-sign); color: var(--see-soot); }
+  [data-experience='seeing'] .mp-sources a { color: var(--see-wash); }
+}

@@ -1,0 +1,61 @@
+---
+// The Sightline: where you are, and the whole atlas one press away. The atlas is a native popover
+// (no script; without popover support it simply shows in the page). Subjects without a page yet
+// are listed but not linked: the atlas never links to a route that does not exist.
+import { PARTS, SUBJECTS, href, positionOf, subject } from '../data/atlas.ts';
+
+interface Props { here: string; tone: 'light' | 'dark' }
+const { here, tone } = Astro.props;
+const HOUSE: Record<string, string> = {
+  opening: 'The camera obscura', reframing: 'Reframing the world', map: 'The relationship map',
+  lab: 'The laboratory', compare: 'Comparisons', sources: 'Sources and credits',
+};
+const isChapter = SUBJECTS.some((x) => x.id === here);
+const where = isChapter
+  ? (() => { const p = positionOf(here); const part = PARTS.find((x) => x.id === subject(here).part)!; return `Part ${part.numeral}, ${p.inPart} of ${p.partSize}`; })()
+  : HOUSE[here] ?? '';
+const tools = [
+  { id: 'reframing', label: 'Reframing the world', url: '/seeing/reframing' },
+  { id: 'map', label: 'The relationship map', url: '/seeing/map' },
+  { id: 'lab', label: 'The laboratory', url: '/seeing/lab' },
+  { id: 'sources', label: 'Sources and credits', url: '/seeing/sources' },
+];
+---
+<header class="see-sightline" data-tone={tone} data-here={here} data-chapter={isChapter ? "" : undefined}>
+  <a class="see-sightline__home" href="/seeing" aria-current={here === 'opening' ? 'page' : undefined}>A History of Seeing</a>
+  {where && <span class="see-sightline__here">{where}</span>}
+  <button class="see-sightline__open" type="button" popovertarget="see-atlas" aria-label="Open the atlas: every chapter">Atlas</button>
+</header>
+<div id="see-atlas" class="see-atlas" popover>
+  <nav aria-labelledby="see-atlas-title">
+    <div class="see-atlas__head">
+      <h2 id="see-atlas-title" class="see-atlas__title">The atlas</h2>
+      <button class="see-atlas__close" type="button" popovertarget="see-atlas" popovertargetaction="hide">Close</button>
+    </div>
+    <p class="see-atlas__note">Nine chapters are open in this prototype. The rest are listed so you can see the whole journey.</p>
+    <div class="see-atlas__parts">
+      {PARTS.filter((p) => p.id !== 'language').map((part) => (
+        <section class="see-atlas__part" aria-labelledby={`atlas-${part.id}`}>
+          <h3 id={`atlas-${part.id}`}><span class="see-atlas__numeral">{part.numeral}</span> {part.title}</h3>
+          <ol>
+            {SUBJECTS.filter((x) => x.part === part.id).map((x) => (
+              <li class={x.built ? 'is-open' : 'is-closed'}>
+                {x.built
+                  ? <a href={href(x.id)} aria-current={x.id === here ? 'page' : undefined}>{x.title}</a>
+                  : <span>{x.title}<span class="see-vh"> (not yet written)</span></span>}
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
+      <section class="see-atlas__part" aria-labelledby="atlas-tools">
+        <h3 id="atlas-tools"><span class="see-atlas__numeral">IV</span> Instruments</h3>
+        <ul>
+          <li class="is-open"><a href="/seeing" aria-current={here === 'opening' ? 'page' : undefined}>The camera obscura</a></li>
+          {tools.map((t) => <li class="is-open"><a href={t.url} aria-current={t.id === here ? 'page' : undefined}>{t.label}</a></li>)}
+          <li class="is-closed"><span>Core, punk and wave<span class="see-vh"> (not yet written)</span></span></li>
+        </ul>
+      </section>
+    </div>
+  </nav>
+</div>

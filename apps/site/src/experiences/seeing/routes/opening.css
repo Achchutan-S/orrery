@@ -1,0 +1,254 @@
+/* The camera obscura. The projection opens from a single point of light (an iris, once, on
+   arrival); after that, only the visitor's own choices move anything. */
+@layer experience {
+  [data-experience='seeing'] .ob { overflow-x: clip; }
+
+  [data-experience='seeing'] .ob-chamber {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-block-size: 100svh;
+    background:
+      radial-gradient(120% 90% at 70% 45%, #3a2e27 0%, var(--see-bistre) 55%, #1f1814 100%);
+  }
+  @media (min-width: 62rem) {
+    [data-experience='seeing'] .ob-chamber {
+      grid-template-columns: minmax(22rem, 31rem) minmax(0, 1fr);
+      align-items: center;
+    }
+  }
+
+  /* The far wall. */
+  [data-experience='seeing'] .ob-wall {
+    position: relative;
+    margin: 5rem 1rem 0;
+    aspect-ratio: 3 / 2;
+    view-transition-name: see-aperture;
+    animation: ob-iris 3.2s cubic-bezier(0.6, 0, 0.2, 1) 0.9s both;
+  }
+  @media (min-width: 62rem) {
+    [data-experience='seeing'] .ob-wall {
+      grid-column: 2;
+      grid-row: 1;
+      align-self: start;
+      position: sticky;
+      inset-block-start: 5rem;
+      margin: 5rem clamp(1.5rem, 4vw, 4rem) 4rem 0;
+    }
+  }
+  @keyframes ob-iris {
+    from { clip-path: circle(0.6% at 50% 50%); }
+    to { clip-path: circle(75% at 50% 50%); }
+  }
+  [data-experience='seeing'] .ob-proj { display: block; inline-size: 100%; block-size: 100%; }
+  [data-experience='seeing'] .ob-pin {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    inline-size: 10px;
+    block-size: 10px;
+    margin: -5px 0 0 -5px;
+    border-radius: 50%;
+    background: var(--see-pin);
+    box-shadow: 0 0 18px 6px rgb(247 243 232 / 0.55);
+    animation: ob-pin 4.4s ease-out both;
+  }
+  @keyframes ob-pin {
+    0% { opacity: 0; }
+    15%, 40% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+
+  /* The optics, set by the instrument's own controls. Default: pinhole, dim, sharp, inverted. */
+  [data-experience='seeing'] .ob-image {
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    transform: scale(-1, -1);
+    transition: transform 1.2s cubic-bezier(0.5, 0, 0.2, 1), filter 0.6s;
+  }
+  [data-experience='seeing'] .ob-dim { fill: #120d0a; opacity: 0.62; transition: opacity 0.6s; }
+  [data-experience='seeing'] .ob:has(#ob-mid:checked) .ob-image { filter: url('#ob-b1'); }
+  [data-experience='seeing'] .ob:has(#ob-mid:checked) .ob-dim { opacity: 0.32; }
+  [data-experience='seeing'] .ob:has(#ob-wide:checked) .ob-image { filter: url('#ob-b2'); }
+  [data-experience='seeing'] .ob:has(#ob-wide:checked) .ob-dim { opacity: 0.06; }
+  [data-experience='seeing'] .ob:has(#ob-lens:checked) .ob-image { filter: none; }
+  [data-experience='seeing'] .ob:has(#ob-mirror:checked) .ob-image { transform: scale(-1, 1); }
+
+  /* The text panel. */
+  [data-experience='seeing'] .ob-text {
+    position: relative;
+    z-index: 1;
+    padding: 1.5rem clamp(1rem, 5vw, 3rem) 3rem;
+  }
+  @media (min-width: 62rem) {
+    [data-experience='seeing'] .ob-text { grid-column: 1; grid-row: 1; padding-block: 6rem 3rem; }
+  }
+  [data-experience='seeing'] .ob-title {
+    margin: 0;
+    font: 400 clamp(2.75rem, 7vw, 4.5rem)/0.98 var(--see-display);
+    color: var(--see-pin);
+    letter-spacing: -0.01em;
+  }
+  [data-experience='seeing'] .ob-sub { margin: 0.5rem 0 2rem; font-style: italic; color: var(--see-soot); }
+  [data-experience='seeing'] .ob-first { margin: 0 0 0.75rem; font-size: 1.25rem; color: var(--see-pin); }
+  [data-experience='seeing'] .ob-intro { margin: 0 0 1.75rem; animation: ob-arrive 1.4s ease-out 3.6s both; }
+  @keyframes ob-arrive { from { opacity: 0; } to { opacity: 1; } }
+  /* Reduced motion: the chamber is simply lit; nothing waits on a delay. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-experience='seeing'] :is(.ob-wall, .ob-pin, .ob-intro) { animation: none; }
+    [data-experience='seeing'] .ob-pin { opacity: 0; }
+  }
+
+  [data-experience='seeing'] .ob-instrument {
+    padding: 1.25rem;
+    border: 1px solid var(--see-line);
+    background: rgb(20 15 12 / 0.45);
+  }
+  [data-experience='seeing'] .ob-legend { margin: 0 0 0.75rem; font-weight: 700; color: var(--see-pin); }
+  [data-experience='seeing'] .ob-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.25rem;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    border: 0;
+    font-family: var(--see-sign);
+    font-size: 0.9375rem;
+  }
+  [data-experience='seeing'] .ob-row legend {
+    float: left;
+    margin-inline-end: 0.75rem;
+    min-block-size: 44px;
+    display: flex;
+    align-items: center;
+    color: var(--see-soot);
+  }
+  [data-experience='seeing'] .ob-row label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-block-size: 44px;
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .ob-row input { inline-size: 1.15rem; block-size: 1.15rem; margin: 0; accent-color: var(--see-pin); }
+
+  [data-experience='seeing'] .ob-diagram { display: block; inline-size: 100%; max-inline-size: 26rem; margin: 0.5rem 0; }
+  [data-experience='seeing'] .ob-d-ink { stroke: var(--see-wash); stroke-width: 2; fill: none; }
+  [data-experience='seeing'] .ob-d-head { stroke-linejoin: round; }
+  [data-experience='seeing'] .ob-d-faint { stroke: var(--see-soot); stroke-width: 1; stroke-dasharray: 3 4; }
+  [data-experience='seeing'] .ob-d-wall { fill: var(--see-soot); }
+  [data-experience='seeing'] .ob-d-ray { fill: #f2d98a; opacity: 0.55; }
+  [data-experience='seeing'] .ob-d-ap,
+  [data-experience='seeing'] .ob-d-ray--lens,
+  [data-experience='seeing'] .ob-d-lens { display: none; }
+  [data-experience='seeing'] .ob-d-lens { fill: none; stroke: #9fc3d6; stroke-width: 2; }
+  [data-experience='seeing'] .ob:has(#ob-pin:checked) .ob-d-ap--pin,
+  [data-experience='seeing'] .ob:has(#ob-mid:checked) .ob-d-ap--mid,
+  [data-experience='seeing'] .ob:has(#ob-wide:checked) .ob-d-ap--wide { display: inline; }
+  [data-experience='seeing'] .ob:has(#ob-lens:checked) .ob-d-ray--bare { display: none; }
+  [data-experience='seeing'] .ob:has(#ob-lens:checked) .ob-d-ray--lens,
+  [data-experience='seeing'] .ob:has(#ob-lens:checked) .ob-d-lens { display: inline; }
+
+  [data-experience='seeing'] .ob-reading { min-block-size: 5.5rem; font-size: 1rem; }
+  [data-experience='seeing'] .ob-r { display: none; margin: 0.25rem 0; }
+  [data-experience='seeing'] .ob:has(#ob-pin:checked):not(:has(#ob-lens:checked)) .ob-r--pin,
+  [data-experience='seeing'] .ob:has(#ob-mid:checked):not(:has(#ob-lens:checked)) .ob-r--mid,
+  [data-experience='seeing'] .ob:has(#ob-wide:checked):not(:has(#ob-lens:checked)) .ob-r--wide,
+  [data-experience='seeing'] .ob:has(#ob-pin:checked):has(#ob-lens:checked) .ob-r--pin-lens,
+  [data-experience='seeing'] .ob:has(#ob-lens:checked):not(:has(#ob-pin:checked)) .ob-r--lens,
+  [data-experience='seeing'] .ob:has(#ob-mirror:checked) .ob-r--mirror { display: block; }
+  [data-experience='seeing'] .ob-skip { margin: 1rem 0 0; font-family: var(--see-sign); font-size: 0.9375rem; }
+  [data-experience='seeing'] .ob-skip a,
+  [data-experience='seeing'] .ob-instrument a { color: var(--see-pin); }
+
+  /* The thesis: the one line set large, in the house's display face. */
+  [data-experience='seeing'] .ob-thesis {
+    padding: clamp(5rem, 14vw, 10rem) clamp(1rem, 6vw, 5rem);
+    background: var(--see-bistre);
+  }
+  [data-experience='seeing'] .ob-thesis > * { max-inline-size: 64rem; margin-inline: auto; }
+  [data-experience='seeing'] .ob-thesis__pre { color: var(--see-soot); font-style: italic; margin-block-end: 1.5rem; }
+  [data-experience='seeing'] .ob-thesis__line {
+    margin-block: 0 3rem;
+    font: 400 clamp(2.25rem, 6.4vw, 5.5rem)/1.04 var(--see-display);
+    color: var(--see-pin);
+    text-wrap: balance;
+  }
+  [data-experience='seeing'] .ob-thesis__body {
+    display: grid;
+    gap: 0 3rem;
+    font-size: 1.1875rem;
+  }
+  @media (min-width: 52rem) {
+    [data-experience='seeing'] .ob-thesis__body { grid-template-columns: 1fr 1fr; }
+  }
+  [data-experience='seeing'] .ob-begin { display: flex; flex-wrap: wrap; gap: 1rem 2rem; margin-block-start: 2.5rem; }
+  [data-experience='seeing'] .ob-begin a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 3.25rem;
+    padding-inline: 1.5rem;
+    border: 1px solid var(--see-pin);
+    color: var(--see-pin);
+    font-size: 1.1875rem;
+    text-decoration: none;
+  }
+  [data-experience='seeing'] .ob-begin a:hover { background: var(--see-pin); color: var(--see-bistre); }
+  [data-experience='seeing'] .ob-begin a[hidden] { display: none; }
+  [data-experience='seeing'] .ob-begin__resume { border-style: dashed !important; }
+
+  /* The directory: like the board in a museum's entrance hall. */
+  [data-experience='seeing'] .ob-directory,
+  [data-experience='seeing'] .ob-instruments,
+  [data-experience='seeing'] .ob-notes {
+    padding: 0 clamp(1rem, 6vw, 5rem) 4rem;
+  }
+  [data-experience='seeing'] .ob-directory > *,
+  [data-experience='seeing'] .ob-instruments > *,
+  [data-experience='seeing'] .ob-notes > * { max-inline-size: 64rem; margin-inline: auto; }
+  [data-experience='seeing'] .ob-directory h2,
+  [data-experience='seeing'] .ob-instruments h2 {
+    margin-block: 0 1.5rem;
+    padding-block-start: 1.5rem;
+    border-block-start: 1px solid var(--see-line);
+    font: 400 1.75rem/1.2 var(--see-display);
+    color: var(--see-pin);
+  }
+  [data-experience='seeing'] .ob-gallery { margin-block-end: 2rem; }
+  [data-experience='seeing'] .ob-gallery h3 { margin: 0 0 0.5rem; font: 700 1.0625rem/1.3 var(--see-text); color: var(--see-wash); }
+  [data-experience='seeing'] .ob-gallery__n { color: var(--see-soot); font-weight: 400; margin-inline-end: 0.35rem; }
+  [data-experience='seeing'] .ob-gallery ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 1.3rem;
+    line-height: 1.3;
+  }
+  [data-experience='seeing'] .ob-gallery li { display: inline-flex; align-items: center; min-block-size: 44px; }
+  [data-experience='seeing'] .ob-gallery li + li::before { content: '/'; margin-inline: 0.55rem; color: var(--see-line); }
+  [data-experience='seeing'] .ob-gallery li.is-closed { color: #a3958a; }
+  [data-experience='seeing'] .ob-gallery li.is-open a { color: var(--see-pin); text-decoration-thickness: 1px; text-underline-offset: 0.2em; }
+  [data-experience='seeing'] .ob-gallery__soon { color: var(--see-soot); }
+
+  [data-experience='seeing'] .ob-tools {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  [data-experience='seeing'] .ob-tools > li > a,
+  [data-experience='seeing'] .ob-tools__label { font: 400 1.4rem/1.2 var(--see-display); color: var(--see-pin); }
+  [data-experience='seeing'] .ob-tools p { margin: 0.4rem 0 0; color: var(--see-wash); font-size: 1rem; }
+  [data-experience='seeing'] .ob-tools ul { margin: 0.5rem 0 0; padding-inline-start: 1.1rem; }
+  [data-experience='seeing'] .ob-tools ul li { min-block-size: 44px; display: list-item; }
+  [data-experience='seeing'] .ob-tools a { color: var(--see-pin); }
+  [data-experience='seeing'] .ob-notes { font: 400 0.875rem/1.5 var(--see-sign); color: var(--see-soot); }
+  [data-experience='seeing'] .ob-notes a { color: var(--see-soot); }
+
+  /* Leaving through the aperture: the wall becomes the next chapter's window. */
+  ::view-transition-group(see-aperture) { animation-duration: 0.9s; animation-timing-function: cubic-bezier(0.6, 0, 0.2, 1); }
+}

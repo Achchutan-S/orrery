@@ -1,0 +1,63 @@
+---
+// The laboratory: a window drawn from eight visual decisions. Explicitly a creative instrument:
+// its readout names the nearest curated composition and says what that does and does not mean.
+// Without JavaScript the curated compositions are shown as a gallery.
+import Layout from '../house/Layout.astro';
+import { PARAMS, PRESETS, presetSvg, windowSvg } from '../lab/window.ts';
+import { SUBJECTS, href } from '../data/atlas.ts';
+import '../house/house-pages.css';
+import './lab.css';
+
+const start = PRESETS[1]!;
+const built = new Set(SUBJECTS.filter((s) => s.built).map((s) => s.id));
+---
+<Layout title="The laboratory: build a window" description="A creative instrument: build a window from eight visual decisions and see which curated composition it comes closest to, with an honest note on what that means." here="lab">
+  <main id="main" class="hp lb">
+    <header>
+      <h1>The laboratory</h1>
+      <p class="hp__lede">Every chapter in this atlas has a window in it somewhere. Here you build one from eight decisions: the shape of its head, the character of its line, how it is divided and decorated, how heavy the wall is, how much light and colour come through.</p>
+    </header>
+
+    <div class="lb-bench" data-lab>
+      <figure class="lb-figure">
+        <svg viewBox="0 0 300 420" class="lb-window" data-window aria-hidden="true" set:html={windowSvg(start.p)} />
+        <figcaption class="lb-readout" role="status" data-readout>Closest curated composition: {start.title}.</figcaption>
+      </figure>
+      <form class="lb-controls" aria-label="Window decisions" data-controls hidden>
+        {PARAMS.map((k) => (
+          <label class="lb-range">
+            <span class="lb-range__name">{k.label}</span>
+            <input type="range" min="0" max="1" step="0.05" name={k.id} value={start.p[k.id]} aria-describedby={`lb-${k.id}-ends`} />
+            <span class="lb-range__ends" id={`lb-${k.id}-ends`}><span>{k.low}</span><span>{k.high}</span></span>
+          </label>
+        ))}
+        <fieldset class="lb-presets">
+          <legend>Start from a curated composition</legend>
+          {PRESETS.map((x) => <button type="button" data-preset={x.id}>{x.title}</button>)}
+        </fieldset>
+      </form>
+      <p class="lb-nojs" data-nojs>The instrument needs JavaScript. The curated compositions are below.</p>
+    </div>
+
+    <section class="lb-honest" aria-labelledby="lb-honest-title">
+      <h2 id="lb-honest-title">What this instrument is, and is not</h2>
+      <p>It is a drawing machine. Eight numbers make a picture, and the readout reports which of eight curated compositions, made for this atlas, has the closest numbers. That is a resemblance between drawings.</p>
+      <p>It is not a way of identifying a style. A movement is made of history, beliefs, materials, makers and communities; none of that is in these sliders. Some aesthetics are left out on purpose: Weirdcore’s strangeness lives in context and caption, not in a window’s shape, and aesthetics like Afrofuturism are cultural and political projects that no set of visual numbers could describe.</p>
+    </section>
+
+    <section aria-labelledby="lb-gallery-title">
+      <h2 id="lb-gallery-title">Curated compositions</h2>
+      <ul class="lb-gallery">
+        {PRESETS.map((x) => (
+          <li>
+            <svg viewBox="0 0 300 420" aria-hidden="true" set:html={presetSvg(x.id, x.p)} />
+            {built.has(x.id) ? <a href={href(x.id)}>{x.title}</a> : <span>{x.title}</span>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  </main>
+  <script>
+    import '../lab/lab.ts';
+  </script>
+</Layout>

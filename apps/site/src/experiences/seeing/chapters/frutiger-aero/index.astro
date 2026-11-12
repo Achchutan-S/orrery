@@ -1,0 +1,96 @@
+---
+// Frutiger Aero: a desktop-wallpaper world (sky, hill, water) with glossy glass panels for the
+// text. Bubbles are real buttons: pop one (pointer, Enter or Space) and it releases a word of the
+// aesthetic's vocabulary into a tray. Water caustics are a WebGL2 shader, only when visible,
+// supported and motion is allowed. Without JavaScript the vocabulary is a plain list.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const encounter = text.encounter.map(rich);
+const BUBBLES = [
+  { word: 'Gloss', gloss: rich('A white highlight across the top half of every button, a soft glow below: the gel look.') },
+  { word: 'Skeuomorphism', gloss: rich('Interfaces that imitated real materials: glass, water, brushed metal, leather.') },
+  { word: 'Aero', gloss: rich('Windows Vista’s translucent glass interface, released in 2007 {wikipedia-vista}.') },
+  { word: 'Frutiger', gloss: rich('Adrian Frutiger’s humanist sans, made for airport signs and released in 1976 {osterer-stamm-2009}.') },
+  { word: 'Eco-optimism', gloss: rich('Nature and technology pictured together: fish, grass, clean water and a laptop.') },
+  { word: 'Aurora', gloss: rich('Ribbons of green and blue light across the wallpaper, borrowed from the northern sky.') },
+  { word: 'Named later', gloss: rich('The name was given in 2017, after the look had gone {cari-frutiger-aero}.') },
+];
+const understand = blocks(text.understand);
+const study = blocks(text.study);
+const sources = notes();
+---
+<Layout title="Frutiger Aero: the future we remember" description="Frutiger Aero as a glossy sky to play in: bubbles that release its vocabulary, the 2000s optimism behind it, and how it differs from Y2K." here="frutiger-aero" tone="light">
+  <main id="main" class="f">
+    <section class="f-world" aria-labelledby="f-title">
+      <div class="f-scene" aria-hidden="true">
+        <svg class="f-land" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice">
+          <defs>
+            <linearGradient id="f-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f7fd6" /><stop offset="0.55" stop-color="#7cc6f5" /><stop offset="1" stop-color="#dff4ff" /></linearGradient>
+            <linearGradient id="f-grass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ee05a" /><stop offset="1" stop-color="#2f9b36" /></linearGradient>
+            <linearGradient id="f-aurora" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b8ffda" stop-opacity="0" /><stop offset="0.5" stop-color="#b8ffda" stop-opacity="0.55" /><stop offset="1" stop-color="#7fe0ff" stop-opacity="0" /></linearGradient>
+            <radialGradient id="f-sun" cx="0.8" cy="0.15" r="0.3"><stop offset="0" stop-color="#fff" stop-opacity="0.95" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></radialGradient>
+          </defs>
+          <rect width="1200" height="700" fill="url(#f-sky)" />
+          <rect width="1200" height="700" fill="url(#f-sun)" />
+          <path d="M-50 260 C 300 140, 700 330, 1250 170 L1250 210 C 700 380, 300 190, -50 310Z" fill="url(#f-aurora)" />
+          <g fill="#fff" opacity="0.92"><ellipse cx="240" cy="150" rx="120" ry="34" /><ellipse cx="320" cy="128" rx="80" ry="34" /><ellipse cx="960" cy="300" rx="100" ry="24" /></g>
+          <path d="M-20 520 C 250 420, 520 440, 760 480 S 1100 430, 1220 470 V700 H-20Z" fill="url(#f-grass)" />
+          <path d="M-20 520 C 250 420, 520 440, 760 480 S 1100 430, 1220 470" fill="none" stroke="#e9ffd6" stroke-width="5" opacity="0.7" />
+          <rect y="600" width="1200" height="100" fill="#1aa0d8" />
+          <rect y="600" width="1200" height="6" fill="#bff0ff" opacity="0.8" />
+        </svg>
+        <canvas class="f-water" data-water></canvas>
+      </div>
+
+      <div class="f-glass f-intro">
+        <h1 id="f-title" class="f-title">Frutiger Aero</h1>
+        <p class="f-thesis">{text.thesis}</p>
+        {encounter.map((p) => <p set:html={p} />)}
+      </div>
+
+      <div class="f-bubbles" data-bubbles>
+        <h2 class="see-vh">Bubbles</h2>
+        {BUBBLES.map((b, i) => <button type="button" class={`f-bubble f-bubble--${i}`} data-word={b.word} hidden>{b.word}</button>)}
+      </div>
+    </section>
+
+    <section class="f-tray f-glass" aria-labelledby="f-tray-title">
+      <h2 id="f-tray-title" class="f-h2">Vocabulary</h2>
+      <p class="f-tray__hint" data-tray-hint hidden>Pop a bubble to add its word here.</p>
+      <dl class="f-words" data-tray aria-live="polite">
+        {BUBBLES.map((b) => <div class="f-word" data-for={b.word}><dt>{b.word}</dt><dd set:html={b.gloss} /></div>)}
+      </dl>
+    </section>
+
+    <div class="f-body">
+      <dl class="f-label f-glass">
+        <div><dt>Aesthetic</dt><dd>Part III, internet aesthetics</dd></div>
+        <div><dt>When</dt><dd>{text.period}</dd></div>
+        <div><dt>Where</dt><dd>{text.place}</dd></div>
+      </dl>
+      <section class="f-glass" aria-labelledby="f-understand-title">
+        <h2 id="f-understand-title" class="f-h2">Where it came from</h2>
+        <Blocks blocks={understand} />
+      </section>
+      <details class="f-glass f-study">
+        <summary>Study: not Y2K, the revival, nostalgia for advertising</summary>
+        <Blocks blocks={study} />
+      </details>
+      <section class="f-glass" aria-labelledby="f-works-title">
+        <h2 id="f-works-title" class="f-h2">Moments to know</h2>
+        <ul class="f-works">{text.works.map((w) => <li><strong>{w.when}</strong> {w.what}{w.who && <span>, {w.who}</span>}</li>)}</ul>
+        <p class="f-recognise"><strong>How to recognise it.</strong> {text.recognise}</p>
+      </section>
+    </div>
+  </main>
+  <ChapterFoot id="frutiger-aero" notes={sources} />
+  <script>
+    import './scene.ts';
+  </script>
+</Layout>

@@ -1,0 +1,78 @@
+---
+// A comparison: the same room in two languages (a wipe, or side by side without JavaScript), then
+// the differences dimension by dimension, then what the comparison teaches. Prose is cited.
+import type { GetStaticPaths } from 'astro';
+import Layout from '../house/Layout.astro';
+import Room from '../reframing/Room.astro';
+import { citer } from '../house/text.ts';
+import { href, subject } from '../data/atlas.ts';
+import { PAIRS, type Pair } from '../data/pairs.ts';
+import '../house/house-pages.css';
+import './compare.css';
+
+export const getStaticPaths = (() => PAIRS.map((p) => ({ params: { pair: p.id }, props: { p } }))) satisfies GetStaticPaths;
+const { p } = Astro.props as { p: Pair };
+const { rich, notes } = citer();
+const A = subject(p.a);
+const B = subject(p.b);
+const rows = p.rows.map((r) => ({ dimension: r.dimension, a: rich(r.a), b: rich(r.b) }));
+const takeaway = rich(p.takeaway);
+const sources = notes();
+const link = (s: typeof A) => (s.built ? href(s.id) : undefined);
+---
+<Layout title={`${A.title} and ${B.title}: a comparison`} description={`${A.title} and ${B.title} compared: ${p.question}`} here="compare">
+  <main id="main" class="hp cp">
+    <header>
+      <h1>{A.title} and {B.title}</h1>
+      <p class="hp__lede">{p.question}</p>
+    </header>
+
+    <div class="cp-wipe" data-wipe>
+      <figure class="cp-side cp-side--a"><Room uid="cpa" only={p.a as never} label={`The atlas room drawn as ${A.title}`} /><figcaption>{A.title}</figcaption></figure>
+      <figure class="cp-side cp-side--b"><Room uid="cpb" only={p.b as never} label={`The atlas room drawn as ${B.title}`} /><figcaption>{B.title}</figcaption></figure>
+      <label class="cp-range" hidden data-wipe-control>Move the boundary between {A.title} and {B.title}
+        <input type="range" min="0" max="100" value="50" />
+      </label>
+    </div>
+    <p class="see-meta">The same room, window, seat, plant and light, drawn twice for this atlas. <a href="/seeing/reframing">See all ten ways</a>.</p>
+
+    <section aria-labelledby="cp-diff-title">
+      <h2 id="cp-diff-title">What actually differs</h2>
+      <div class="cp-table" tabindex="0" role="region" aria-labelledby="cp-diff-title">
+        <table>
+          <thead><tr><th scope="col">Dimension</th><th scope="col">{A.title}</th><th scope="col">{B.title}</th></tr></thead>
+          <tbody>{rows.map((r) => <tr><th scope="row">{r.dimension}</th><td set:html={r.a} /><td set:html={r.b} /></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="cp-take-title">
+      <h2 id="cp-take-title">What the comparison shows</h2>
+      <p class="cp-take" set:html={takeaway} />
+      <p>
+        {link(A) ? <a href={link(A)}>Read the {A.title} chapter</a> : <span class="see-meta">The {A.title} chapter is not yet written.</span>}
+        {' · '}
+        {link(B) ? <a href={link(B)}>Read the {B.title} chapter</a> : <span class="see-meta">The {B.title} chapter is not yet written.</span>}
+      </p>
+    </section>
+
+    <section class="cp-sources" aria-labelledby="cp-sources-title">
+      <h2 id="cp-sources-title">Sources</h2>
+      <ol>{sources.map((s) => <li id={`source-${s.id}`}>{s.url ? <a href={s.url}>{s.cite}</a> : s.cite}</li>)}</ol>
+      <p><a href="/seeing/map">How these connect on the map</a> · <a href="/seeing">Back to the camera obscura</a></p>
+    </section>
+  </main>
+  <script>
+    // The wipe: one room over the other, divided where the visitor sets the range.
+    const wipe = document.querySelector<HTMLElement>('[data-wipe]');
+    const control = wipe?.querySelector<HTMLElement>('[data-wipe-control]');
+    const input = control?.querySelector('input');
+    if (wipe && control && input) {
+      wipe.classList.add('is-wipe');
+      control.hidden = false;
+      const set = () => wipe.style.setProperty('--cp-split', `${input.value}%`);
+      input.addEventListener('input', set);
+      set();
+    }
+  </script>
+</Layout>

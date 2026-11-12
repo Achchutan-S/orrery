@@ -1,0 +1,22 @@
+/* The laboratory: a drafting bench. The window on the left, the decisions on the right. */
+@layer experience {
+  [data-experience='seeing'] .lb-bench { display: grid; gap: 2rem; margin-block-start: 2rem; padding: clamp(1rem, 3vw, 2rem); border: 1px solid var(--see-line); background: #241c18; }
+  @media (min-width: 56rem) { [data-experience='seeing'] .lb-bench { grid-template-columns: minmax(16rem, 2fr) minmax(0, 3fr); align-items: start; } }
+  [data-experience='seeing'] .lb-figure { margin: 0; view-transition-name: see-aperture; }
+  [data-experience='seeing'] .lb-window { display: block; inline-size: 100%; max-inline-size: 22rem; margin-inline: auto; block-size: auto; box-shadow: 0 20px 60px rgb(0 0 0 / 0.5); }
+  [data-experience='seeing'] .lb-readout { min-block-size: 3.5rem; margin-block-start: 1rem; font: 400 1rem/1.4 var(--see-sign); color: var(--see-pin); }
+  [data-experience='seeing'] .lb-controls { display: grid; gap: 0.6rem 1.5rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); font: 400 0.9375rem/1.3 var(--see-sign); }
+  [data-experience='seeing'] .lb-controls[hidden], [data-experience='seeing'] .lb-nojs[hidden] { display: none; }
+  [data-experience='seeing'] .lb-range { display: grid; gap: 0.1rem; }
+  [data-experience='seeing'] .lb-range__name { font-weight: 650; color: var(--see-pin); }
+  [data-experience='seeing'] .lb-range input { inline-size: 100%; min-block-size: 44px; margin: 0; accent-color: var(--see-pin); }
+  [data-experience='seeing'] .lb-range__ends { display: flex; justify-content: space-between; color: var(--see-soot); font-size: 0.8125rem; }
+  [data-experience='seeing'] .lb-presets { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 0; padding: 0.75rem; border: 1px solid var(--see-line); }
+  [data-experience='seeing'] .lb-presets legend { padding-inline: 0.4rem; color: var(--see-soot); }
+  [data-experience='seeing'] .lb-presets button { min-block-size: 44px; padding-inline: 0.9rem; border: 1px solid var(--see-soot); background: none; color: var(--see-wash); font: inherit; cursor: pointer; }
+  [data-experience='seeing'] .lb-presets button:hover { border-color: var(--see-pin); color: var(--see-pin); }
+  [data-experience='seeing'] .lb-honest p { max-inline-size: 44rem; }
+  [data-experience='seeing'] .lb-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 1.5rem; margin: 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .lb-gallery svg { display: block; inline-size: 100%; block-size: auto; margin-block-end: 0.4rem; }
+  [data-experience='seeing'] .lb-gallery li { font: 400 0.9375rem/1.3 var(--see-sign); }
+}

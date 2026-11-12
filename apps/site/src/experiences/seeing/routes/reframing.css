@@ -1,0 +1,34 @@
+/* Reframing the world: the room as a projected image on the chamber wall, lenses beside it. */
+@layer experience {
+  [data-experience='seeing'] .rf-stage { display: grid; gap: 2rem; margin-block-start: 2rem; }
+  @media (min-width: 64rem) {
+    [data-experience='seeing'] .rf-stage { grid-template-columns: minmax(0, 3fr) minmax(18rem, 2fr); align-items: start; }
+    [data-experience='seeing'] .rf-figure { position: sticky; inset-block-start: 1.5rem; }
+  }
+  [data-experience='seeing'] .rf-figure { margin: 0; view-transition-name: see-aperture; }
+  [data-experience='seeing'] .rf-figure .rf-room { box-shadow: 0 0 0 1px var(--see-line), 0 30px 80px rgb(0 0 0 / 0.45); }
+  [data-experience='seeing'] .rf-style { display: none; }
+  [data-experience='seeing'] .rf:has(#rf-skel:checked) .rf-skeleton { opacity: 1; }
+  [data-experience='seeing'] .rf-legend { margin: 0 0 0.5rem; font-weight: 700; color: var(--see-pin); }
+  [data-experience='seeing'] .rf-lenses { display: grid; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); gap: 0.25rem 0.75rem; font: 400 1rem/1.2 var(--see-sign); }
+  [data-experience='seeing'] .rf-lenses label, [data-experience='seeing'] .rf-skel { display: inline-flex; align-items: center; gap: 0.5rem; min-block-size: 44px; cursor: pointer; }
+  [data-experience='seeing'] .rf-lenses label:has(input:checked) { color: var(--see-pin); font-weight: 650; }
+  [data-experience='seeing'] .rf input { accent-color: var(--see-pin); margin: 0; }
+  [data-experience='seeing'] .rf-skel { margin-block: 0.5rem; font: 400 1rem/1.2 var(--see-sign); }
+  [data-experience='seeing'] .rf-read { display: none; }
+  [data-experience='seeing'] .rf-read h2 { margin-block: 1rem 0.5rem; }
+  [data-experience='seeing'] .rf-about { margin-block-start: 4rem; }
+  [data-experience='seeing'] .rf-about p { max-inline-size: 44rem; }
+  [data-experience='seeing'] .rf:has(#rf-s-gothic:checked) :is(.rf-style--gothic, .rf-read--gothic),
+  [data-experience='seeing'] .rf:has(#rf-s-renaissance:checked) :is(.rf-style--renaissance, .rf-read--renaissance),
+  [data-experience='seeing'] .rf:has(#rf-s-art-nouveau:checked) :is(.rf-style--art-nouveau, .rf-read--art-nouveau),
+  [data-experience='seeing'] .rf:has(#rf-s-bauhaus:checked) :is(.rf-style--bauhaus, .rf-read--bauhaus),
+  [data-experience='seeing'] .rf:has(#rf-s-brutalism:checked) :is(.rf-style--brutalism, .rf-read--brutalism),
+  [data-experience='seeing'] .rf:has(#rf-s-minimalism:checked) :is(.rf-style--minimalism, .rf-read--minimalism),
+  [data-experience='seeing'] .rf:has(#rf-s-wabi-sabi:checked) :is(.rf-style--wabi-sabi, .rf-read--wabi-sabi),
+  [data-experience='seeing'] .rf:has(#rf-s-cyberpunk:checked) :is(.rf-style--cyberpunk, .rf-read--cyberpunk),
+  [data-experience='seeing'] .rf:has(#rf-s-frutiger-aero:checked) :is(.rf-style--frutiger-aero, .rf-read--frutiger-aero),
+  [data-experience='seeing'] .rf:has(#rf-s-weirdcore:checked) :is(.rf-style--weirdcore, .rf-read--weirdcore) { display: block; }
+  [data-experience='seeing'] .rf:has(input[name='rf-style']:checked) .rf-style { animation: rf-in 0.5s ease-out; }
+  @keyframes rf-in { from { opacity: 0.2; } to { opacity: 1; } }
+}

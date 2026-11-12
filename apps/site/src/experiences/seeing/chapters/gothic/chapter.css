@@ -1,0 +1,222 @@
+/* Gothic: dim stone, coloured light, a blackletter title and a pen-made reading face. Headings are
+   rubricated, red as in manuscripts. The reading column is narrow and tall, like the nave. */
+@layer experience {
+  @font-face { font-family: 'G Textura'; src: url('/seeing/fonts/unifraktur-cook-700/face.woff2') format('woff2'); font-weight: 700; font-display: swap; }
+  @font-face { font-family: 'G Alegreya'; src: url('/seeing/fonts/alegreya-400-700/face.woff2') format('woff2'); font-weight: 400 700; font-display: swap; }
+  @font-face { font-family: 'G Alegreya'; src: url('/seeing/fonts/alegreya-400-700-italic/face.woff2') format('woff2'); font-weight: 400 700; font-style: italic; font-display: swap; }
+
+  [data-experience='seeing'] {
+    color-scheme: dark;
+    --g-night: #17151b;
+    --g-floor: #1f1c22;
+    --g-stone: #b7ab98;
+    --g-text: #ece4d3;
+    --g-dim: #b9ae9d;
+    --g-rubric: #e46a6a;
+    --g-gold: #e0a630;
+    --g-blue: #6f8fe6;
+    --g-read: 'G Alegreya', 'Palatino Linotype', Palatino, Georgia, serif;
+  }
+  [data-experience='seeing'] body {
+    margin: 0;
+    background: var(--g-night);
+    color: var(--g-text);
+    font: 400 1.1875rem/1.65 var(--g-read);
+  }
+  [data-experience='seeing'] .g a { color: #f3d79a; text-underline-offset: 0.18em; }
+  [data-experience='seeing'] .g { overflow-x: clip; }
+
+  /* The nave: the elevation runs the height of several screens. */
+  [data-experience='seeing'] .g-nave {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-block-size: min(270svh, 300vw);
+    overflow: hidden;
+  }
+  [data-experience='seeing'] .g-elev {
+    position: absolute;
+    inset: 0;
+    view-transition-name: see-aperture;
+  }
+  [data-experience='seeing'] .g-elev svg { display: block; inline-size: 100%; block-size: 100%; }
+  [data-experience='seeing'] .g-side { opacity: 0.38; }
+  [data-experience='seeing'] .g-glow { opacity: 0.05; mix-blend-mode: screen; transition: opacity 1.2s; }
+  [data-experience='seeing'] .g-beams { display: none; mix-blend-mode: screen; }
+  [data-experience='seeing'] .g:has(#g-hour-dawn:checked) .g-beams--dawn,
+  [data-experience='seeing'] .g:has(#g-hour-morning:checked) .g-beams--morning,
+  [data-experience='seeing'] .g:has(#g-hour-noon:checked) .g-beams--noon,
+  [data-experience='seeing'] .g:has(#g-hour-afternoon:checked) .g-beams--afternoon,
+  [data-experience='seeing'] .g:has(#g-hour-evening:checked) .g-beams--evening { display: inline; animation: g-fade 1.4s ease-out both; }
+  [data-experience='seeing'] .g:has(#g-hour-noon:checked) .g-glow { opacity: 0.2; }
+  [data-experience='seeing'] .g:has(#g-hour-dawn:checked) .g-glow,
+  [data-experience='seeing'] .g:has(#g-hour-evening:checked) .g-glow { opacity: 0; }
+  @keyframes g-fade { from { opacity: 0; } to { opacity: 1; } }
+
+  [data-experience='seeing'] .g-head {
+    position: relative;
+    padding: clamp(5.5rem, 12vh, 8rem) clamp(1rem, 5vw, 4rem) 0;
+    text-shadow: 0 2px 18px rgb(0 0 0 / 0.9);
+  }
+  [data-experience='seeing'] .g-title {
+    margin: 0;
+    font: 700 clamp(4rem, 13vw, 10rem)/0.85 'G Textura', 'Old English Text MT', serif;
+    color: var(--g-text);
+  }
+  [data-experience='seeing'] .g-thesis {
+    margin: 0.75rem 0 0;
+    max-inline-size: 16rem;
+    font-style: italic;
+    font-size: 1.25rem;
+    color: var(--g-text);
+  }
+  [data-experience='seeing'] .g-height {
+    position: relative;
+    margin: auto 0 8rem;
+    padding: 2rem clamp(1rem, 5vw, 4rem);
+    max-inline-size: 20rem;
+    font-style: italic;
+    color: var(--g-text);
+    text-shadow: 0 2px 14px rgb(0 0 0 / 0.95);
+  }
+
+  /* The floor, where the light lands. */
+  [data-experience='seeing'] .g-floor {
+    position: relative;
+    z-index: 1;
+    margin: -6rem auto 0;
+    padding: 2rem clamp(1rem, 4vw, 2.5rem) 2.5rem;
+    inline-size: min(40rem, 100%);
+    background: rgb(15 13 18 / 0.9);
+    border-block-start: 3px double var(--g-stone);
+  }
+  [data-experience='seeing'] .g-label {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.5rem 1rem;
+    margin: 0 0 1.5rem;
+    font-size: 0.9375rem;
+  }
+  [data-experience='seeing'] .g-label dt { color: var(--g-rubric); font-style: italic; }
+  [data-experience='seeing'] .g-label dd { margin: 0; color: var(--g-dim); }
+  [data-experience='seeing'] .g-encounter:first-of-type::first-letter {
+    float: left;
+    margin: 0.06em 0.12em 0 0;
+    font: 700 3.6em/0.8 'G Textura', serif;
+    color: var(--g-rubric);
+  }
+  [data-experience='seeing'] .g-hours {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.5rem 0 0;
+    padding: 0;
+    border: 0;
+  }
+  [data-experience='seeing'] .g-hours legend { margin-block-end: 0.75rem; color: var(--g-rubric); font-style: italic; }
+  [data-experience='seeing'] .g-hour {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-block-size: 44px;
+    padding: 0.25rem 0.9rem 0.25rem 0.7rem;
+    border: 1px solid #5f574f;
+    border-radius: 999px 999px 4px 4px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .g-hour:has(input:checked) { border-color: var(--g-gold); background: rgb(224 166 48 / 0.15); }
+  [data-experience='seeing'] .g-hour input { margin: 0; accent-color: var(--g-gold); }
+  [data-experience='seeing'] .g-pools {
+    position: absolute;
+    inset: auto -30% 100%;
+    block-size: 45vh;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    background:
+      radial-gradient(ellipse 30% 40% at var(--g-pool-x, 55%) 60%, rgb(31 63 153 / 0.55), transparent 70%),
+      radial-gradient(ellipse 22% 35% at calc(var(--g-pool-x, 55%) + 14%) 70%, rgb(163 24 43 / 0.45), transparent 70%),
+      radial-gradient(ellipse 18% 30% at calc(var(--g-pool-x, 55%) - 12%) 72%, rgb(224 166 48 / 0.35), transparent 70%);
+    filter: blur(14px);
+    transition: opacity 1.2s;
+  }
+  [data-experience='seeing'] .g:has(#g-hour-dawn:checked) .g-pools { --g-pool-x: 85%; opacity: 0.5; }
+  [data-experience='seeing'] .g:has(#g-hour-morning:checked) .g-pools { --g-pool-x: 68%; opacity: 0.8; }
+  [data-experience='seeing'] .g:has(#g-hour-noon:checked) .g-pools { --g-pool-x: 50%; opacity: 1; }
+  [data-experience='seeing'] .g:has(#g-hour-afternoon:checked) .g-pools { --g-pool-x: 32%; opacity: 0.8; }
+  [data-experience='seeing'] .g:has(#g-hour-evening:checked) .g-pools { --g-pool-x: 15%; opacity: 0.5; }
+
+  /* The reading: one tall column between two shafts. */
+  [data-experience='seeing'] .g-body {
+    position: relative;
+    margin: 0 auto;
+    padding: 5rem clamp(1.25rem, 5vw, 3rem) 6rem;
+    max-inline-size: 42rem;
+    border-inline: 3px double rgb(183 171 152 / 0.35);
+  }
+  [data-experience='seeing'] .g-h2 {
+    margin: 4rem 0 1.5rem;
+    font: 700 clamp(2.25rem, 6vw, 3.5rem)/1 'G Textura', serif;
+    color: var(--g-text);
+  }
+  [data-experience='seeing'] .g-body > section:first-child .g-h2 { margin-block-start: 0; }
+  [data-experience='seeing'] .g .see-block { margin-block-end: 2.25rem; }
+  [data-experience='seeing'] .g .see-block__title {
+    margin: 0 0 0.5rem;
+    font: italic 700 1.375rem/1.25 var(--g-read);
+    color: var(--g-rubric);
+  }
+  [data-experience='seeing'] .g .see-block p { margin: 0 0 1rem; }
+  [data-experience='seeing'] .g .see-block--interpretation,
+  [data-experience='seeing'] .g .see-block--editor {
+    padding-inline-start: 1.25rem;
+    border-inline-start: 3px solid var(--g-blue);
+  }
+  [data-experience='seeing'] .g .see-block__kind { color: var(--g-blue); }
+
+  [data-experience='seeing'] .g-panel { margin: 3rem auto; max-inline-size: 22rem; text-align: center; }
+  [data-experience='seeing'] .g-panel img {
+    display: block;
+    margin-inline: auto;
+    inline-size: 100%;
+    block-size: auto;
+    box-shadow: 0 0 0 10px #0d0b10, 0 0 60px 10px rgb(31 63 153 / 0.45), 0 0 120px 30px rgb(163 24 43 / 0.25);
+  }
+  [data-experience='seeing'] .g-panel figcaption { margin-block-start: 1.5rem; font-size: 0.9375rem; color: var(--g-dim); }
+
+  [data-experience='seeing'] .g-section-fig { margin: 2rem 0; }
+  [data-experience='seeing'] .g-section-fig svg { display: block; inline-size: 100%; block-size: auto; background: #120f15; }
+  [data-experience='seeing'] .g-section-key { padding-inline-start: 1.5rem; font-size: 1rem; color: var(--g-dim); }
+  [data-experience='seeing'] .g-thrust { animation: g-flow 1.6s linear infinite; }
+  @keyframes g-flow { to { stroke-dashoffset: -40; } }
+  @media (prefers-reduced-motion: reduce) {
+    [data-experience='seeing'] .g-thrust { animation: none; }
+  }
+
+  [data-experience='seeing'] .g-heights figure { margin: 1rem 0; }
+  [data-experience='seeing'] .g-heights svg { display: block; inline-size: 100%; max-inline-size: 30rem; block-size: auto; }
+  [data-experience='seeing'] .g-heights-key { margin: 1rem 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .g-heights-key span { color: var(--g-rubric); font-style: italic; }
+  [data-experience='seeing'] .g-heights figcaption p { color: var(--g-dim); font-size: 0.9375rem; }
+
+  [data-experience='seeing'] .g-study { margin: 4rem 0; border-block: 3px double rgb(183 171 152 / 0.35); }
+  [data-experience='seeing'] .g-study summary {
+    display: flex;
+    align-items: center;
+    min-block-size: 3.5rem;
+    font: 700 1.6rem/1.2 'G Textura', serif;
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .g-study[open] summary { margin-block-end: 1.5rem; }
+
+  [data-experience='seeing'] .g-works ol { margin: 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .g-works li { padding: 0.6rem 0; border-block-end: 1px solid rgb(183 171 152 / 0.2); }
+  [data-experience='seeing'] .g-works__when { display: inline-block; min-inline-size: 7.5rem; color: var(--g-rubric); font-style: italic; }
+  [data-experience='seeing'] .g-works__where { color: var(--g-dim); }
+  [data-experience='seeing'] .g-recognise { margin: 4rem 0 0; font-size: 1.375rem; line-height: 1.5; }
+  [data-experience='seeing'] .g-recognise span { color: var(--g-rubric); font-style: italic; }
+
+  @media (max-width: 40rem) {
+    [data-experience='seeing'] .g-body { border-inline: 0; }
+  }
+}

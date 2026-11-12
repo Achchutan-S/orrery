@@ -1,0 +1,123 @@
+---
+// The relationship map: a hand-placed SVG argument. Each kind of relationship has its own line
+// pattern and end mark, named in a legend, so nothing depends on colour. Every edge is also a
+// sentence with sources in the list below the map, which is the accessible form of the whole map.
+// Filters are checkboxes (CSS); hovering or focusing a node lights its edges (small script).
+import Layout from '../house/Layout.astro';
+import { SUBJECTS, href } from '../data/atlas.ts';
+import { KINDS, NODES, RELATIONS, node } from '../data/relations.ts';
+import { source } from '../data/sources.ts';
+import '../house/house-pages.css';
+import './map.css';
+
+const built = new Set(SUBJECTS.filter((s) => s.built).map((s) => s.id));
+const order: string[] = [];
+const cite = (ids: string[]) => ids.map((id) => { source(id); if (!order.includes(id)) order.push(id); return order.indexOf(id) + 1; });
+const edges = RELATIONS.map((r, i) => {
+  const a = node(r.from)!; const b = node(r.to)!;
+  const mx = (a.x + b.x) / 2; const my = (a.y + b.y) / 2;
+  const dx = b.x - a.x; const dy = b.y - a.y; const len = Math.hypot(dx, dy) || 1;
+  const bend = 26 * (i % 2 ? 1 : -1);
+  const cx = mx - (dy / len) * bend; const cy = my + (dx / len) * bend;
+  // Stop short of the node labels so the end marks stay visible.
+  const pull = (x: number, y: number, tx: number, ty: number, d: number) => { const l = Math.hypot(tx - x, ty - y) || 1; return [x + ((tx - x) / l) * d, y + ((ty - y) / l) * d]; };
+  const [sx, sy] = pull(a.x, a.y, cx, cy, 14); const [ex, ey] = pull(b.x, b.y, cx, cy, 16);
+  return { ...r, d: `M${sx!.toFixed(1)} ${sy!.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${ex!.toFixed(1)} ${ey!.toFixed(1)}`, n: cite(r.sources), a, b };
+});
+const sourcesList = order.map(source);
+const kindLabel = (k: string) => KINDS.find((x) => x.id === k)!;
+---
+<Layout title="The relationship map" description="How the atlas's movements and aesthetics connect: succession, documented influence, reaction, revival, shared ancestry and loose resemblance, each with its reason and its sources." here="map">
+  <main id="main" class="hp mp">
+    <header>
+      <h1>The relationship map</h1>
+      <p class="hp__lede">Not every line on a map like this means the same thing. Here, each kind of relationship is drawn differently, explained in a sentence and backed by a source. Where two things only look alike, the map says so instead of drawing an arrow.</p>
+    </header>
+
+    <fieldset class="mp-filters">
+      <legend>Show relationships</legend>
+      {KINDS.map((k) => (
+        <label class={`mp-filter mp-filter--${k.id}`}>
+          <input type="checkbox" id={`mp-k-${k.id}`} checked />
+          <svg viewBox="0 0 60 12" aria-hidden="true"><path d="M2 6 H52" class={`mp-edge mp-edge--${k.id}`} marker-end={`url(#mp-end-${k.id})`} /></svg>
+          {k.label}
+        </label>
+      ))}
+    </fieldset>
+
+    <div class="mp-frame" tabindex="0" role="region" aria-label="Map; scroll sideways on small screens">
+      <svg class="mp-svg" viewBox="0 0 1200 760" aria-labelledby="mp-svg-title">
+        <title id="mp-svg-title">Map of relationships between the atlas's subjects. The same relationships are listed in text below.</title>
+        <defs>
+          {KINDS.map((k) => (
+            <marker id={`mp-end-${k.id}`} viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse" class={`mp-marker mp-marker--${k.id}`}>
+              {k.id === 'reaction' ? <path d="M10 0 V12" /> : k.id === 'ancestry' || k.id === 'resemblance' ? <circle cx="6" cy="6" r="2.5" /> : <path d="M0 0 L12 6 L0 12 Z" />}
+            </marker>
+          ))}
+        </defs>
+        <g class="mp-axis" aria-hidden="true">
+          <text x="70" y="740">antiquity</text><text x="160" y="740">1100s</text><text x="300" y="740">1400s</text><text x="560" y="740">1700s</text><text x="820" y="740">1900</text><text x="1100" y="740">today</text>
+        </g>
+        <g class="mp-edges" aria-hidden="true">
+          {edges.map((e) => <path d={e.d} class={`mp-edge mp-edge--${e.kind}`} data-from={e.from} data-to={e.to} marker-end={`url(#mp-end-${e.kind})`} />)}
+        </g>
+        <g class="mp-nodes">
+          {NODES.map((n) => {
+            const isBuilt = built.has(n.id);
+            const body = <><circle cx={n.x} cy={n.y} r={n.context ? 6 : 9} class="mp-dot" /><text x={n.x} y={n.y - 16} class="mp-label">{n.label}</text></>;
+            return isBuilt
+              ? <a href={href(n.id)} class="mp-node is-open" data-node={n.id}>{body}</a>
+              : <g class={`mp-node ${n.context ? 'is-context' : 'is-closed'}`} data-node={n.id}>{body}</g>;
+          })}
+        </g>
+      </svg>
+    </div>
+    <p class="see-meta mp-key">Bright, underlined names are open chapters and lead to them. Dim names are not yet written; italic names are context, not chapters.</p>
+
+    <section aria-labelledby="mp-list-title">
+      <h2 id="mp-list-title">Every relationship, in words</h2>
+      {KINDS.map((k) => {
+        const list = edges.filter((e) => e.kind === k.id);
+        return list.length > 0 && (
+          <section class={`mp-group mp-group--${k.id}`} aria-labelledby={`mp-g-${k.id}`}>
+            <h3 id={`mp-g-${k.id}`}>{k.label}</h3>
+            <ul>
+              {list.map((e) => (
+                <li>
+                  <p class="mp-pair">
+                    {built.has(e.from) ? <a href={href(e.from)}>{e.a.label}</a> : <span>{e.a.label}</span>}
+                    <span class="mp-verb"> {kindLabel(e.kind).reads} </span>
+                    {built.has(e.to) ? <a href={href(e.to)}>{e.b.label}</a> : <span>{e.b.label}</span>}
+                  </p>
+                  <p>{e.text} {e.n.map((n, j) => <sup class="see-cite"><a href={`#source-${order[n - 1]}`} aria-label={`source ${n}`}>{n}</a>{j < e.n.length - 1 ? ',' : ''}</sup>)}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+    </section>
+
+    <section class="mp-sources" aria-labelledby="mp-sources-title">
+      <h2 id="mp-sources-title">Sources</h2>
+      <ol>{sourcesList.map((s) => <li id={`source-${s.id}`}>{s.url ? <a href={s.url}>{s.cite}</a> : s.cite}</li>)}</ol>
+    </section>
+  </main>
+  <script>
+    // Light the edges of the node under the pointer or the keyboard focus.
+    const svg = document.querySelector<SVGSVGElement>('.mp-svg');
+    if (svg) {
+      const light = (id: string | null) => {
+        svg.classList.toggle('is-focusing', !!id);
+        svg.querySelectorAll<SVGPathElement>('.mp-edge').forEach((e) => e.classList.toggle('is-lit', !!id && (e.dataset.from === id || e.dataset.to === id)));
+        svg.querySelectorAll<SVGElement>('.mp-node').forEach((n) => n.classList.toggle('is-lit', n.dataset.node === id));
+      };
+      svg.querySelectorAll<SVGElement>('.mp-node').forEach((n) => {
+        n.addEventListener('pointerenter', () => light(n.dataset.node ?? null));
+        n.addEventListener('pointerleave', () => light(null));
+        n.addEventListener('focusin', () => light(n.dataset.node ?? null));
+        n.addEventListener('focusout', () => light(null));
+      });
+    }
+  </script>
+</Layout>

@@ -1,0 +1,237 @@
+---
+// Gothic: the page is a nave. One bay of a great church, drawn at build time from pointed-arch
+// geometry, runs the full height of the first screens, so the visitor descends thirty-seven
+// metres to the floor where the reading begins. The hour of day (radio buttons, CSS only) moves the
+// coloured light. Everything is static SVG and CSS: no script beyond the house's.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import { image } from '../../data/assets.ts';
+import { GLASS, archPath, lancet, medallionWindow, rose } from './geometry.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const glassPanel = image('louis-ix-glass.webp');
+// Prose rendered in reading order, so citation numbers run 1, 2, 3 down the page.
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const heightsNote = rich('Heights rounded {britannica-gothic}. Part of the Beauvais vault fell in 1284 {murray-1989}.');
+const study = blocks(text.study);
+const sources = notes();
+
+// One bay, 600 wide and 1800 high: floor at 1800, vault apex at 40.
+const PIER = [[20, 110], [490, 580]] as const;
+const windowFrame = lancet(130, 470, 520, 290, 880);
+const lancets = [lancet(150, 290, 600, 120, 870), lancet(310, 450, 600, 120, 870)];
+const panes = [medallionWindow(150, 290, 470, 870, 11), medallionWindow(310, 450, 470, 870, 23)];
+const petals = rose(300, 382, 92, 6, 7);
+const triforium = [0, 1, 2, 3].map((i) => {
+  const x0 = 122 + i * 92; return { x0, x1: x0 + 80 };
+});
+const joints = Array.from({ length: 52 }, (_, i) => 1800 - i * 32);
+// One figure at the scale of the drawing: 1,760 units for 37 metres, so 1.7 metres is about 81.
+const person = 'M300 1719 a10 10 0 1 1 0.1 0 M290 1742 h20 l4 40 h-6 l-2 18 h-12 l-2-18 h-6 Z';
+
+// Light by the hour: angle from the vertical (degrees), strength, and the colour of the day.
+const HOURS = [
+  { id: 'dawn', label: 'Dawn', angle: 58, strength: 0.32, tint: '#f2b8a0' },
+  { id: 'morning', label: 'Morning', angle: 34, strength: 0.55, tint: '#f5dcb0' },
+  { id: 'noon', label: 'Noon', angle: 8, strength: 0.85, tint: '#fff4d8' },
+  { id: 'afternoon', label: 'Afternoon', angle: -32, strength: 0.55, tint: '#f6d9a2' },
+  { id: 'evening', label: 'Evening', angle: -56, strength: 0.34, tint: '#f0a46a' },
+] as const;
+const BEAMS = [{ x0: 160, x1: 230, c: GLASS.blue }, { x0: 250, x1: 330, c: GLASS.ruby }, { x0: 360, x1: 440, c: GLASS.gold }];
+const beam = (b: (typeof BEAMS)[number], angle: number) => {
+  const d = Math.tan((angle * Math.PI) / 180) * 920;
+  const spread = 40 + Math.abs(d) * 0.08;
+  return `${b.x0},860 ${b.x1},860 ${(b.x1 + d + spread).toFixed(0)},1800 ${(b.x0 + d - spread).toFixed(0)},1800`;
+};
+
+// The section: why the wall could become glass.
+const flyer = (x0: number, y0: number, x1: number, y1: number) => `M${x0} ${y0} Q ${(x0 + x1) / 2} ${Math.min(y0, y1) - 40} ${x1} ${y1}`;
+
+// Vault heights for the comparison (metres, rounded) at 10 units per metre.
+const HEIGHTS = [
+  { name: 'Chartres', m: 37 },
+  { name: 'Amiens', m: 42 },
+  { name: 'Beauvais, choir', m: 48 },
+];
+---
+<Layout title="Gothic: the architecture of reaching upward" description="Gothic architecture as an encounter: one bay of a cathedral, its coloured light by the hour, and how the wall became glass." here="gothic" preload={['unifraktur-cook-700.woff2', 'alegreya-400-700.woff2']}>
+  <main id="main" class="g">
+    <section class="g-nave" aria-labelledby="g-title">
+      <div class="g-elev" aria-hidden="true">
+        <svg viewBox="-600 0 1800 1800" preserveAspectRatio="xMidYMin slice">
+          <defs>
+            <linearGradient id="g-vault" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d0b10" /><stop offset="1" stop-color="#2a2630" /></linearGradient>
+            <linearGradient id="g-stone" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4a443f" /><stop offset="0.5" stop-color="#6e665e" /><stop offset="1" stop-color="#3d3833" /></linearGradient>
+            {BEAMS.map((b, i) => <linearGradient id={`g-beam-${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color={b.c} stop-opacity="0.9" /><stop offset="1" stop-color={b.c} stop-opacity="0" /></linearGradient>)}
+            <clipPath id="g-clip-0"><path d={lancets[0]} /></clipPath>
+            <clipPath id="g-clip-1"><path d={lancets[1]} /></clipPath>
+            <clipPath id="g-clip-rose"><circle cx="300" cy="382" r="92" /></clipPath>
+            <g id="g-bay">
+              <rect x="0" y="0" width="600" height="1800" fill="url(#g-vault)" />
+              <path d={`${archPath(20, 580, 560, 520)} L580 1800 L20 1800 Z`} fill="#1a171d" />
+              <path d={archPath(20, 580, 560, 520)} fill="none" stroke="#7a7066" stroke-width="10" />
+              <path d={archPath(110, 490, 560, 330)} fill="none" stroke="#5f574f" stroke-width="5" />
+              <path d={windowFrame} fill="#3a3530" />
+              {panes.map((pane, i) => (
+                <g clip-path={`url(#g-clip-${i})`} stroke="#130f14" stroke-width="1.6" stroke-linejoin="round">
+                  {pane.pieces.map((c) => <polygon points={c.points} fill={c.fill} />)}
+                  {pane.medallions.map((c) => <polygon points={c.points} fill={c.fill} />)}
+                </g>
+              ))}
+              <g class="g-lead" fill="none" stroke="#120f12" stroke-width="2.2">
+                {lancets.map((l) => <path d={l} stroke-width="6" stroke="#3a3530" />)}
+                {panes.flatMap((p, i) => p.bars.map((y) => <line x1={i ? 310 : 150} x2={i ? 450 : 290} y1={y} y2={y} stroke-width="5" />))}
+              </g>
+              <circle cx="300" cy="382" r="92" fill={GLASS.deep} />
+              <g clip-path="url(#g-clip-rose)">{petals.map((p) => <path d={p.path} fill={p.fill} stroke="#3a3530" stroke-width="7" />)}</g>
+              <circle cx="300" cy="382" r="22" fill={GLASS.gold} stroke="#3a3530" stroke-width="7" />
+              <circle cx="300" cy="382" r="92" fill="none" stroke="#3a3530" stroke-width="10" />
+              <rect x="110" y="880" width="380" height="24" fill="#5f574f" />
+              <rect x="110" y="1056" width="380" height="20" fill="#5f574f" />
+              <rect x="110" y="904" width="380" height="152" fill="#141117" />
+              {triforium.map((t) => <path d={`${archPath(t.x0, t.x1, 980, 56)} L${t.x1} 1056 L${t.x0} 1056 Z`} fill="#0a080c" stroke="#6e665e" stroke-width="5" />)}
+              <path d={`${archPath(110, 490, 1440, 330)} L490 1800 L110 1800 Z`} fill="#0e0c11" />
+              <path d={archPath(110, 490, 1440, 330)} fill="none" stroke="#6e665e" stroke-width="12" />
+              <path d={`${archPath(280, 320, 1560, 70)} L320 1700 L280 1700 Z`} fill="#3b4a78" opacity="0.55" />
+              {PIER.map(([a, b]) => (
+                <g>
+                  <rect x={a} y="560" width={b - a} height="1240" fill="url(#g-stone)" />
+                  <rect x={a + 8} y="560" width="12" height="1240" fill="#7d746a" />
+                  <rect x={(a + b) / 2 - 6} y="560" width="12" height="1240" fill="#8a8075" />
+                  <rect x={b - 20} y="560" width="12" height="1240" fill="#7d746a" />
+                  {joints.filter((y) => y > 560).map((y) => <line x1={a} x2={b} y1={y} y2={y} stroke="#2e2a26" stroke-width="1.2" opacity="0.6" />)}
+                </g>
+              ))}
+              <rect x="0" y="1780" width="600" height="20" fill="#2e2a26" />
+            </g>
+          </defs>
+          <use href="#g-bay" x="-600" class="g-side" />
+          <use href="#g-bay" x="600" class="g-side" />
+          <use href="#g-bay" />
+          <path class="g-glow" d={windowFrame} fill="#fff6dc" />
+          {HOURS.map((h) => (
+            <g class={`g-beams g-beams--${h.id}`}>
+              {BEAMS.map((b, i) => <polygon points={beam(b, h.angle)} fill={`url(#g-beam-${i})`} opacity={h.strength} />)}
+            </g>
+          ))}
+          <path d={person} fill="#f3eadb" />
+        </svg>
+      </div>
+
+      <header class="g-head">
+        <h1 id="g-title" class="g-title">Gothic</h1>
+        <p class="g-thesis">{text.thesis}</p>
+      </header>
+
+      <p class="g-height">Thirty-seven metres down to the floor. The figure standing there is drawn to scale.</p>
+
+    </section>
+
+    <div class="g-floor">
+        <dl class="g-label">
+          <div><dt>Movement</dt><dd>Part I, the history of art and design</dd></div>
+          <div><dt>Period</dt><dd>{text.period}</dd></div>
+          <div><dt>Where</dt><dd>{text.place}</dd></div>
+        </dl>
+        {encounter.map((p) => <p class="g-encounter" set:html={p} />)}
+        <fieldset class="g-hours">
+          <legend>Choose the hour, and watch the light</legend>
+          {HOURS.map((h, i) => (
+            <label class="g-hour"><input type="radio" name="g-hour" id={`g-hour-${h.id}`} checked={h.id === 'morning'} /> <span>{h.label}</span></label>
+          ))}
+        </fieldset>
+        <div class="g-pools" aria-hidden="true"></div>
+      </div>
+
+    <div class="g-body">
+      <section class="g-understand" aria-labelledby="g-understand-title">
+        <h2 id="g-understand-title" class="g-h2">Understand</h2>
+        <Blocks blocks={understand.slice(0, 2)} />
+        <figure class="g-panel">
+          <img src={`/seeing/images/${glassPanel.file.replace(/\.webp$/, '')}/image.webp`} width={glassPanel.width} height={glassPanel.height} alt={glassPanel.alt} loading="lazy" decoding="async" />
+          <figcaption><cite>{glassPanel.title}</cite>, {glassPanel.date}. {glassPanel.medium}. {glassPanel.institution} ({glassPanel.accession}). Public domain.</figcaption>
+        </figure>
+        <Blocks blocks={understand.slice(2)} />
+      </section>
+
+      <section class="g-structure" aria-labelledby="g-structure-title">
+        <h2 id="g-structure-title" class="g-h2">Why the wall could become glass</h2>
+        <p>Cut through the church and the trick is outside. Follow the arrows: the outward push of the vault is carried over the aisle by the flying buttress and down the buttress pier into the ground, so the wall between does not need to be solid.</p>
+        <figure class="g-section-fig">
+          <svg viewBox="0 0 1000 700" role="img" aria-labelledby="g-section-desc">
+            <desc id="g-section-desc">Cross-section of a Gothic church: a tall central nave with a pointed vault and high windows, lower aisles on either side, and outside them buttress piers connected to the upper nave walls by flying buttresses. Arrows show the vault's thrust passing along the flying buttresses and down the piers to the ground.</desc>
+            <rect x="0" y="672" width="1000" height="28" fill="#3a3530" />
+            <path d="M380 672 V220 M620 672 V220" stroke="#b7ab98" stroke-width="22" />
+            <path d="M380 330 V230 M620 330 V230" stroke={GLASS.blue} stroke-width="22" />
+            <path d={archPath(392, 608, 222, 120)} fill="none" stroke="#b7ab98" stroke-width="14" />
+            <path d="M370 210 L500 70 L630 210" fill="none" stroke="#8a8075" stroke-width="10" />
+            <path d="M380 420 L250 470 V672 M620 420 L750 470 V672" fill="none" stroke="#8a8075" stroke-width="12" />
+            <rect x="160" y="300" width="56" height="372" fill="#8a8075" />
+            <rect x="784" y="300" width="56" height="372" fill="#8a8075" />
+            <path d="M168 300 L188 250 L208 300 M792 300 L812 250 L832 300" fill="#8a8075" />
+            <path d={flyer(216, 330, 370, 262)} fill="none" stroke="#b7ab98" stroke-width="14" />
+            <path d={flyer(784, 330, 630, 262)} fill="none" stroke="#b7ab98" stroke-width="14" />
+            <g class="g-thrust" fill="none" stroke="#e0a630" stroke-width="5" stroke-dasharray="12 8">
+              <path d="M392 225 Q 300 230 214 318 L188 640" />
+              <path d="M608 225 Q 700 230 786 318 L812 640" />
+            </g>
+            <path d="M178 626 L188 650 L198 626 M802 626 L812 650 L822 626" fill="#e0a630" />
+            <g class="g-num" font-size="30" fill="#ece4d3">
+              <text x="485" y="160">1</text><text x="640" y="295">2</text><text x="275" y="250">3</text><text x="130" y="460">4</text><text x="300" y="560">5</text>
+            </g>
+          </svg>
+          <figcaption>
+            <ol class="g-section-key">
+              <li>The vault pushes down and outward.</li>
+              <li>The clerestory: the upper wall, opened into glass.</li>
+              <li>A flying buttress carries the push over the aisle.</li>
+              <li>The buttress pier takes it to the ground.</li>
+              <li>The aisle, lower, with its own windows.</li>
+            </ol>
+          </figcaption>
+        </figure>
+      </section>
+
+      <section class="g-heights" aria-labelledby="g-heights-title">
+        <h2 id="g-heights-title" class="g-h2">How high</h2>
+        <figure>
+          <svg viewBox="0 0 560 560" aria-hidden="true">
+            <line x1="0" y1="540" x2="560" y2="540" stroke="#6e665e" stroke-width="2" />
+            {HEIGHTS.map((v, i) => {
+              const x0 = 40 + i * 170; const top = 540 - v.m * 10;
+              return <path d={`M${x0} 540 L${archPath(x0, x0 + 110, top + 95, 95).slice(1)} L${x0 + 110} 540`} fill="none" stroke="#b7ab98" stroke-width="3" />;
+            })}
+            <path d="M530 523 a3 3 0 1 1 .1 0 M527 528 h6 l1 12 h-8 Z" fill="#ece4d3" />
+          </svg>
+          <figcaption>
+            <ul class="g-heights-key">
+              {HEIGHTS.map((v) => <li><span>{v.name}</span> about {v.m} m to the vault</li>)}
+              <li><span>A person</span> 1.7 m, at the far right</li>
+            </ul>
+            <p set:html={heightsNote} />
+          </figcaption>
+        </figure>
+      </section>
+
+      <details class="g-study">
+        <summary>Study: theology, travel and afterlives</summary>
+        <Blocks blocks={study} />
+      </details>
+
+      <section class="g-works" aria-labelledby="g-works-title">
+        <h2 id="g-works-title" class="g-h2">Buildings to know</h2>
+        <ol>
+          {text.works.map((w) => <li><span class="g-works__when">{w.when}</span> <span class="g-works__what">{w.what}</span>{w.where && <span class="g-works__where">, {w.where}</span>}</li>)}
+        </ol>
+      </section>
+
+      <p class="g-recognise"><span>How to recognise it.</span> {text.recognise}</p>
+    </div>
+  </main>
+  <ChapterFoot id="gothic" notes={sources} images={[glassPanel]} />
+</Layout>

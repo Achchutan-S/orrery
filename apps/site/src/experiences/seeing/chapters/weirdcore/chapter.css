@@ -1,0 +1,59 @@
+/* Weirdcore: almost no styling. The browser's own defaults (Times, blue links, white) are the
+   familiar material; a few things are slightly wrong. Reading text never moves. */
+@layer experience {
+  [data-experience='seeing'] { color-scheme: light; }
+  [data-experience='seeing'] body {
+    margin: 0;
+    background: #fff;
+    color: #000;
+    font: 400 1.125rem/1.5 'Times New Roman', Times, serif;
+  }
+  [data-experience='seeing'] .k { max-inline-size: 44rem; padding: 5rem 1rem 3rem 1.15rem; overflow-x: clip; }
+  [data-experience='seeing'] .k a { color: #0000ee; }
+  [data-experience='seeing'] .k a:visited { color: #551a8b; }
+  [data-experience='seeing'] .k-title { margin: 0; font-size: 2em; }
+  [data-experience='seeing'] .k-thesis { margin: 0.25rem 0 0 0.4rem; }
+  [data-experience='seeing'] .k-visits { margin: 0.5rem 0 0; font-family: 'Courier New', monospace; font-size: 0.95rem; }
+  [data-experience='seeing'] .k hr { rotate: -0.35deg; }
+  [data-experience='seeing'] .k h2 { margin-inline-start: 0.2rem; font-size: 1.5em; }
+  [data-experience='seeing'] .k h2:nth-of-type(2) { margin-inline-start: 0; }
+
+  [data-experience='seeing'] .k-frame { margin: 1.5rem 0; }
+  [data-experience='seeing'] .k-picture { position: relative; inline-size: 100%; aspect-ratio: 16 / 10; overflow: hidden; border: 2px inset #c0c0c0; rotate: 0.6deg; view-transition-name: see-aperture; }
+  [data-experience='seeing'] .k-still, [data-experience='seeing'] .k-canvas { display: block; inline-size: 100%; block-size: 100%; image-rendering: pixelated; }
+  [data-experience='seeing'] .k-canvas[hidden] { display: none; }
+  [data-experience='seeing'] .k-caption {
+    position: absolute;
+    inset: auto 8% 9% auto;
+    display: none;
+    margin: 0;
+    font: 700 clamp(1rem, 4vw, 1.9rem)/1.1 Arial, Helvetica, sans-serif;
+    color: #fff;
+    -webkit-text-stroke: 1.5px #000;
+    paint-order: stroke fill;
+    text-shadow: 2px 2px 0 #000;
+    rotate: -2deg;
+  }
+  [data-experience='seeing'] .k:has(#k-c-0:checked) .k-caption--0,
+  [data-experience='seeing'] .k:has(#k-c-1:checked) .k-caption--1,
+  [data-experience='seeing'] .k:has(#k-c-2:checked) .k-caption--2,
+  [data-experience='seeing'] .k:has(#k-c-3:checked) .k-caption--3,
+  [data-experience='seeing'] .k:has(#k-c-4:checked) .k-caption--4 { display: block; }
+  [data-experience='seeing'] .k-frame figcaption { margin-block-start: 0.6rem; font-style: italic; font-size: 1rem; }
+
+  [data-experience='seeing'] .k-controls fieldset { margin: 0 0 0.75rem; }
+  [data-experience='seeing'] .k-controls fieldset[hidden] { display: none; }
+  [data-experience='seeing'] .k-controls label { display: inline-flex; align-items: center; gap: 0.3rem; min-block-size: 44px; margin-inline-end: 1rem; }
+
+  [data-experience='seeing'] .k-label { margin: 1.5rem 0; border: 1px solid #000; border-collapse: collapse; }
+  [data-experience='seeing'] .k-label caption { text-align: start; font-weight: 700; }
+  [data-experience='seeing'] .k-label th, [data-experience='seeing'] .k-label td { padding: 0.3rem 0.6rem; border: 1px solid #000; text-align: start; vertical-align: top; }
+  [data-experience='seeing'] .k .see-block__title { font-size: 1.17em; }
+  [data-experience='seeing'] .k .see-block__kind { font-family: 'Courier New', monospace; font-style: normal; font-size: 0.9rem; }
+  [data-experience='seeing'] .k-study summary { min-block-size: 44px; display: flex; align-items: center; cursor: pointer; }
+
+  /* Arriving: a moment of blank white, then the page, as if it took too long to load. */
+  ::view-transition-old(root) { animation: none; opacity: 0; }
+  ::view-transition-new(root) { animation: k-late 0.6s steps(1, end) both; }
+  @keyframes k-late { from { opacity: 0; } to { opacity: 1; } }
+}

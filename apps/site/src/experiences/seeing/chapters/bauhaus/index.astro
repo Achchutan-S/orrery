@@ -1,0 +1,88 @@
+---
+// Bauhaus: the page is constructed on a visible twelve-column module, set in a geometric sans and,
+// as the school's printed matter was from 1925, in lowercase (a switch restores capitals). The
+// hero is knowingly the poster version of the Bauhaus; the page then takes it apart. The
+// experiment is a colour-and-form exercise inspired by Kandinsky's 1923 questionnaire. CSS only.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const study = blocks(text.study);
+const disclaimer = rich('An exercise inspired by Kandinsky’s 1923 questionnaire, not a reproduction of it: the original was a printed sheet on which respondents filled in the shapes by hand and wrote down their reasons {harvard-questionnaire}.');
+const sources = notes();
+
+const SHAPES = [
+  { id: 'tri', name: 'Triangle', kandinsky: 'y', svg: '<polygon points="60,8 112,104 8,104" />' },
+  { id: 'sq', name: 'Square', kandinsky: 'r', svg: '<rect x="12" y="12" width="96" height="96" />' },
+  { id: 'ci', name: 'Circle', kandinsky: 'b', svg: '<circle cx="60" cy="60" r="50" />' },
+] as const;
+const COLOURS = [{ id: 'y', name: 'Yellow' }, { id: 'r', name: 'Red' }, { id: 'b', name: 'Blue' }] as const;
+const colourName = (id: string) => COLOURS.find((c) => c.id === id)!.name;
+---
+<Layout title="Bauhaus: the grammar of modern design" description="The Bauhaus as a constructed page: a school rather than a style, its workshops and myths, and a colour-and-form exercise after Kandinsky's 1923 questionnaire." here="bauhaus" tone="light" preload={['jost-300-700.woff2']}>
+  <main id="main" class="b">
+    <section class="b-hero" aria-labelledby="b-title">
+      <h1 id="b-title" class="b-title">Bauhaus</h1>
+      <div class="b-shapes" aria-hidden="true"><span class="b-sq"></span><span class="b-ci"></span><span class="b-tri"></span><span class="b-bar"></span></div>
+      <p class="b-thesis">{text.thesis}</p>
+      <dl class="b-label">
+        <div><dt>Movement</dt><dd>Part I, the history of art and design</dd></div>
+        <div><dt>Period</dt><dd>{text.period}</dd></div>
+        <div><dt>Where</dt><dd>{text.place}</dd></div>
+      </dl>
+      <label class="b-lower"><input type="checkbox" id="b-lower" checked /> Set in lowercase, the school’s house style from 1925</label>
+    </section>
+
+    <section class="b-intro" aria-label="Encounter">
+      {encounter.map((p, i) => <p class={i === 0 ? 'b-encounter b-encounter--lead' : 'b-encounter'} set:html={p} />)}
+    </section>
+
+    <section class="b-understand" aria-labelledby="b-understand-title">
+      <h2 id="b-understand-title" class="b-h2">How the school worked</h2>
+      <div class="b-modules"><Blocks blocks={understand} class="b-module" /></div>
+    </section>
+
+    <section class="b-quiz" aria-labelledby="b-quiz-title">
+      <h2 id="b-quiz-title" class="b-h2">Colour and form</h2>
+      <p class="b-quiz__ask">Give each shape the colour you think belongs to it. There is no right answer, though Kandinsky thought there was.</p>
+      <form class="b-quiz__grid" aria-label="Colour and form exercise">
+        {SHAPES.map((s) => (
+          <fieldset class={`b-q b-q--${s.id}`}>
+            <legend>{s.name}</legend>
+            <svg viewBox="0 0 120 112" aria-hidden="true" class="b-q__shape" set:html={s.svg} />
+            <div class="b-q__colours">
+              {COLOURS.map((c) => <label class={`b-swatch b-swatch--${c.id}`}><input type="radio" name={`b-${s.id}`} id={`b-${s.id}-${c.id}`} /> {c.name}</label>)}
+            </div>
+            <p class="b-q__match">Same as Kandinsky</p>
+          </fieldset>
+        ))}
+      </form>
+      <details class="b-answer">
+        <summary>Show Kandinsky’s answer</summary>
+        <ul class="b-answer__list">
+          {SHAPES.map((s) => <li class={`b-answer__item b-answer__item--${s.kandinsky}`}><svg viewBox="0 0 120 112" aria-hidden="true" set:html={s.svg} /> {colourName(s.kandinsky)} {s.name.toLowerCase()}</li>)}
+        </ul>
+        <p>Kandinsky linked the sharp, outward triangle to yellow, the stable square to red and the calm, inward circle to blue. Read why the consensus was less convincing than it looked in the study section below.</p>
+      </details>
+      <p class="b-quiz__note" set:html={disclaimer} />
+    </section>
+
+    <details class="b-study">
+      <summary>Study: myths, who did what, after 1933</summary>
+      <div class="b-modules"><Blocks blocks={study} class="b-module" /></div>
+    </details>
+
+    <section class="b-works" aria-labelledby="b-works-title">
+      <h2 id="b-works-title" class="b-h2">Works to know</h2>
+      <ol class="b-works__list">{text.works.map((w) => <li><span class="b-works__when">{w.when}</span><span class="b-works__what">{w.what}</span><span class="b-works__who">{[w.who, w.where].filter(Boolean).join(', ')}</span></li>)}</ol>
+    </section>
+    <p class="b-recognise"><span>How to recognise it.</span> {text.recognise}</p>
+  </main>
+  <ChapterFoot id="bauhaus" notes={sources} />
+</Layout>

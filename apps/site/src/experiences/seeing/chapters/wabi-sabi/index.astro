@@ -1,0 +1,109 @@
+---
+// Wabi-sabi: a dim earthen room, one paper window, one hand-shaped bowl, a great deal of space.
+// The page ages while it is read (CSS animations over minutes, stoppable; under reduced motion the
+// room is shown already aged). Four words, four small compositions, by radio button. No script.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import { bowl } from './bowl.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const WORDS = [
+  { id: 'wabi', ja: '侘び', gloss: rich('Simplicity chosen, not suffered: the rustic, the spare, the quietly sufficient {sep-japanese}.') },
+  { id: 'sabi', ja: '寂び', gloss: rich('The beauty of age and solitude: rust, patina, the worn edge {sep-japanese}.') },
+  { id: 'ma', ja: '間', gloss: rich('The interval between things, felt as presence rather than absence {isozaki-ma}.') },
+  { id: 'yugen', label: 'yūgen', ja: '幽玄', gloss: rich('Profound and mysterious grace: what is suggested rather than shown {sep-japanese}.') },
+];
+const study = blocks(text.study);
+const sources = notes();
+const b = bowl();
+---
+<Layout title="Wabi-sabi: the unfinished world" description="Wabi-sabi as a quiet room that ages while you read: the tea room, the poets, four words kept distinct, and what wabi-sabi is not." here="wabi-sabi" tone="dark" preload={['shippori-mincho-400.woff2']}>
+  <main id="main" class="w">
+    <div class="w-stage">
+    <div class="w-scene" aria-hidden="true">
+        <svg viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice">
+          <defs>
+            <filter id="w-straw"><feTurbulence type="fractalNoise" baseFrequency="0.035 0.22" numOctaves="3" seed="9" /><feColorMatrix values="0 0 0 0 0.85  0 0 0 0 0.72  0 0 0 0 0.52  0 0 0 0.09 0" /></filter>
+            <filter id="w-soft"><feGaussianBlur stdDeviation="22" /></filter>
+            <radialGradient id="w-light" cx="0.18" cy="0.82" r="0.55"><stop offset="0" stop-color="#efe3c6" stop-opacity="0.32" /><stop offset="1" stop-color="#efe3c6" stop-opacity="0" /></radialGradient>
+            <radialGradient id="w-patina" cx="0.7" cy="0.3" r="0.8"><stop offset="0" stop-color="#1c1712" stop-opacity="0" /><stop offset="1" stop-color="#1c1712" stop-opacity="0.75" /></radialGradient>
+            <linearGradient id="w-mist" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#d9d4ca" stop-opacity="0.85" /><stop offset="1" stop-color="#d9d4ca" stop-opacity="0.35" /></linearGradient>
+          </defs>
+          <rect width="1200" height="700" fill="#4d433b" />
+          <rect width="1200" height="700" filter="url(#w-straw)" />
+          <rect width="1200" height="700" fill="url(#w-light)" />
+          <g class="w-window">
+            <rect x="70" y="330" width="250" height="230" fill="#efe7d2" />
+            <path d="M70 388 H320 M70 446 H320 M70 504 H320 M132 330 V560 M195 330 V560 M258 330 V560" stroke="#6b5b49" stroke-width="5" />
+            <rect x="70" y="330" width="250" height="230" fill="none" stroke="#3b322b" stroke-width="12" />
+          </g>
+          <rect x="0" y="560" width="1200" height="140" fill="#3a322b" />
+          <rect x="0" y="560" width="1200" height="8" fill="#2b241f" />
+          <path d="M60 568 L330 568 L520 700 L-60 700Z" fill="#efe3c6" opacity="0.08" filter="url(#w-soft)" />
+          <g class="w-vase" transform="translate(380 0)">
+            <path d="M470 560 C 455 520, 462 470, 478 440 C 470 430, 470 418, 482 416 H500 C 510 418, 510 430, 502 440 C 520 470, 525 520, 508 560Z" fill="#5c4a3a" />
+            <path d="M490 418 C 486 360, 470 320, 430 300 M488 380 C 500 350, 520 336, 545 332" stroke="#2a221c" stroke-width="3" fill="none" />
+            <ellipse cx="545" cy="330" rx="7" ry="5" fill="#c9b9a0" />
+          </g>
+          <g class="w-bowl" transform="translate(420 352)">
+            <path d={b.path} fill="#241e1a" />
+            <path d={b.rim} fill="none" stroke="#5a4d42" stroke-width="3" />
+            <path d={b.glaze} fill="none" stroke="#3f342c" stroke-width="10" stroke-linecap="round" opacity="0.8" />
+            <g class="w-cracks">{b.cracks.map((d) => <path d={d} pathLength="1" />)}</g>
+          </g>
+          <rect class="w-patina" width="1200" height="700" fill="url(#w-patina)" />
+          <path class="w-ma" d="M676 600 H850 M676 590 V610 M850 590 V610" stroke="#efe3c6" stroke-width="2" />
+          <rect class="w-mist" width="1200" height="700" fill="url(#w-mist)" />
+        </svg>
+      </div>
+    <section class="w-room" aria-labelledby="w-title">
+      <header class="w-head">
+        <h1 id="w-title" class="w-title">Wabi-sabi</h1>
+        <p class="w-thesis">{text.thesis}</p>
+      </header>
+      <div class="w-encounter">
+        {encounter.map((p) => <p set:html={p} />)}
+        <label class="w-time"><input type="checkbox" id="w-time" checked /> Let time pass</label>
+      </div>
+    </section>
+
+    <section class="w-words" aria-labelledby="w-words-title">
+      <h2 id="w-words-title" class="w-h2">Four words, kept apart</h2>
+      <p class="w-words__intro">The room above changes with each word. They are related, but they are not the same idea.</p>
+      <fieldset class="w-pick">
+        <legend class="see-vh">Choose a word</legend>
+        {WORDS.map((w, i) => <label><input type="radio" name="w-word" id={`w-word-${w.id}`} checked={i === 0} /> <span>{w.label ?? w.id}</span> <span lang="ja" class="w-ja">{w.ja}</span></label>)}
+      </fieldset>
+      {WORDS.map((w) => <p class={`w-gloss w-gloss--${w.id}`} set:html={w.gloss} />)}
+    </section>
+    </div>
+
+    <div class="w-body">
+      <dl class="w-label">
+        <div><dt>Aesthetic</dt><dd>Part II, the spaces we inhabit</dd></div>
+        <div><dt>When</dt><dd>{text.period}</dd></div>
+        <div><dt>Where</dt><dd>{text.place}</dd></div>
+      </dl>
+      <section class="w-understand" aria-labelledby="w-understand-title">
+        <h2 id="w-understand-title" class="w-h2">Where the words come from</h2>
+        <Blocks blocks={understand} />
+      </section>
+      <details class="w-study">
+        <summary>Study: other words, the interval, whose poverty, what it is not</summary>
+        <Blocks blocks={study} />
+      </details>
+      <section class="w-works" aria-labelledby="w-works-title">
+        <h2 id="w-works-title" class="w-h2">To see and to read</h2>
+        <ul>{text.works.map((w) => <li><span class="w-works__what">{w.what}</span> <span class="w-works__meta">{[w.who, w.when, w.where].filter(Boolean).join(', ')}</span></li>)}</ul>
+      </section>
+      <p class="w-recognise"><span>How to recognise it.</span> {text.recognise}</p>
+    </div>
+  </main>
+  <ChapterFoot id="wabi-sabi" notes={sources} />
+</Layout>

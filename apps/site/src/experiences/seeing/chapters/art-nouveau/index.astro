@@ -1,0 +1,106 @@
+---
+// Art Nouveau: the page is grown, not decorated. Whiplash stems drawn at build time stand in the
+// margins and the reading text flows along their curves (shape-outside). Where scroll-driven
+// animation is supported and motion is allowed, each stem grows as it enters the screen; otherwise
+// it is simply there. The experiment shows one line in four media. No script.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import Stem from './Stem.astro';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const study = blocks(text.study);
+const sources = notes();
+
+// The line used in all four media: one path, never redrawn.
+const LINE = 'M300 440 C 210 340, 450 300, 410 220 S 300 100, 430 72 C 488 60, 498 130, 448 132';
+const MEDIA = [
+  { id: 'iron', label: 'Iron', caption: 'In wrought and cast iron the line becomes structure: a balustrade, a bracket, the canopy of a Métro entrance.' },
+  { id: 'paper', label: 'Paper', caption: 'On a poster or a book cover it becomes a frame that the image grows inside.' },
+  { id: 'glass', label: 'Glass', caption: 'In glass it becomes the contour of a vessel, blown and shaped while still soft.' },
+  { id: 'letter', label: 'Letter', caption: 'In lettering it becomes the stroke itself; shop signs and magazine titles bent their letters to match.' },
+] as const;
+---
+<Layout title="Art Nouveau: nature becomes a language" description="Art Nouveau as a page that grows: whiplash lines in the margins, text that flows around them, and one line drawn in iron, paper, glass and type." here="art-nouveau" tone="light" preload={['amarante-400.woff2', 'spectral-300.woff2']}>
+  <main id="main" class="n">
+    <section class="n-hero" aria-labelledby="n-title">
+      <Stem side="left" class="n-float--hero" />
+      <h1 id="n-title" class="n-title">Art Nouveau</h1>
+      <p class="n-thesis">{text.thesis}</p>
+      <dl class="n-label">
+        <div><dt>Movement</dt><dd>Part I, the history of art and design</dd></div>
+        <div><dt>Period</dt><dd>{text.period}</dd></div>
+        <div><dt>Where</dt><dd>{text.place}</dd></div>
+      </dl>
+      {encounter.map((p) => <p class="n-encounter" set:html={p} />)}
+    </section>
+
+    <section class="n-flow" aria-labelledby="n-understand-title">
+      <h2 id="n-understand-title" class="n-h2">How a line became a style</h2>
+      <Stem side="right" />
+      <Blocks blocks={understand.slice(0, 3)} />
+      <Stem side="left" />
+      <Blocks blocks={understand.slice(3)} />
+    </section>
+
+    <section class="n-media" aria-labelledby="n-media-title">
+      <h2 id="n-media-title" class="n-h2">One line, four materials</h2>
+      <p class="n-media__intro">Art Nouveau designers wanted a building, its furniture, its glass and its lettering to speak one language. Here the same curve, drawn once, moves between materials. Choose one.</p>
+      <fieldset class="n-media__pick">
+        <legend class="see-vh">Material</legend>
+        {MEDIA.map((m, i) => <label><input type="radio" name="n-medium" id={`n-m-${m.id}`} checked={i === 0} /> {m.label}</label>)}
+      </fieldset>
+      <figure class="n-media__fig">
+        <svg viewBox="0 0 800 500" aria-hidden="true">
+          <defs>
+            <linearGradient id="n-favrile" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#2f6d5a" /><stop offset="0.45" stop-color="#b98a2e" /><stop offset="0.8" stop-color="#6b4e7e" /><stop offset="1" stop-color="#2f6d5a" />
+            </linearGradient>
+            <path id="n-line" d={LINE} />
+          </defs>
+          <g class="n-ctx n-ctx--iron">
+            <path d="M60 80 H740 M60 92 H740 M60 448 H740" class="n-iron" />
+            {[100, 160, 640, 700].map((x) => <path d={`M${x} 92 V448`} class="n-iron n-iron--thin" />)}
+            <use href="#n-line" class="n-iron n-iron--whip" />
+            <use href="#n-line" class="n-iron n-iron--whip" transform="translate(800 0) scale(-1 1)" />
+            {[[300, 440], [448, 132], [500, 440], [352, 132]].map(([x, y]) => <circle cx={x} cy={y} r="7" class="n-rivet" />)}
+          </g>
+          <g class="n-ctx n-ctx--paper">
+            <rect x="200" y="24" width="400" height="452" class="n-paper" />
+            <rect x="230" y="372" width="340" height="74" class="n-paper-band" />
+            <use href="#n-line" class="n-paper-line" />
+            <use href="#n-line" class="n-paper-line" transform="translate(800 0) scale(-1 1)" />
+            <circle cx="400" cy="230" r="70" class="n-paper-sun" />
+          </g>
+          <g class="n-ctx n-ctx--glass">
+            <path d="M360 60 C 330 60, 340 110, 370 140 C 250 220, 230 380, 330 452 H470 C 570 380, 550 220, 430 140 C 460 110, 470 60, 440 60Z" fill="url(#n-favrile)" class="n-vase" />
+            <use href="#n-line" class="n-glass-line" transform="translate(-40 0)" />
+            <use href="#n-line" class="n-glass-line" transform="translate(840 0) scale(-1 1)" />
+          </g>
+          <g class="n-ctx n-ctx--letter">
+            <use href="#n-line" class="n-letter" transform="translate(-40 0)" />
+            <path d="M240 444 H330 M410 70 H480" class="n-letter-serif" />
+          </g>
+        </svg>
+        <figcaption>{MEDIA.map((m) => <p class={`n-cap n-cap--${m.id}`}><strong>{m.label}.</strong> {m.caption}</p>)}</figcaption>
+      </figure>
+    </section>
+
+    <details class="n-study">
+      <summary>Study: the total work, the price of beauty, the end of the curve</summary>
+      <Blocks blocks={study} />
+    </details>
+
+    <section class="n-works" aria-labelledby="n-works-title">
+      <h2 id="n-works-title" class="n-h2">Works to know</h2>
+      <ul>{text.works.map((w) => <li><span class="n-works__what">{w.what}</span><span class="n-works__meta">{[w.who, w.when, w.where].filter(Boolean).join(', ')}</span></li>)}</ul>
+    </section>
+    <p class="n-recognise"><span>How to recognise it.</span> {text.recognise}</p>
+  </main>
+  <ChapterFoot id="art-nouveau" notes={sources} />
+</Layout>

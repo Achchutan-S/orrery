@@ -6,7 +6,7 @@ import { CANARY, catalog, parseCatalog } from './index.ts';
 test('the catalog parses with no issues', () => {
   const { experiences, issues } = parseCatalog();
   assert.deepEqual(issues, []);
-  assert.deepEqual(experiences.map((e) => e.id), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app', 'skills', 'divya-chakshu', 'resume', 'canary-draft', 'sample-hostile']);
+  assert.deepEqual(experiences.map((e) => e.id), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app', 'skills', 'divya-chakshu', 'seeing', 'resume', 'canary-draft', 'sample-hostile']);
 });
 
 test('every entry passes the shared definition schema (no local schema copies)', () => {

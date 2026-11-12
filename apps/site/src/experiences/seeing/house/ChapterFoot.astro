@@ -1,0 +1,78 @@
+---
+// The corridor after every chapter: the same signage everywhere, in the house's voice, so the
+// visitor always knows how to leave, where they could go next and what the chapter rests on.
+import { href, neighbours, subject } from '../data/atlas.ts';
+import type { ImageRecord } from '../data/assets.ts';
+import { pairsOf } from '../data/pairs.ts';
+import { KINDS, node, relationsOf } from '../data/relations.ts';
+import { KIND_LABEL as SOURCE_KIND, type Source } from '../data/sources.ts';
+
+interface Props { id: string; notes: Source[]; images?: ImageRecord[] }
+const { id, notes, images = [] } = Astro.props;
+const { previous, next } = neighbours(id);
+const links = relationsOf(id).map((r) => {
+  const other = r.from === id ? r.to : r.from;
+  const builtOther = (() => { try { return subject(other).built; } catch { return false; } })();
+  return { r, other, label: node(other)?.label ?? other, url: builtOther ? href(other) : undefined, kind: KINDS.find((k) => k.id === r.kind)!.label, outward: r.from === id };
+});
+const doors = links.filter((l) => l.url).map((l) => l.other);
+const pairs = pairsOf(id);
+---
+<footer class="see-foot" aria-labelledby="see-foot-title">
+  <h2 id="see-foot-title" class="see-vh">Leaving this chapter</h2>
+  <nav class="see-foot__walk" aria-label="Chapters">
+    {previous ? <a rel="prev" href={href(previous.id)}><span>Previous</span> {previous.title}</a> : <a rel="prev" href="/seeing"><span>Back to</span> The camera obscura</a>}
+    {next ? <a rel="next" href={href(next.id)}><span>Next</span> {next.title}</a> : <a rel="next" href="/seeing/reframing"><span>Next</span> Reframing the world</a>}
+  </nav>
+
+  {links.length > 0 && (
+    <section class="see-foot__section" aria-labelledby="see-foot-links">
+      <h3 id="see-foot-links">Connections</h3>
+      <ul class="see-foot__links">
+        {links.map((l) => (
+          <li data-kind={l.r.kind}>
+            <p class="see-foot__kind">{l.kind}{l.outward ? ', towards ' : ', from '}{l.url ? <a href={l.url}>{l.label}</a> : <span>{l.label}</span>}</p>
+            <p>{l.r.text}</p>
+          </li>
+        ))}
+      </ul>
+      <p class="see-foot__more"><a href="/seeing/map">See every connection on the map</a></p>
+    </section>
+  )}
+
+  {pairs.length > 0 && (
+    <section class="see-foot__section" aria-labelledby="see-foot-compare">
+      <h3 id="see-foot-compare">Compare</h3>
+      <ul class="see-foot__compare">
+        {pairs.map((p) => <li><a href={`/seeing/compare/${p.id}`}>{subject(p.a).title} and {subject(p.b).title}</a>: {p.question}</li>)}
+      </ul>
+    </section>
+  )}
+
+  {doors.length > 0 && (
+    <p class="see-foot__door" data-doors={doors.join(' ')}>
+      <span>A door you have not opened yet:</span> <a href={href(doors[0]!)} data-door>{subject(doors[0]!).title}</a>
+    </p>
+  )}
+
+  <section class="see-foot__section see-foot__sources" aria-labelledby="see-foot-sources">
+    <h3 id="see-foot-sources">Sources</h3>
+    <p class="see-foot__status">This chapter is draft text written for this atlas from the sources below. Passages marked Interpretation, Term or Editor’s note are not settled history.</p>
+    <ol>
+      {notes.map((s) => (
+        <li id={`source-${s.id}`}>
+          <span class="see-foot__source-kind">{SOURCE_KIND[s.kind]}.</span> {s.url ? <a href={s.url}>{s.cite}</a> : s.cite}{s.note && <span class="see-foot__source-note"> {s.note}</span>}
+        </li>
+      ))}
+    </ol>
+    {images.length > 0 && (
+      <>
+        <h4>Images</h4>
+        <ul>
+          {images.map((i) => <li>{i.creator}, <cite>{i.title}</cite>, {i.date}. {i.medium}. {i.institution}, {i.accession}. <a href={i.url}>{i.licence}</a>. <a href={`/seeing/images/${i.file.replace(/\.webp$/, '')}/image.webp`}>Open the image file</a>.</li>)}
+        </ul>
+      </>
+    )}
+    <p><a href="/seeing/sources">All sources, fonts and image credits</a></p>
+  </section>
+</footer>

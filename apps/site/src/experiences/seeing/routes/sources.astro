@@ -1,0 +1,58 @@
+---
+// Every source, image and typeface in the atlas, with its kind and licence; and the key to the
+// kinds of statement chapters mark. Generated from data/, so it cannot drift from the pages.
+import Layout from '../house/Layout.astro';
+import { FONTS, IMAGES } from '../data/assets.ts';
+import { KIND_LABEL, SOURCES, type SourceKind } from '../data/sources.ts';
+import { KIND_LABEL as STATEMENT } from '../house/text.ts';
+import '../house/house-pages.css';
+import './sources.css';
+
+const kinds = Object.keys(KIND_LABEL) as SourceKind[];
+---
+<Layout title="Sources and credits" description="Every source, image and typeface in A History of Seeing, with its licence, and how the atlas marks history, interpretation and contemporary terms." here="sources">
+  <main id="main" class="hp sr">
+    <header>
+      <h1>Sources and credits</h1>
+      <p class="hp__lede">The chapters are draft text written for this atlas from the sources below. They are not drawn from any earlier narration. Each claim in a chapter points to its source.</p>
+    </header>
+
+    <section aria-labelledby="sr-key-title">
+      <h2 id="sr-key-title">Four kinds of statement</h2>
+      <dl class="sr-key">
+        <div><dt>{STATEMENT.history}</dt><dd>Unmarked passages: what happened, when and where, with a source.</dd></div>
+        <div><dt>{STATEMENT.interpretation}</dt><dd>A reading that scholars or critics argue over, presented as one view.</dd></div>
+        <div><dt>{STATEMENT.term}</dt><dd>Contemporary vocabulary, often internet-born, described as its users use it.</dd></div>
+        <div><dt>{STATEMENT.editor}</dt><dd>This atlas speaking for itself: choices of design, cautions, opinions.</dd></div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="sr-src-title">
+      <h2 id="sr-src-title">Sources</h2>
+      <p class="see-meta">Online sources were located on 8 November 2026. Some museum and encyclopaedia sites refuse automated requests, so their addresses were confirmed by search. Journalism and community wikis are cited as records of how internet aesthetics are described, not as authorities on their history.</p>
+      {kinds.map((k) => (
+        <section aria-labelledby={`sr-${k}`}>
+          <h3 id={`sr-${k}`}>{KIND_LABEL[k]}</h3>
+          <ul class="sr-list">{SOURCES.filter((s) => s.kind === k).map((s) => <li id={`source-${s.id}`}>{s.url ? <a href={s.url}>{s.cite}</a> : s.cite}{s.note && <span class="see-meta"> {s.note}</span>}</li>)}</ul>
+        </section>
+      ))}
+    </section>
+
+    <section aria-labelledby="sr-img-title">
+      <h2 id="sr-img-title">Images</h2>
+      <p>Two photographs of artworks, from The Metropolitan Museum of Art’s Open Access programme (CC0), resized and re-encoded without metadata. Every other image in the atlas is an original drawing made for it in code.</p>
+      <ul class="sr-list">{IMAGES.map((i) => <li>{i.creator}, <cite>{i.title}</cite>, {i.date}. {i.medium}. {i.institution}, {i.accession}. <a href={i.url}>{i.licence}</a>.</li>)}</ul>
+    </section>
+
+    <section aria-labelledby="sr-font-title">
+      <h2 id="sr-font-title">Typefaces</h2>
+      <p>All under the SIL Open Font License 1.1, which allows these files to be redistributed in a public repository. Each licence text is committed beside its font. Weirdcore, Frutiger Aero, Brutalism’s reading text and the house signage use your device’s own fonts.</p>
+      <div class="sr-table" tabindex="0" role="region" aria-labelledby="sr-font-title">
+        <table>
+          <thead><tr><th scope="col">Family</th><th scope="col">Designer</th><th scope="col">Used for</th><th scope="col">Licence</th></tr></thead>
+          <tbody>{FONTS.map((f) => <tr><td>{f.family}</td><td>{f.designer}</td><td>{f.use}</td><td>{f.licence}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</Layout>

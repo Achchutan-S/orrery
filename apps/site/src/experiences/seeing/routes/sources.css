@@ -1,0 +1,12 @@
+@layer experience {
+  [data-experience='seeing'] .sr-key { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem 2rem; }
+  [data-experience='seeing'] .sr-key dt { font-weight: 700; color: var(--see-pin); }
+  [data-experience='seeing'] .sr-key dd { margin: 0.25rem 0 0; font-size: 1rem; }
+  [data-experience='seeing'] .sr-list { padding-inline-start: 1.25rem; font: 400 0.9375rem/1.5 var(--see-sign); }
+  [data-experience='seeing'] .sr-list li { margin-block-end: 0.5rem; max-inline-size: 60rem; }
+  [data-experience='seeing'] .sr-list li:target { outline: 2px solid var(--see-pin); outline-offset: 4px; }
+  [data-experience='seeing'] .sr-table { overflow-x: auto; }
+  [data-experience='seeing'] .sr table { inline-size: 100%; min-inline-size: 44rem; border-collapse: collapse; font: 400 0.9375rem/1.45 var(--see-sign); }
+  [data-experience='seeing'] .sr th, [data-experience='seeing'] .sr td { padding: 0.6rem 1rem 0.6rem 0; border-block-end: 1px solid var(--see-line); text-align: start; vertical-align: top; }
+  [data-experience='seeing'] .sr th { color: var(--see-pin); }
+}

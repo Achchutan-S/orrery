@@ -1,0 +1,161 @@
+---
+// The opening: a camera obscura. The page is the instrument. Its controls are native radio buttons
+// and checkboxes, and CSS (:has) does the optics, so the whole demonstration works without
+// JavaScript and under reduced motion (where the image is simply there, not revealed).
+import Layout from '../house/Layout.astro';
+import World from '../house/World.astro';
+import { citer } from '../house/text.ts';
+import { PARTS, SUBJECTS, href } from '../data/atlas.ts';
+import { PAIRS } from '../data/pairs.ts';
+import { subject } from '../data/atlas.ts';
+import '../house/house-pages.css';
+import './opening.css';
+
+const { rich, notes } = citer();
+
+// The ray diagram: an arrow outside, a wall with a hole, a screen. For each aperture (half-height
+// in px) and with or without a lens, the bundle of light from the arrow's tip.
+const TIP = { x: 40, y: 40 };
+const HOLE = { x: 150, y: 80 };
+const SCREEN = 330;
+const APERTURES = { pin: 1.5, mid: 7, wide: 16 } as const;
+const at = (y0: number, y1: number) => TIP.y + ((y1 - y0) / (HOLE.x - TIP.x)) * (SCREEN - TIP.x);
+const focus = HOLE.y + ((HOLE.y - TIP.y) / (HOLE.x - TIP.x)) * (SCREEN - HOLE.x);
+const bundle = (a: number, lens: boolean) => {
+  const top = HOLE.y - a; const bottom = HOLE.y + a;
+  return lens
+    ? `${TIP.x},${TIP.y} ${HOLE.x},${top} ${SCREEN},${focus.toFixed(1)} ${HOLE.x},${bottom}`
+    : `${TIP.x},${TIP.y} ${HOLE.x},${top} ${SCREEN},${at(TIP.y, top).toFixed(1)} ${SCREEN},${at(TIP.y, bottom).toFixed(1)} ${HOLE.x},${bottom}`;
+};
+const baseFocus = HOLE.y - ((HOLE.y - TIP.y) / (HOLE.x - TIP.x)) * (SCREEN - HOLE.x);
+
+const readings = {
+  pin: rich('A pinhole: sharp but dim. Only a thin pencil of light gets through from each point outside.'),
+  mid: rich('Wider: brighter, but every point outside now lands as a small disc of light, and the discs overlap into blur.'),
+  wide: rich('Wide open: plenty of light and almost no picture. In a bare hole, brightness and sharpness pull against each other.'),
+  pinLens: rich('A lens over a pinhole adds little: the hole was already sharp. Open the aperture to see what the lens is for.'),
+  lens: rich('With a lens, the wide hole gathers more light and bends each bundle of rays back to a point: bright and sharp. From the sixteenth century, lenses turned the dark room into an instrument for drawing {camera-obscura}.'),
+  mirror: rich('A mirror at forty-five degrees throws the image the right way up, though still reversed left to right, onto glass or paper where it can be traced {camera-obscura}.'),
+};
+const intro = rich('On the far wall the world outside appears, upside down and reversed. Nobody painted it. Light from every point outside travels in a straight line through the hole, so what was high lands low and what was left lands right. This is a *camera obscura*, Latin for “dark room”. Ibn al-Haytham worked out its optics in Cairo in the eleventh century {camera-obscura}.');
+const open = SUBJECTS.filter((s) => s.built).length;
+---
+<Layout title="A History of Seeing" description="How humanity learned to make the world beautiful: an atlas of art movements, interiors and internet aesthetics, each in its own visual language." here="opening" preload={['caslon-display-400.woff2', 'caslon-text-400.woff2']}>
+  <main id="main" class="ob">
+    <section class="ob-chamber" aria-labelledby="ob-title">
+      <div class="ob-wall" aria-hidden="true">
+        <svg class="ob-proj" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <filter id="ob-b1" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="7" /></filter>
+            <filter id="ob-b2" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="22" /></filter>
+            <filter id="ob-grain"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" /><feColorMatrix values="0 0 0 0 0.17  0 0 0 0 0.13  0 0 0 0 0.11  0 0 0 0.55 0" /></filter>
+            <radialGradient id="ob-vignette" cx="0.5" cy="0.5" r="0.65"><stop offset="0.55" stop-color="#2b221d" stop-opacity="0" /><stop offset="1" stop-color="#2b221d" stop-opacity="0.92" /></radialGradient>
+          </defs>
+          <g class="ob-image"><World id="ob-world" /></g>
+          <rect class="ob-dim" width="1200" height="800" />
+          <rect width="1200" height="800" filter="url(#ob-grain)" />
+          <rect width="1200" height="800" fill="url(#ob-vignette)" />
+        </svg>
+        <span class="ob-pin"></span>
+      </div>
+
+      <div class="ob-text">
+        <h1 id="ob-title" class="ob-title">A History of Seeing</h1>
+        <p class="ob-sub">How humanity learned to make the world beautiful</p>
+        <p class="ob-first">A dark room. One small hole in the wall. Give your eyes a moment.</p>
+        <p class="ob-intro" set:html={intro} />
+
+        <form class="ob-instrument" aria-labelledby="ob-legend">
+          <p id="ob-legend" class="ob-legend">Change the instrument, not the world</p>
+          <fieldset class="ob-row">
+            <legend>The hole</legend>
+            <label><input type="radio" name="ob-ap" id="ob-pin" value="pin" checked /> Pinhole</label>
+            <label><input type="radio" name="ob-ap" id="ob-mid" value="mid" /> Wider</label>
+            <label><input type="radio" name="ob-ap" id="ob-wide" value="wide" /> Wide open</label>
+          </fieldset>
+          <div class="ob-row">
+            <label><input type="checkbox" id="ob-lens" /> Put a lens in the hole</label>
+            <label><input type="checkbox" id="ob-mirror" /> Add a mirror</label>
+          </div>
+          <svg class="ob-diagram" viewBox="0 0 360 160" role="img" aria-labelledby="ob-diagram-desc">
+            <desc id="ob-diagram-desc">Ray diagram: light from the tip of an arrow outside passes through the hole and lands low on the screen, so the image is upside down. A wider hole spreads each point into a patch; a lens brings it back to a point.</desc>
+            <line x1="40" y1="120" x2="40" y2="44" class="ob-d-ink" />
+            <path d="M33 54 L40 40 L47 54" class="ob-d-ink ob-d-head" />
+            {Object.entries(APERTURES).map(([k, a]) => (
+              <g class={`ob-d-ap ob-d-ap--${k}`}>
+                <polygon points={bundle(a, false)} class="ob-d-ray ob-d-ray--bare" />
+                <polygon points={bundle(a, true)} class="ob-d-ray ob-d-ray--lens" />
+                <rect x="146" y="8" width="8" height={HOLE.y - a - 8} class="ob-d-wall" />
+                <rect x="146" y={HOLE.y + a} width="8" height={152 - HOLE.y - a} class="ob-d-wall" />
+              </g>
+            ))}
+            <line x1="40" y1="120" x2={SCREEN} y2={baseFocus.toFixed(1)} class="ob-d-faint" />
+            <line x1={SCREEN} y1="6" x2={SCREEN} y2="154" class="ob-d-ink" />
+            <line x1={SCREEN - 14} y1={baseFocus.toFixed(1)} x2={SCREEN - 14} y2={(focus - 6).toFixed(1)} class="ob-d-ink" />
+            <path d={`M${SCREEN - 21} ${(focus - 14).toFixed(1)} L${SCREEN - 14} ${focus.toFixed(1)} L${SCREEN - 7} ${(focus - 14).toFixed(1)}`} class="ob-d-ink ob-d-head" />
+            <ellipse cx="150" cy="80" rx="5" ry="18" class="ob-d-lens" />
+          </svg>
+          <div class="ob-reading" role="status">
+            <p class="ob-r ob-r--pin" set:html={readings.pin} />
+            <p class="ob-r ob-r--mid" set:html={readings.mid} />
+            <p class="ob-r ob-r--wide" set:html={readings.wide} />
+            <p class="ob-r ob-r--pin-lens" set:html={readings.pinLens} />
+            <p class="ob-r ob-r--lens" set:html={readings.lens} />
+            <p class="ob-r ob-r--mirror" set:html={readings.mirror} />
+          </div>
+        </form>
+        <p class="ob-skip"><a href="#ob-thesis">Skip the chamber</a></p>
+      </div>
+    </section>
+
+    <section class="ob-thesis" id="ob-thesis" aria-labelledby="ob-thesis-title">
+      <p class="ob-thesis__pre">Nothing outside changed. Only the instrument did.</p>
+      <h2 id="ob-thesis-title" class="ob-thesis__line">The world changes when the way we look at it changes.</h2>
+      <div class="ob-thesis__body">
+        <p>Every era builds its own instruments for seeing. Some are made of glass and lenses. Most are made of ideas: what a wall is for, where a painter should stand, whether a chair should look like a flower or a machine, what a screen should promise.</p>
+        <p>This atlas follows forty-six of them, from cathedrals that dissolved their walls into coloured light to the aesthetics the internet names faster than anyone can write them down. Each chapter is built in its own visual language; the building around them stays quiet. {open} chapters are open in this prototype.</p>
+      </div>
+      <p class="ob-begin">
+        <a class="ob-begin__go" href={href('gothic')}>Step through: the Gothic</a>
+        <a class="ob-begin__resume" href="/seeing" data-resume hidden>Continue where you left off: <span data-resume-title></span></a>
+      </p>
+    </section>
+
+    <section class="ob-directory" aria-labelledby="ob-dir-title">
+      <h2 id="ob-dir-title">The galleries</h2>
+      {PARTS.filter((p) => p.id !== 'language').map((part) => (
+        <section class="ob-gallery" aria-labelledby={`ob-part-${part.id}`}>
+          <h3 id={`ob-part-${part.id}`}><span class="ob-gallery__n">{part.numeral}</span> {part.title}</h3>
+          <ul>
+            {SUBJECTS.filter((s) => s.part === part.id).map((s) => (
+              <li class={s.built ? 'is-open' : 'is-closed'}>{s.built ? <a href={href(s.id)}>{s.title}</a> : <>{s.title}<span class="see-vh"> (not yet written)</span></>}</li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <section class="ob-gallery" aria-labelledby="ob-part-language">
+        <h3 id="ob-part-language"><span class="ob-gallery__n">IV</span> The language of aesthetics</h3>
+        <p class="ob-gallery__soon">Core, punk and wave: how the internet names what it sees. Not yet written.</p>
+      </section>
+    </section>
+
+    <section class="ob-instruments" aria-labelledby="ob-tools-title">
+      <h2 id="ob-tools-title">Instruments</h2>
+      <ul class="ob-tools">
+        <li><a href="/seeing/reframing">Reframing the world</a><p>One room, seen nine ways. What stays, and what changes.</p></li>
+        <li><a href="/seeing/map">The relationship map</a><p>Which aesthetics descend from which, which only look alike, and how we know.</p></li>
+        <li><a href="/seeing/lab">The laboratory</a><p>Build a window from eight visual decisions. A creative instrument, not a taxonomy.</p></li>
+        <li>
+          <span class="ob-tools__label">Comparisons</span>
+          <ul>{PAIRS.map((p) => <li><a href={`/seeing/compare/${p.id}`}>{subject(p.a).title} and {subject(p.b).title}</a></li>)}</ul>
+        </li>
+        <li><a href="/seeing/sources">Sources and credits</a><p>Every source, image and typeface, with its licence.</p></li>
+      </ul>
+    </section>
+
+    <section class="ob-notes" aria-labelledby="ob-notes-title">
+      <h2 id="ob-notes-title" class="see-vh">Sources for this page</h2>
+      <ol>{notes().map((s) => <li id={`source-${s.id}`}>{s.url ? <a href={s.url}>{s.cite}</a> : s.cite}</li>)}</ol>
+    </section>
+  </main>
+</Layout>

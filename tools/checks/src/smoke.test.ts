@@ -47,6 +47,13 @@ function site(env: 'production' | 'preview') {
     files.set('skills/sidequest/files/SKILL.md', '---');
     files.set('skills/sidequest/files/scripts/quest.py', 'print()');
     files.set('divya-chakshu.html', html('Divya Chakshu'));
+    // A History of Seeing (a draft): its pages, one comparison, and its own font and image routes.
+    const seeing = ['gothic', 'renaissance', 'art-nouveau', 'bauhaus', 'brutalism', 'wabi-sabi', 'cyberpunk', 'frutiger-aero', 'weirdcore', 'reframing', 'map', 'lab', 'sources'];
+    files.set('seeing.html', html('A History of Seeing', ['<a href="/seeing/compare/gothic-renaissance">c</a>', '<link rel="preload" href="/seeing/fonts/f/face.woff2">', '<a href="/seeing/images/i/image.webp">i</a>'].join('')));
+    for (const s of seeing) files.set(`seeing/${s}.html`, html(s));
+    files.set('seeing/compare/gothic-renaissance.html', html('Gothic and Renaissance'));
+    files.set('seeing/fonts/f/face.woff2', 'font');
+    files.set('seeing/images/i/image.webp', 'webp');
   }
   return files;
 }
@@ -55,7 +62,7 @@ type Mutate = {
   files?: (f: Map<string, string>) => void; noHeaders?: boolean; noRedirects?: boolean; mutableAssets?: boolean; spaFallback?: boolean;
   /** Overrides the Content-Type for one path. */ types?: Record<string, string>; noHeadersOn404?: boolean; cachedHtml?: boolean;
 };
-const TYPES: Record<string, string> = { js: 'text/javascript; charset=utf-8', woff2: 'font/woff2', svg: 'image/svg+xml', png: 'image/png', pdf: 'application/pdf', md: 'text/markdown', zip: 'application/zip', py: '' };
+const TYPES: Record<string, string> = { js: 'text/javascript; charset=utf-8', woff2: 'font/woff2', webp: 'image/webp', svg: 'image/svg+xml', png: 'image/png', pdf: 'application/pdf', md: 'text/markdown', zip: 'application/zip', py: '' };
 
 function deployment(env: 'production' | 'preview', m: Mutate = {}): Fetch {
   const files = site(env);

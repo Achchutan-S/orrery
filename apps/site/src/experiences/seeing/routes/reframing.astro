@@ -1,0 +1,61 @@
+---
+// Reframing the World: one room, ten ways of seeing it. The visitor changes the lens (radio
+// buttons, CSS only) and can show the skeleton that never changes. Every caption says what the
+// style kept, transformed or removed, and why.
+import Layout from '../house/Layout.astro';
+import Room, { STYLES } from '../reframing/Room.astro';
+import { SUBJECTS, href } from '../data/atlas.ts';
+import '../house/house-pages.css';
+import './reframing.css';
+
+const READ: Record<(typeof STYLES)[number], { title: string; text: string }> = {
+  gothic: { title: 'Gothic', text: 'The window takes over the wall and fills with coloured glass, so the world outside is barely seen: light matters more than view. The ceiling becomes a pointed vault, the seat a tall carved throne, and coloured light lands on the floor.' },
+  renaissance: { title: 'Renaissance', text: 'Nothing is added for mystery. The floor becomes a measured pavement whose lines run to one vanishing point; grey stone frames white walls; the window is a round-headed opening onto a clear view. The room exists to be seen from one place.' },
+  'art-nouveau': { title: 'Art Nouveau', text: 'Every straight line starts to grow. The window frame swells like a bud, iron tendrils climb the walls, the chair and the lamp curve to match. The room is designed as one organism.' },
+  bauhaus: { title: 'Bauhaus', text: 'The window becomes a wide band of glass divided by plain mullions; one wall is painted a primary colour; the chair is bent tubular steel; the lamp a simple glass sphere. Nothing is there for ornament.' },
+  brutalism: { title: 'Brutalism', text: 'The walls thicken and keep the marks of their formwork; the window is a deep square void with a hard shaft of light; the seat is a block. The room is felt as weight.' },
+  minimalism: { title: 'Minimalism', text: 'Almost everything is removed. The window grows and loses its frame, the walls go white, one chair remains. What is left is light, proportion and empty floor.' },
+  'wabi-sabi': { title: 'Wabi-sabi', text: 'The room grows dim; the window becomes a low paper screen, so the world is felt as light rather than seen; the chair disappears in favour of a cushion on the mat; a single branch stands in a worn vase.' },
+  cyberpunk: { title: 'Cyberpunk', text: 'The window is replaced by a screen: the world outside has become an advertisement. Neon traces the edges of the room, the seat is cheap and hard, the plant is a hologram.' },
+  'frutiger-aero': { title: 'Frutiger Aero', text: 'Everything turns glossy. The window becomes a rounded pane of glass with a white highlight, the floor reflects, the chair is a white shell, the plant is impossibly green and bubbles drift past.' },
+  weirdcore: { title: 'Weirdcore', text: 'The room is still there, but wrong. The window shows a corridor instead of the world, the chair hangs upside down from nothing, the light sits where the lamp should be, and a caption claims you have been here before.' },
+};
+const built = new Set(SUBJECTS.filter((s) => s.built).map((s) => s.id));
+---
+<Layout title="Reframing the world: one room, ten ways of seeing" description="The same room, window, chair, plant and light, redrawn in ten visual languages, with what each one keeps, transforms or removes." here="reframing">
+  <main id="main" class="hp rf">
+    <header>
+      <h1>Reframing the world</h1>
+      <p class="hp__lede">One room: a window onto the same view, a seat, a plant, a light. Change the way of seeing, and watch what each one keeps, transforms or throws away.</p>
+    </header>
+
+    <div class="rf-stage">
+      <figure class="rf-figure">
+        <Room uid="rf" />
+        <figcaption class="see-vh">The room drawn in the style chosen below.</figcaption>
+      </figure>
+      <form class="rf-controls" aria-labelledby="rf-legend">
+        <p id="rf-legend" class="rf-legend">Ways of seeing</p>
+        <div class="rf-lenses">
+          {STYLES.map((s, i) => <label><input type="radio" name="rf-style" id={`rf-s-${s}`} checked={i === 0} /> {READ[s].title}</label>)}
+        </div>
+        <label class="rf-skel"><input type="checkbox" id="rf-skel" /> Show what never changes</label>
+        <div class="rf-reading" role="status">
+          {STYLES.map((s) => (
+            <div class={`rf-read rf-read--${s}`}>
+              <h2>{READ[s].title}</h2>
+              <p>{READ[s].text}</p>
+              {built.has(s) ? <p><a href={href(s)}>Go to the {READ[s].title} chapter</a></p> : <p class="see-meta">Its chapter is not yet written.</p>}
+            </div>
+          ))}
+        </div>
+      </form>
+    </div>
+
+    <section class="rf-about" aria-labelledby="rf-about-title">
+      <h2 id="rf-about-title">What this shows, and what it does not</h2>
+      <p>The skeleton (the box, the window’s place, the footprints of the seat and the plant, the vanishing point) is identical in every drawing. Everything else is a choice: what a window is for, whether a seat is a throne, a machine or a cushion, whether the world outside is a view, a light or an advertisement.</p>
+      <p class="see-meta">These are interpretive drawings made for this atlas, not reconstructions of real rooms. Each style is compressed into a handful of decisions; the chapters say what they leave out.</p>
+    </section>
+  </main>
+</Layout>

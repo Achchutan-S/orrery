@@ -1,0 +1,105 @@
+---
+// Cyberpunk: a night city in layers. The towers are build-time SVG; signs, screens, drones and
+// surveillance boxes are HTML and CSS, added layer by layer by a density control (radio buttons,
+// CSS). A WebGL2 shader adds rain on the glass in front of it all, only when visible, supported
+// and motion is allowed (scene.ts). The reading panel is always solid and high-contrast.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import { rng } from '../../lib/random.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const study = blocks(text.study);
+const sources = notes();
+
+// Towers: two ranks, lit windows at random.
+const r = rng(1983);
+const tower = (x: number, w: number, h: number, base: number) => {
+  const wins: { x: number; y: number; c: string }[] = [];
+  for (let y = base - h + 12; y < base - 8; y += 14) for (let wx = x + 6; wx < x + w - 6; wx += 10) {
+    const v = r();
+    if (v < 0.42) wins.push({ x: wx, y, c: v < 0.06 ? '#ff5a6e' : v < 0.2 ? '#ffb347' : '#cfe8ff' });
+  }
+  return { x, w, h, base, wins };
+};
+const far = Array.from({ length: 16 }, (_, i) => tower(i * 78 - 20, 60 + r() * 30, 260 + r() * 300, 620));
+const near = Array.from({ length: 9 }, (_, i) => tower(i * 140 - 40, 100 + r() * 40, 200 + r() * 260, 700));
+const SIGNS = [
+  { t: 'Your face is your password', l: 2, c: 'cyan' }, { t: 'Rent due 03:12:44', l: 2, c: 'red' },
+  { t: 'Upgrade your eyes. 0% finance', l: 2, c: 'amber' }, { t: 'Water 4.99 / litre', l: 3, c: 'cyan' },
+  { t: 'This street is monitored for your safety', l: 3, c: 'white' }, { t: 'Now hiring: night shift, no questions', l: 3, c: 'amber' },
+  { t: 'Citizen score pending', l: 4, c: 'red' }, { t: 'Sleep pods by the hour', l: 4, c: 'cyan' },
+  { t: 'Memory backup. Never lose a moment', l: 4, c: 'magenta' }, { t: 'Credit approved', l: 2, c: 'magenta' },
+];
+const DENSITY = [
+  { id: 1, label: 'Street' }, { id: 2, label: 'Signs' }, { id: 3, label: 'Screens' }, { id: 4, label: 'Overload' },
+];
+---
+<Layout title="Cyberpunk: the city that never sleeps" description="Cyberpunk as a dense night city you can turn up and down: its origins in 1980s fiction and film, its themes of corporate power and surveillance, and a critical look at techno-orientalism." here="cyberpunk" tone="dark" preload={['barlow-condensed-700.woff2', 'barlow-400.woff2']}>
+  <main id="main" class="c">
+    <section class="c-city" aria-labelledby="c-title">
+      <div class="c-layers" aria-hidden="true">
+        <svg class="c-towers" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMax slice">
+          <defs>
+            <linearGradient id="c-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#07070d" /><stop offset="0.6" stop-color="#1b1430" /><stop offset="1" stop-color="#4a2238" /></linearGradient>
+          </defs>
+          <rect width="1200" height="700" fill="url(#c-sky)" />
+          <g class="c-far">{far.map((t) => <g><rect x={t.x} y={t.base - t.h} width={t.w} height={t.h} fill="#12111c" />{t.wins.map((w) => <rect x={w.x} y={w.y} width="5" height="7" fill={w.c} opacity="0.55" />)}</g>)}</g>
+          <g class="c-near">{near.map((t) => <g><rect x={t.x} y={t.base - t.h} width={t.w} height={t.h} fill="#0a0a10" />{t.wins.map((w) => <rect x={w.x} y={w.y} width="6" height="8" fill={w.c} opacity="0.8" />)}</g>)}</g>
+          <path class="c-wires" d="M0 380 Q 300 430 600 360 T 1200 400 M0 300 Q 400 360 800 290 T 1200 320" fill="none" stroke="#000" stroke-width="2" />
+          <g class="c-street">
+            <rect y="660" width="1200" height="40" fill="#0d0c14" />
+            <rect y="660" width="1200" height="3" fill="#ffb347" opacity="0.5" />
+            {[180, 420, 640, 900, 1060].map((x, i) => <g class="c-person"><path d={`M${x} 618 q 22 -26 44 0 Z`} fill={i % 2 ? '#2a2d48' : '#3b1f33'} /><rect x={x + 18} y="618" width="8" height="42" fill="#050508" /><line x1={x + 22} x2={x + 22} y1="600" y2="618" stroke="#333" /></g>)}
+          </g>
+        </svg>
+        <div class="c-signs">{SIGNS.map((s, i) => <span class={`c-sign c-sign--${s.c} c-l${s.l} c-sign--${i}`}>{s.t}</span>)}</div>
+        <div class="c-screens c-l3"><span></span><span></span><span></span></div>
+        <div class="c-drones c-l3"><span></span><span></span></div>
+        <div class="c-watch c-l4"><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="c-scan c-l4"></div>
+        <canvas class="c-rain" data-rain></canvas>
+      </div>
+
+      <div class="c-panel">
+        <h1 id="c-title" class="c-title">Cyberpunk</h1>
+        <p class="c-thesis">{text.thesis}</p>
+        <fieldset class="c-density">
+          <legend>Density</legend>
+          {DENSITY.map((d) => <label><input type="radio" name="c-density" id={`c-d${d.id}`} checked={d.id === 2} /> {d.label}</label>)}
+        </fieldset>
+        <dl class="c-label">
+          <div><dt>Aesthetic</dt><dd>Part III, internet aesthetics; a genre since the 1980s</dd></div>
+          <div><dt>When</dt><dd>{text.period}</dd></div>
+        </dl>
+        {encounter.map((p) => <p set:html={p} />)}
+        <p class="c-fiction">The signs in this city are fiction written for this page.</p>
+      </div>
+    </section>
+
+    <div class="c-body">
+      <section aria-labelledby="c-understand-title">
+        <h2 id="c-understand-title" class="c-h2">Where it came from, what it is about</h2>
+        <Blocks blocks={understand} />
+      </section>
+      <details class="c-study">
+        <summary>Study: its children, the present, the signs</summary>
+        <Blocks blocks={study} />
+      </details>
+      <section class="c-works" aria-labelledby="c-works-title">
+        <h2 id="c-works-title" class="c-h2">Works to know</h2>
+        <ol>{text.works.map((w) => <li><span class="c-works__when">{w.when}</span> <span class="c-works__what">{w.what}</span> <span class="c-works__who">{w.who}</span></li>)}</ol>
+      </section>
+      <p class="c-recognise"><span>How to recognise it.</span> {text.recognise}</p>
+    </div>
+  </main>
+  <ChapterFoot id="cyberpunk" notes={sources} />
+  <script>
+    import './scene.ts';
+  </script>
+</Layout>

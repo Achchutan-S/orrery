@@ -1,0 +1,93 @@
+---
+// Weirdcore: the page wears the browser's defaults (Times, blue links, white). One ordinary
+// corridor, drawn at low resolution on a canvas (scene.ts), with a caption that changes what it
+// means. Controls: caption, resolution and a gentle displacement. Text is always HTML and never
+// moves; nothing flashes. Without JavaScript a static drawing of the corridor stands in.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const study = blocks(text.study);
+const sources = notes();
+const CAPTIONS = [
+  'this is the hallway',
+  'you have been here before',
+  'nobody is coming back',
+  'it was always this quiet',
+  'you can stay as long as you want',
+];
+---
+<Layout title="Weirdcore: something is not quite right" description="Weirdcore as a familiar place made unfamiliar: a low-resolution corridor whose caption changes its meaning, and how weirdcore differs from liminal spaces and dreamcore." here="weirdcore" tone="light">
+  <main id="main" class="k">
+    <h1 class="k-title">Weirdcore</h1>
+    <p class="k-thesis"><i>{text.thesis}</i></p>
+    <p class="k-visits" data-visits hidden></p>
+    <hr />
+
+    <figure class="k-frame">
+      <div class="k-picture">
+        <svg class="k-still" viewBox="0 0 160 100" aria-hidden="true">
+          <rect width="160" height="100" fill="#cfc9a8" />
+          <polygon points="0,0 160,0 104,34 56,34" fill="#e8e4d0" />
+          <polygon points="0,100 160,100 104,66 56,66" fill="#9d9672" />
+          <polygon points="0,0 56,34 56,66 0,100" fill="#bdb78f" />
+          <polygon points="160,0 104,34 104,66 160,100" fill="#b2ac84" />
+          <rect x="56" y="34" width="48" height="32" fill="#6f6a4f" />
+          <rect x="74" y="44" width="12" height="22" fill="#2c2a20" />
+          <rect x="64" y="10" width="32" height="3" fill="#fffbe6" />
+        </svg>
+        <canvas class="k-canvas" data-corridor width="96" height="60" aria-hidden="true" hidden></canvas>
+        {CAPTIONS.map((c, i) => <p class={`k-caption k-caption--${i}`} aria-hidden="true">{c}</p>)}
+      </div>
+      <figcaption>An empty school corridor at night, fluorescent lights on, a door at the far end, drawn for this page. The words on it are the caption you choose below.</figcaption>
+    </figure>
+
+    <form class="k-controls" aria-label="Change the picture">
+      <fieldset>
+        <legend>Caption</legend>
+        {CAPTIONS.map((c, i) => <label><input type="radio" name="k-caption" id={`k-c-${i}`} checked={i === 1} /> {c}</label>)}
+      </fieldset>
+      <fieldset data-needs-js hidden>
+        <legend>Resolution</legend>
+        {[['high', 'clear'], ['mid', 'low'], ['low', 'very low']].map(([v, l], i) => <label><input type="radio" name="k-res" value={v} checked={i === 1} /> {l}</label>)}
+      </fieldset>
+      <fieldset data-needs-js hidden>
+        <legend>Something wrong with the walls</legend>
+        {[['0', 'no'], ['1', 'a little'], ['2', 'more']].map(([v, l], i) => <label><input type="radio" name="k-warp" value={v} checked={i === 1} /> {l}</label>)}
+      </fieldset>
+    </form>
+
+    {encounter.map((p) => <p set:html={p} />)}
+
+    <table class="k-label">
+      <caption>About this aesthetic</caption>
+      <tbody>
+        <tr><th scope="row">Kind</th><td>Part III, internet aesthetics</td></tr>
+        <tr><th scope="row">When</th><td>{text.period}</td></tr>
+        <tr><th scope="row">Where</th><td>{text.place}</td></tr>
+      </tbody>
+    </table>
+
+    <h2>Weirdcore, liminal spaces, dreamcore</h2>
+    <Blocks blocks={understand} />
+
+    <details class="k-study">
+      <summary>Study: community and care</summary>
+      <Blocks blocks={study} />
+    </details>
+
+    <h2>Reference points</h2>
+    <ul>{text.works.map((w) => <li>{w.what} ({w.when})</li>)}</ul>
+    <p><b>How to recognise it.</b> {text.recognise}</p>
+  </main>
+  <ChapterFoot id="weirdcore" notes={sources} />
+  <script>
+    import './scene.ts';
+  </script>
+</Layout>

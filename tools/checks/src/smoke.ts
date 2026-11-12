@@ -36,7 +36,7 @@ export const VERCEL_ONLY = 'vercel.json headers, clean-URL and trailing-slash re
 const MEDIA: Record<string, string[]> = {
   html: ['text/html'], pdf: ['application/pdf'], png: ['image/png'], jpg: ['image/jpeg'], jpeg: ['image/jpeg'],
   svg: ['image/svg+xml'], css: ['text/css'], js: ['text/javascript', 'application/javascript'], mjs: ['text/javascript', 'application/javascript'],
-  woff2: ['font/woff2'], json: ['application/json'], txt: ['text/plain'], xml: ['application/xml', 'text/xml'],
+  woff2: ['font/woff2'], webp: ['image/webp'], json: ['application/json'], txt: ['text/plain'], xml: ['application/xml', 'text/xml'],
   // The Skills Archive's downloads. Python has no registered media type, and astro preview sends none
   // for it; what matters is that it is never an HTML fallback.
   md: ['text/markdown', 'text/plain'], zip: ['application/zip'], py: ['text/x-python', 'text/x-script.python', 'text/plain', 'application/octet-stream', ''],
@@ -153,7 +153,8 @@ async function checks(input: SmokeInput, findings: Finding[]): Promise<void> {
         if (views.length === 0) fail(pattern, `no links into ${pattern} found on "${e.id}" pages`);
         for (const v of views) await page(v, 200, `enumerated view of "${e.id}"`);
         if (views[0]) {
-          await page(`${views[0]}?pu-smoke=1`, 200, 'a query string serves the same view');
+          // Views that are pages are probed with a query string; file routes (fonts, images) are files.
+          if (extension(views[0]) === 'html') await page(`${views[0]}?pu-smoke=1`, 200, 'a query string serves the same view');
           await page(`/${under}__pu-smoke-no-such-view`, 404, 'an unknown view is a real 404');
         }
       }

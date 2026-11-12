@@ -1,0 +1,115 @@
+/* Frutiger Aero: sky blue, grass green, water, white gloss. Glass panels are this chapter's
+   subject, not a habit. System humanist type, as the era's interfaces used. */
+@layer experience {
+  [data-experience='seeing'] {
+    color-scheme: light;
+    --f-ink: #082a4d;
+    --f-blue: #1260b3;
+    --f-sky: #7cc6f5;
+    --f-green: #2f9b36;
+    --f-type: 'Segoe UI', 'Lucida Grande', 'Frutiger', 'Frutiger Next', 'Myriad Pro', system-ui, sans-serif;
+  }
+  [data-experience='seeing'] body {
+    margin: 0;
+    background: linear-gradient(#cdeaff, #eef9ff 40%, #e3f7e0) fixed;
+    color: var(--f-ink);
+    font: 400 1.125rem/1.6 var(--f-type);
+  }
+  [data-experience='seeing'] .f a { color: var(--f-blue); }
+
+  /* Glass: a frosted panel with a highlight across its upper half. */
+  [data-experience='seeing'] .f-glass {
+    position: relative;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid rgb(255 255 255 / 0.9);
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.93) 0%, rgb(255 255 255 / 0.84) 49%, rgb(236 248 255 / 0.9) 51%, rgb(255 255 255 / 0.92) 100%);
+    box-shadow: 0 10px 30px rgb(8 60 120 / 0.22), inset 0 1px 0 #fff, inset 0 -8px 20px rgb(124 198 245 / 0.25);
+    backdrop-filter: blur(10px) saturate(1.3);
+  }
+
+  [data-experience='seeing'] .f-world { position: relative; display: grid; min-block-size: 100svh; align-items: center; overflow: hidden; }
+  [data-experience='seeing'] .f-scene { position: absolute; inset: 0; view-transition-name: see-aperture; }
+  [data-experience='seeing'] .f-land, [data-experience='seeing'] .f-water { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+  [data-experience='seeing'] .f-water { pointer-events: none; mix-blend-mode: screen; }
+  [data-experience='seeing'] .f-intro { margin: 6rem clamp(1rem, 5vw, 4rem) 8rem; max-inline-size: 32rem; }
+  [data-experience='seeing'] .f-title {
+    margin: 0;
+    font: 300 clamp(2.6rem, 6vw, 4.5rem)/1 var(--f-type);
+    letter-spacing: -0.02em;
+    color: var(--f-blue);
+    text-shadow: 0 1px 0 #fff;
+  }
+  [data-experience='seeing'] .f-thesis { margin: 0.25rem 0 1rem; font-size: 1.35rem; color: #24638f; font-style: italic; }
+  [data-experience='seeing'] .f-intro p { margin: 0 0 0.9rem; }
+
+  /* Bubbles: real buttons. */
+  [data-experience='seeing'] .f-bubbles { position: absolute; inset: 0; pointer-events: none; }
+  [data-experience='seeing'] .f-bubble {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    inline-size: clamp(5.5rem, 10vw, 8rem);
+    aspect-ratio: 1;
+    padding: 0.5rem;
+    border: 1px solid rgb(255 255 255 / 0.85);
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 32% 26%, rgb(255 255 255 / 0.95) 0 9%, transparent 22%),
+      radial-gradient(circle at 70% 78%, rgb(160 255 230 / 0.5), transparent 45%),
+      radial-gradient(circle at 50% 50%, rgb(255 255 255 / 0.15) 55%, rgb(255 255 255 / 0.7) 72%, rgb(120 200 255 / 0.5) 100%);
+    color: var(--f-ink);
+    font: 600 0.95rem/1.1 var(--f-type);
+    text-shadow: 0 0 6px #fff, 0 0 2px #fff;
+    pointer-events: auto;
+    cursor: pointer;
+    animation: f-drift 9s ease-in-out infinite alternate;
+  }
+  [data-experience='seeing'] .f-bubble[hidden] { display: none; }
+  [data-experience='seeing'] .f-bubble:hover { filter: brightness(1.08); }
+  [data-experience='seeing'] .f-bubble--0 { inset: 14% 10% auto auto; }
+  [data-experience='seeing'] .f-bubble--1 { inset: 34% 24% auto auto; animation-delay: -2s; }
+  [data-experience='seeing'] .f-bubble--2 { inset: 56% 8% auto auto; animation-delay: -4s; }
+  [data-experience='seeing'] .f-bubble--3 { inset: 24% 38% auto auto; animation-delay: -6s; }
+  [data-experience='seeing'] .f-bubble--4 { inset: 60% 32% auto auto; animation-delay: -1s; }
+  [data-experience='seeing'] .f-bubble--5 { inset: 8% 28% auto auto; animation-delay: -3s; }
+  [data-experience='seeing'] .f-bubble--6 { inset: 44% 2% auto auto; animation-delay: -5s; }
+  @keyframes f-drift { from { translate: 0 0; } to { translate: -12px -26px; } }
+  [data-experience='seeing'] .f-bubble.is-popping { animation: f-pop 0.38s ease-out forwards; }
+  @keyframes f-pop { 60% { scale: 1.25; opacity: 0.6; } to { scale: 1.5; opacity: 0; } }
+  @media (max-width: 52rem) {
+    [data-experience='seeing'] .f-world { display: block; }
+    [data-experience='seeing'] .f-bubbles { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; padding: 0 1rem 3rem; pointer-events: auto; }
+    [data-experience='seeing'] .f-bubble { position: relative; inset: auto !important; }
+    [data-experience='seeing'] .f-intro { margin: 5.5rem 1rem 2rem; }
+  }
+
+  [data-experience='seeing'] .f-tray { margin: -4rem clamp(1rem, 5vw, 4rem) 0; max-inline-size: 60rem; }
+  [data-experience='seeing'] .f-h2 { margin: 0 0 1rem; font: 300 clamp(1.6rem, 3vw, 2.2rem)/1.1 var(--f-type); color: var(--f-blue); }
+  [data-experience='seeing'] .f-tray__hint { margin: 0; color: #2c587a; }
+  [data-experience='seeing'] .f-words { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem; margin: 0; }
+  [data-experience='seeing'] .f-word { padding: 0.75rem 1rem; border-radius: 12px; background: linear-gradient(#ffffff, #e6f5ff); box-shadow: inset 0 0 0 1px #bfe3ff; }
+  [data-experience='seeing'] .f-word[hidden] { display: none; }
+  [data-experience='seeing'] .f-word dt { font-weight: 600; color: var(--f-blue); }
+  [data-experience='seeing'] .f-word dd { margin: 0.25rem 0 0; font-size: 1rem; }
+
+  [data-experience='seeing'] .f-body { display: grid; gap: 1.5rem; max-inline-size: 52rem; margin: 3rem auto 4rem; padding-inline: clamp(1rem, 4vw, 2rem); }
+  [data-experience='seeing'] .f-label { display: grid; gap: 0.25rem; margin: 0; font-size: 1rem; }
+  [data-experience='seeing'] .f-label div { display: flex; flex-wrap: wrap; gap: 0 0.6rem; }
+  [data-experience='seeing'] .f-label dt { font-weight: 600; color: var(--f-blue); }
+  [data-experience='seeing'] .f-label dd { margin: 0; }
+  [data-experience='seeing'] .f .see-block { margin-block-end: 1.5rem; }
+  [data-experience='seeing'] .f .see-block__title { margin: 0 0 0.35rem; font-size: 1.25rem; font-weight: 600; color: var(--f-ink); }
+  [data-experience='seeing'] .f .see-block p { margin: 0 0 0.9rem; }
+  [data-experience='seeing'] .f .see-block__kind { color: #1d6b2a; font-style: normal; font-weight: 600; font-size: 0.9375rem; }
+  [data-experience='seeing'] .f-study summary { display: flex; align-items: center; min-block-size: 44px; font-size: 1.2rem; color: var(--f-blue); cursor: pointer; }
+  [data-experience='seeing'] .f-study[open] summary { margin-block-end: 1rem; }
+  [data-experience='seeing'] .f-works { margin: 0; padding: 0; list-style: none; }
+  [data-experience='seeing'] .f-works li { padding-block: 0.4rem; border-block-end: 1px solid #cfe9fb; }
+  [data-experience='seeing'] .f-works strong { display: inline-block; min-inline-size: 3.5rem; color: var(--f-blue); }
+  [data-experience='seeing'] .f-recognise { margin: 1.5rem 0 0; }
+
+  /* Arriving: a glossy sheen sweeps across. */
+  ::view-transition-new(root) { animation: f-sheen 0.8s ease-out both; }
+  @keyframes f-sheen { from { opacity: 0; filter: brightness(1.6) saturate(0.6); } to { opacity: 1; filter: none; } }
+}

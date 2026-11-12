@@ -1,0 +1,157 @@
+/* Brutalism: concrete greys only, one black. Titles in a heavy grotesque cropped by the screen's
+   edge; reading text in the device's own sans. No animation anywhere on this page. */
+@layer experience {
+  @font-face { font-family: 'X Archivo'; src: url('/seeing/fonts/archivo-black-400/face.woff2') format('woff2'); font-display: swap; }
+
+  [data-experience='seeing'] {
+    color-scheme: light;
+    --x-sky: #e9e8e4;
+    --x-light: #c4c1b9;
+    --x-mid: #8f8c85;
+    --x-dark: #4a4844;
+    --x-black: #141413;
+    --x-mass: 'X Archivo', 'Arial Black', Impact, sans-serif;
+    --x-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+    --x-board: repeating-linear-gradient(90deg, rgb(0 0 0 / 0.045) 0 1px, transparent 1px 9px, rgb(255 255 255 / 0.05) 9px 10px, transparent 10px 23px);
+  }
+  [data-experience='seeing'] body {
+    margin: 0;
+    background: var(--x-sky);
+    color: var(--x-black);
+    font: 400 1.125rem/1.6 var(--x-sans);
+  }
+  [data-experience='seeing'] .x a { color: var(--x-black); text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
+  [data-experience='seeing'] .x *, [data-experience='seeing'] .x *::before { animation: none !important; transition: none !important; }
+  [data-experience='seeing'] .x { overflow-x: clip; }
+
+  [data-experience='seeing'] .x-hero {
+    padding: 6rem 0 0;
+    background: var(--x-sky);
+  }
+  [data-experience='seeing'] .x-title {
+    margin: 0 0 0 -0.06em;
+    font: 400 clamp(3.5rem, 18.6vw, 22rem)/0.78 var(--x-mass);
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+    color: var(--x-black);
+  }
+  [data-experience='seeing'] .x-thesis {
+    margin: 1.5rem clamp(1rem, 6vw, 5rem) 3rem auto;
+    max-inline-size: 20rem;
+    font: 400 clamp(1.4rem, 3vw, 2.2rem)/1.05 var(--x-mass);
+    text-align: end;
+  }
+
+  /* The slab on its legs. */
+  [data-experience='seeing'] .x-pilotis { position: relative; }
+  [data-experience='seeing'] .x-columns {
+    display: flex;
+    justify-content: space-around;
+    block-size: clamp(5rem, 16vw, 11rem);
+    background: linear-gradient(var(--x-dark), #5a5853);
+  }
+  [data-experience='seeing'] .x-columns span { inline-size: clamp(2.5rem, 6vw, 5rem); background: var(--x-mid) var(--x-board); box-shadow: inset -14px 0 0 rgb(0 0 0 / 0.18); }
+  [data-experience='seeing'] .x-slab {
+    padding: clamp(1.5rem, 5vw, 4rem) clamp(1rem, 6vw, 5rem);
+    background: var(--x-light) var(--x-board);
+    border-block: 18px solid var(--x-mid);
+    view-transition-name: see-aperture;
+  }
+  [data-experience='seeing'] .x-label { display: flex; flex-wrap: wrap; gap: 0.5rem 2.5rem; margin: 0 0 2rem; font-size: 0.9375rem; }
+  [data-experience='seeing'] .x-label dt { font: 400 0.8125rem/1.3 var(--x-mass); }
+  [data-experience='seeing'] .x-label dd { margin: 0; }
+  [data-experience='seeing'] .x-board { max-inline-size: 34rem; margin: 2rem 0 0; font-size: 0.9375rem; color: #2f2e2b; }
+
+  /* Recesses: text sits in voids cut deep into the mass, lit from above. */
+  [data-experience='seeing'] .x-recess {
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    background: var(--x-sky);
+    box-shadow: inset 0 22px 0 -6px rgb(20 20 19 / 0.32), inset 18px 0 0 -6px rgb(20 20 19 / 0.2);
+  }
+  [data-experience='seeing'] .x-recess--lead { max-inline-size: 46rem; font-size: 1.25rem; }
+  [data-experience='seeing'] .x-recess p { margin: 0 0 1rem; max-inline-size: 40rem; }
+  [data-experience='seeing'] .x-recess .see-block__title { margin: 0 0 0.75rem; font: 400 1.35rem/1.1 var(--x-mass); }
+  [data-experience='seeing'] .x .see-block__kind { font-style: normal; font-weight: 700; }
+
+  [data-experience='seeing'] .x-understand,
+  [data-experience='seeing'] .x-readings,
+  [data-experience='seeing'] .x-works,
+  [data-experience='seeing'] .x-study,
+  [data-experience='seeing'] .x-recognise { padding-inline: clamp(1rem, 6vw, 5rem); }
+  [data-experience='seeing'] .x-h2 {
+    margin: 5rem 0 2rem;
+    font: 400 clamp(2.25rem, 7vw, 5.5rem)/0.9 var(--x-mass);
+    letter-spacing: -0.03em;
+  }
+  [data-experience='seeing'] .x-voids {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    gap: 18px;
+    padding: 18px;
+    background: var(--x-mid) var(--x-board);
+  }
+
+  [data-experience='seeing'] .x-readings__intro { max-inline-size: 40rem; }
+  [data-experience='seeing'] .x-pick { display: flex; flex-wrap: wrap; gap: 0; margin: 1.5rem 0 0; padding: 0; border: 0; }
+  [data-experience='seeing'] .x-pick label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-block-size: 52px;
+    padding-inline: 1.25rem;
+    border: 4px solid var(--x-black);
+    margin: 0 -4px -4px 0;
+    font: 400 1rem/1 var(--x-mass);
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .x-pick label:has(input:checked) { background: var(--x-black); color: var(--x-sky); }
+  [data-experience='seeing'] .x-pick input { margin: 0; accent-color: var(--x-sky); }
+  [data-experience='seeing'] .x-fig { margin: 2rem 0 0; }
+  [data-experience='seeing'] .x-fig svg { display: block; inline-size: 100%; block-size: auto; }
+  [data-experience='seeing'] .x-fig figcaption { min-block-size: 4rem; margin-block-start: 1rem; max-inline-size: 44rem; }
+  [data-experience='seeing'] .x-cap, [data-experience='seeing'] .x-only { display: none; }
+  [data-experience='seeing'] .x:has(#x-r-drawn:checked) :is(.x-cap--drawn, .x-only--drawn),
+  [data-experience='seeing'] .x:has(#x-r-weathered:checked) :is(.x-cap--weathered, .x-only--weathered),
+  [data-experience='seeing'] .x:has(#x-r-photographed:checked) :is(.x-cap--photographed, .x-only--photographed) { display: block; }
+
+  /* The three readings of the same drawing. */
+  [data-experience='seeing'] .x-sky { fill: #fbfbf9; }
+  [data-experience='seeing'] .x-mass, [data-experience='seeing'] .x-tower { fill: #fbfbf9; stroke: var(--x-black); stroke-width: 2; }
+  [data-experience='seeing'] .x-band { fill: none; stroke: var(--x-black); stroke-width: 1.5; }
+  [data-experience='seeing'] .x-window { fill: #fbfbf9; stroke: var(--x-black); stroke-width: 1.2; }
+  [data-experience='seeing'] .x-deck { fill: #fbfbf9; stroke: var(--x-black); stroke-width: 1.5; }
+  [data-experience='seeing'] .x-rail { stroke: var(--x-black); stroke-width: 1; }
+  [data-experience='seeing'] .x-piloti { fill: #fbfbf9; stroke: var(--x-black); stroke-width: 1.5; }
+  [data-experience='seeing'] .x-ground { fill: var(--x-black); }
+  [data-experience='seeing'] .x-person { fill: none; stroke: var(--x-black); stroke-width: 1.4; }
+  [data-experience='seeing'] .x-trunk { stroke: var(--x-black); stroke-width: 2; }
+  [data-experience='seeing'] .x-tree { fill: none; stroke: var(--x-black); stroke-width: 1.5; }
+  [data-experience='seeing'] .x-shadow-cast { display: none; }
+
+  [data-experience='seeing'] .x:has(#x-r-weathered:checked) .x-sky { fill: #c9ccd0; }
+  [data-experience='seeing'] .x:has(#x-r-weathered:checked) :is(.x-mass, .x-tower, .x-deck, .x-piloti) { fill: #9a968e; stroke: #6b6862; }
+  [data-experience='seeing'] .x:has(#x-r-weathered:checked) .x-window { fill: #4b4a47; stroke: #6b6862; }
+  [data-experience='seeing'] .x:has(#x-r-weathered:checked) .x-band { stroke: #7c7871; stroke-width: 6; }
+  [data-experience='seeing'] .x-stain { fill: #5f5c56; opacity: 0.45; }
+  [data-experience='seeing'] .x-board-up { fill: #8c7a5e; }
+
+  [data-experience='seeing'] .x:has(#x-r-photographed:checked) .x-sky { fill: #f4f4f4; }
+  [data-experience='seeing'] .x:has(#x-r-photographed:checked) :is(.x-mass, .x-tower, .x-deck, .x-piloti) { fill: #d9d9d9; stroke: none; }
+  [data-experience='seeing'] .x:has(#x-r-photographed:checked) .x-window { fill: #000; stroke: none; }
+  [data-experience='seeing'] .x:has(#x-r-photographed:checked) .x-band { stroke: #000; stroke-width: 3; }
+  [data-experience='seeing'] .x:has(#x-r-photographed:checked) .x-shadow-cast { display: block; fill: #000; }
+  [data-experience='seeing'] .x-hard { fill: #000; opacity: 0.8; }
+
+  [data-experience='seeing'] .x-study { margin-block: 4rem; }
+  [data-experience='seeing'] .x-study summary { display: flex; align-items: center; min-block-size: 3.5rem; margin-block-end: 1.5rem; font: 400 1.5rem/1.1 var(--x-mass); cursor: pointer; }
+  [data-experience='seeing'] .x-works ul { margin: 0; padding: 0; list-style: none; border-block-start: 6px solid var(--x-black); }
+  [data-experience='seeing'] .x-works li { padding-block: 0.75rem; border-block-end: 2px solid var(--x-black); }
+  [data-experience='seeing'] .x-works__what { font: 400 1.125rem/1.3 var(--x-mass); }
+  [data-experience='seeing'] .x-works__meta { display: block; color: #3b3a37; }
+  [data-experience='seeing'] .x-recognise { margin-block: 4rem 4rem; max-inline-size: 52rem; font-size: 1.5rem; line-height: 1.35; }
+  [data-experience='seeing'] .x-recognise span { font-family: var(--x-mass); }
+
+  /* Arriving: a cut. Weight does not fade in. */
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
+  ::view-transition-old(*) { display: none; }
+}

@@ -1,0 +1,6 @@
+/* The room's own drawing styles, wherever it appears. */
+@layer experience {
+  [data-experience='seeing'] .rf-room { display: block; inline-size: 100%; block-size: auto; }
+  [data-experience='seeing'] .rf-weird-caption { font: 700 22px Arial, sans-serif; fill: #fff; stroke: #000; stroke-width: 3px; paint-order: stroke; }
+  [data-experience='seeing'] .rf-skeleton { fill: none; stroke: #f2d98a; stroke-width: 2; stroke-dasharray: 6 5; opacity: 0; transition: opacity 0.4s; }
+}

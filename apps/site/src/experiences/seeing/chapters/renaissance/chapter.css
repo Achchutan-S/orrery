@@ -1,0 +1,175 @@
+/* Renaissance: white plaster and grey pietra serena, as in Brunelleschi's Florence; a classical
+   roman; red sinopia for the construction, the colour of a fresco's underdrawing. The layout is a
+   grid of measured bays with visible stone frames. */
+@layer experience {
+  @font-face { font-family: 'R Garamond'; src: url('/seeing/fonts/eb-garamond-400-600/face.woff2') format('woff2'); font-weight: 400 600; font-display: swap; }
+  @font-face { font-family: 'R Garamond'; src: url('/seeing/fonts/eb-garamond-400-600-italic/face.woff2') format('woff2'); font-weight: 400 600; font-style: italic; font-display: swap; }
+
+  [data-experience='seeing'] {
+    color-scheme: light;
+    --r-plaster: #f4f3ef;
+    --r-stone: #5c676d;
+    --r-stone-light: #8f999e;
+    --r-ink: #23272a;
+    --r-sinopia: #a33f25;
+    --r-read: 'R Garamond', Garamond, 'Times New Roman', serif;
+  }
+  [data-experience='seeing'] body {
+    margin: 0;
+    background: var(--r-plaster);
+    color: var(--r-ink);
+    font: 400 1.25rem/1.6 var(--r-read);
+    font-variant-numeric: oldstyle-nums;
+  }
+  [data-experience='seeing'] .r a { color: var(--r-sinopia); text-underline-offset: 0.16em; }
+  [data-experience='seeing'] .r {
+    padding: 5.5rem clamp(1rem, 4vw, 3.5rem) 4rem;
+    max-inline-size: 90rem;
+    margin-inline: auto;
+  }
+
+  /* The opening bay: text and instrument, framed in stone. */
+  [data-experience='seeing'] .r-open {
+    display: grid;
+    gap: 2rem;
+    padding: clamp(1rem, 3vw, 2.5rem);
+    border: 6px solid var(--r-stone);
+    outline: 1px solid var(--r-stone);
+    outline-offset: 6px;
+  }
+  @media (min-width: 64rem) {
+    [data-experience='seeing'] .r-open { grid-template-columns: minmax(0, 5fr) minmax(0, 8fr); align-items: start; }
+  }
+  [data-experience='seeing'] .r-title {
+    margin: 0;
+    font: 400 clamp(2rem, 3.4vw, 3.4rem)/1 var(--r-read);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--r-ink);
+  }
+  [data-experience='seeing'] .r-thesis { margin: 0.5rem 0 1.5rem; font-style: italic; font-size: 1.4rem; color: var(--r-stone); }
+  [data-experience='seeing'] .r-label {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0 0 1.5rem;
+    padding-block: 0.75rem;
+    border-block: 1px solid var(--r-stone-light);
+    font-size: 1rem;
+  }
+  [data-experience='seeing'] .r-label div { display: grid; grid-template-columns: 6rem 1fr; gap: 1rem; }
+  [data-experience='seeing'] .r-label dt { font-style: italic; color: var(--r-stone); }
+  [data-experience='seeing'] .r-label dd { margin: 0; }
+  [data-experience='seeing'] .r-encounter { margin: 0 0 1rem; max-inline-size: 34rem; }
+
+  [data-experience='seeing'] .r-instrument { view-transition-name: see-aperture; }
+  [data-experience='seeing'] .r-figure { margin: 0; }
+  [data-experience='seeing'] .r-figure svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    border: 2px solid var(--r-stone);
+    touch-action: none;
+    cursor: crosshair;
+  }
+  [data-experience='seeing'] .r-sky { fill: #e9ebe8; }
+  [data-experience='seeing'] .r-back { fill: #f8f7f3; stroke: var(--r-stone); stroke-width: 3; }
+  [data-experience='seeing'] .r-door { fill: #3c3a36; }
+  [data-experience='seeing'] .r-floor { fill: #ebe5d8; }
+  [data-experience='seeing'] .r-tile { fill: #8c8a83; }
+  [data-experience='seeing'] .r-wall { fill: none; stroke: var(--r-stone); stroke-width: 4; }
+  [data-experience='seeing'] .r-arch { fill: none; stroke: var(--r-stone); stroke-width: 5; stroke-linejoin: round; }
+  [data-experience='seeing'] .r-column { fill: var(--r-stone); }
+  [data-experience='seeing'] .r-construction { fill: none; stroke: var(--r-sinopia); stroke-width: 1.4; transition: opacity 0.4s; }
+  [data-experience='seeing'] .r-c-thin { stroke-width: 0.8; opacity: 0.7; }
+  [data-experience='seeing'] .r-c-diag { stroke-dasharray: 8 6; stroke-width: 1.6; }
+  [data-experience='seeing'] .r-c-horizon { stroke-width: 1; stroke-dasharray: 2 4; }
+  [data-experience='seeing'] .r-c-dp { fill: var(--r-plaster); stroke: var(--r-sinopia); stroke-width: 2; }
+  [data-experience='seeing'] .r:not(:has(#r-lines:checked)) .r-construction { opacity: 0; }
+  [data-experience='seeing'] .r-vp { fill: var(--r-sinopia); stroke: var(--r-sinopia); stroke-width: 2; cursor: grab; }
+  [data-experience='seeing'] .r-vp-halo { fill: rgb(163 63 37 / 0.14); stroke: none; }
+  [data-experience='seeing'] .r-caption { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; margin-block-start: 0.5rem; font-size: 0.9375rem; color: var(--r-stone); }
+  [data-experience='seeing'] .r-key::before {
+    content: '';
+    display: inline-block;
+    inline-size: 0.7rem;
+    block-size: 0.7rem;
+    margin-inline-end: 0.4rem;
+    border: 2px solid var(--r-sinopia);
+    border-radius: 50%;
+    vertical-align: -0.05em;
+  }
+  [data-experience='seeing'] .r-key--vp::before { background: var(--r-sinopia); }
+  [data-experience='seeing'] .r-key--hz::before { border-radius: 0; block-size: 0; border-width: 1px 0 0; border-style: dashed; inline-size: 1.2rem; }
+
+  [data-experience='seeing'] .r-controls { margin-block-start: 1rem; font-size: 1.0625rem; }
+  [data-experience='seeing'] .r-hint { margin: 0 0 0.5rem; font-style: italic; color: var(--r-stone); }
+  [data-experience='seeing'] .r-range { display: grid; gap: 0.1rem; margin-block-end: 0.5rem; }
+  [data-experience='seeing'] .r-range input { inline-size: 100%; min-block-size: 44px; margin: 0; accent-color: var(--r-sinopia); }
+  [data-experience='seeing'] .r-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.5rem; }
+  [data-experience='seeing'] .r-check { display: inline-flex; align-items: center; gap: 0.5rem; min-block-size: 44px; }
+  [data-experience='seeing'] .r-check input { inline-size: 1.1rem; block-size: 1.1rem; accent-color: var(--r-sinopia); }
+  [data-experience='seeing'] .r-reset {
+    min-block-size: 44px;
+    padding-inline: 1rem;
+    border: 1px solid var(--r-stone);
+    background: var(--r-plaster);
+    color: var(--r-ink);
+    font: inherit;
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .r-reset:hover { background: #e7e9e7; }
+  [data-experience='seeing'] .r-status { margin: 0.5rem 0 0; font-size: 0.9375rem; color: var(--r-stone); }
+  [data-experience='seeing'] .r-instrument:not(.is-live) [data-live],
+  [data-experience='seeing'] .r-instrument:not(.is-live) .r-hint { display: none; }
+
+  /* The bays. */
+  [data-experience='seeing'] .r-h2 {
+    margin: 4.5rem 0 1.5rem;
+    font: 400 clamp(1.6rem, 3.2vw, 2.4rem)/1.1 var(--r-read);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+  [data-experience='seeing'] .r-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+    border-block-start: 6px solid var(--r-stone);
+    border-inline-start: 6px solid var(--r-stone);
+  }
+  [data-experience='seeing'] .r-bay,
+  [data-experience='seeing'] .r-durer {
+    margin: 0;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    border-block-end: 6px solid var(--r-stone);
+    border-inline-end: 6px solid var(--r-stone);
+  }
+  [data-experience='seeing'] .r-bay .see-block__title { margin: 0 0 0.75rem; font: italic 600 1.45rem/1.2 var(--r-read); color: var(--r-ink); }
+  [data-experience='seeing'] .r-bay p { margin: 0 0 1rem; hyphens: auto; }
+  [data-experience='seeing'] .r .see-block__kind { color: var(--r-sinopia); }
+  [data-experience='seeing'] .r-durer { grid-column: 1 / -1; background: #fbfaf7; }
+  [data-experience='seeing'] .r-durer img { display: block; inline-size: 100%; block-size: auto; mix-blend-mode: multiply; }
+  [data-experience='seeing'] .r-durer figcaption { margin-block-start: 0.75rem; font-size: 1rem; color: var(--r-stone); }
+
+  [data-experience='seeing'] .r-study { margin-block: 4rem; }
+  [data-experience='seeing'] .r-study summary {
+    display: flex;
+    align-items: center;
+    min-block-size: 3.5rem;
+    margin-block-end: 1rem;
+    font: 400 1.5rem/1.2 var(--r-read);
+    letter-spacing: 0.06em;
+    cursor: pointer;
+  }
+
+  [data-experience='seeing'] .r-works table { inline-size: 100%; border-collapse: collapse; font-size: 1.0625rem; }
+  [data-experience='seeing'] .r-works th { text-align: start; font-weight: 600; font-style: italic; color: var(--r-stone); border-block-end: 2px solid var(--r-stone); padding: 0.5rem 1rem 0.5rem 0; }
+  [data-experience='seeing'] .r-works td { padding: 0.6rem 1rem 0.6rem 0; border-block-end: 1px solid var(--r-stone-light); vertical-align: top; }
+  [data-experience='seeing'] .r-where { color: var(--r-stone); }
+  [data-experience='seeing'] .r-recognise { margin: 4rem 0 0; max-inline-size: 46rem; font-size: 1.5rem; line-height: 1.45; }
+  [data-experience='seeing'] .r-recognise span { font-style: italic; color: var(--r-sinopia); }
+  @media (max-width: 40rem) {
+    [data-experience='seeing'] .r-works table, [data-experience='seeing'] .r-works tbody, [data-experience='seeing'] .r-works tr, [data-experience='seeing'] .r-works td { display: block; }
+    [data-experience='seeing'] .r-works thead { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+    [data-experience='seeing'] .r-works tr { padding-block: 0.6rem; border-block-end: 1px solid var(--r-stone-light); }
+    [data-experience='seeing'] .r-works td { padding: 0; border: 0; }
+  }
+}

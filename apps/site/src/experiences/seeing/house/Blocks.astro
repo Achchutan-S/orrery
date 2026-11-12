@@ -1,0 +1,17 @@
+---
+// A run of editorial blocks, already rendered by the page's citer (house/text.ts) in its
+// frontmatter, so citation numbers follow reading order. Non-history passages carry a visible
+// label, so interpretation, contemporary terms and the editor's voice are never mistaken for
+// settled history.
+import { KIND_LABEL, type Block } from './text.ts';
+
+interface Props { blocks: Block[]; level?: 2 | 3; class?: string }
+const { blocks, level = 3, class: cls } = Astro.props;
+---
+{blocks.map((b) => (
+  <section class:list={['see-block', `see-block--${b.kind ?? 'history'}`, cls]}>
+    {b.title && (level === 2 ? <h2 class="see-block__title">{b.title}</h2> : <h3 class="see-block__title">{b.title}</h3>)}
+    {b.kind && b.kind !== 'history' && <p class="see-block__kind">{KIND_LABEL[b.kind]}</p>}
+    {b.text.map((t) => <p set:html={t} />)}
+  </section>
+))}

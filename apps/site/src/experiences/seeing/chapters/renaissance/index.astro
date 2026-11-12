@@ -1,0 +1,119 @@
+---
+// Renaissance: the page is a measured interior. White plaster bays framed in grey pietra serena,
+// a classical roman, and at its centre an instrument: a loggia in true one-point perspective that
+// the visitor re-projects by moving the eye. First frame drawn at build time (perspective.ts); the
+// script only redraws it.
+import Layout from '../../house/Layout.astro';
+import Blocks from '../../house/Blocks.astro';
+import ChapterFoot from '../../house/ChapterFoot.astro';
+import { citer } from '../../house/text.ts';
+import { image } from '../../data/assets.ts';
+import { DEFAULT_EYE, LIMITS, describe, draw } from './perspective.ts';
+import text from './content.ts';
+import './chapter.css';
+
+const { rich, blocks, notes } = citer();
+const durer = image('durer-draughtsman.webp');
+const encounter = text.encounter.map(rich);
+const understand = blocks(text.understand);
+const study = blocks(text.study);
+const sources = notes();
+const first = draw(DEFAULT_EYE);
+---
+<Layout title="Renaissance: the world becomes measurable" description="Linear perspective as an instrument: move the eye and watch a Florentine loggia rebuild itself, then read how the method was made and what it leaves out." here="renaissance" tone="light" preload={['eb-garamond-400-600.woff2']}>
+  <main id="main" class="r">
+    <section class="r-open" aria-labelledby="r-title">
+      <header class="r-head">
+        <h1 id="r-title" class="r-title">Renaissance</h1>
+        <p class="r-thesis">{text.thesis}</p>
+        <dl class="r-label">
+          <div><dt>Movement</dt><dd>Part I, the history of art and design</dd></div>
+          <div><dt>Period</dt><dd>{text.period}</dd></div>
+          <div><dt>Where</dt><dd>{text.place}</dd></div>
+        </dl>
+        {encounter.map((p) => <p class="r-encounter" set:html={p} />)}
+      </header>
+
+      <div class="r-instrument" data-perspective>
+        <figure class="r-figure">
+          <svg viewBox="0 0 1000 750" role="img" aria-labelledby="r-svg-desc">
+            <desc id="r-svg-desc">A loggia drawn in one-point perspective: a chequered pavement recedes between two arcades of grey columns and round arches towards a white end wall with a door. Red construction lines run from the base of the picture to a single vanishing point on the horizon.</desc>
+            <rect width="1000" height="750" class="r-sky" />
+            <path data-part="back" d={first.back} class="r-back" />
+            <path data-part="door" d={first.door} class="r-door" />
+            <path data-part="floor" d={first.floor} class="r-floor" />
+            <path data-part="dark" d={first.dark} class="r-tile" />
+            <path data-part="walls" d={first.walls} class="r-wall" />
+            <path data-part="arches" d={first.arches} class="r-arch" />
+            <path data-part="columns" d={first.columns} class="r-column" />
+            <g class="r-construction">
+              <path data-part="horizon" d={first.horizon} class="r-c-horizon" />
+              <path data-part="orthogonals" d={first.orthogonals} />
+              <path data-part="transversals" d={first.transversals} class="r-c-thin" />
+              <path data-part="diagonal" d={first.diagonal} class="r-c-diag" />
+              <circle data-dp cx={first.distancePoint.X} cy={first.distancePoint.Y} r="7" class="r-c-dp" />
+            </g>
+            <g data-vp transform={`translate(${first.vp.X} ${first.vp.Y})`} class="r-vp">
+              <circle r="22" class="r-vp-halo" />
+              <circle r="9" />
+              <path d="M-30 0 H30 M0 -30 V30" />
+            </g>
+          </svg>
+          <figcaption class="r-caption">
+            <span class="r-key r-key--vp">Vanishing point</span>
+            <span class="r-key r-key--dp">Distance point</span>
+            <span class="r-key r-key--hz">Horizon, at the height of the eye</span>
+          </figcaption>
+        </figure>
+        <form class="r-controls" aria-label="Move the eye">
+          <p class="r-hint">Drag the red point, or use the sliders.</p>
+          <label class="r-range" data-live>Eye, left or right
+            <input id="r-eye-x" type="range" min={LIMITS.eyeX[0]} max={LIMITS.eyeX[1]} step="0.1" value={DEFAULT_EYE.eyeX} />
+          </label>
+          <label class="r-range" data-live>Eye height
+            <input id="r-eye-h" type="range" min={LIMITS.eyeHeight[0]} max={LIMITS.eyeHeight[1]} step="0.1" value={DEFAULT_EYE.eyeHeight} />
+          </label>
+          <label class="r-range" data-live>Distance from the picture
+            <input id="r-dist" type="range" min={LIMITS.distance[0]} max={LIMITS.distance[1]} step="0.1" value={DEFAULT_EYE.distance} />
+          </label>
+          <div class="r-row">
+            <label class="r-check"><input type="checkbox" id="r-lines" checked /> Show the construction</label>
+            <button type="button" class="r-reset" data-reset data-live>Stand in the centre</button>
+          </div>
+          <p class="r-status" role="status" data-eye-status>{describe(DEFAULT_EYE)}</p>
+        </form>
+      </div>
+    </section>
+
+    <section class="r-bays" aria-labelledby="r-understand-title">
+      <h2 id="r-understand-title" class="r-h2">How the window was built</h2>
+      <div class="r-grid">
+        <Blocks blocks={understand.slice(0, 3)} class="r-bay" />
+        <figure class="r-durer">
+          <img src={`/seeing/images/${durer.file.replace(/\.webp$/, '')}/image.webp`} width={durer.width} height={durer.height} alt={durer.alt} loading="lazy" decoding="async" />
+          <figcaption>{durer.creator}, <cite>{durer.title}</cite>. {durer.medium}; {durer.date}. {durer.institution} ({durer.accession}). Public domain.</figcaption>
+        </figure>
+        <Blocks blocks={understand.slice(3)} class="r-bay" />
+      </div>
+    </section>
+
+    <details class="r-study">
+      <summary>Study: the geometry, the critique, the body</summary>
+      <div class="r-grid"><Blocks blocks={study} class="r-bay" /></div>
+    </details>
+
+    <section class="r-works" aria-labelledby="r-works-title">
+      <h2 id="r-works-title" class="r-h2">Works to know</h2>
+      <table>
+        <caption class="see-vh">Works, makers and dates</caption>
+        <thead><tr><th scope="col">Work</th><th scope="col">Maker</th><th scope="col">Date</th></tr></thead>
+        <tbody>{text.works.map((w) => <tr><td>{w.what}{w.where && <span class="r-where">, {w.where}</span>}</td><td>{w.who}</td><td>{w.when}</td></tr>)}</tbody>
+      </table>
+    </section>
+    <p class="r-recognise"><span>How to recognise it.</span> {text.recognise}</p>
+  </main>
+  <ChapterFoot id="renaissance" notes={sources} images={[durer]} />
+  <script>
+    import './scene.ts';
+  </script>
+</Layout>

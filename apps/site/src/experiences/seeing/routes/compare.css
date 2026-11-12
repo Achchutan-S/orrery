@@ -1,0 +1,22 @@
+@layer experience {
+  [data-experience='seeing'] .cp-wipe { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin-block: 2rem 0.5rem; view-transition-name: see-aperture; }
+  [data-experience='seeing'] .cp-side { margin: 0; }
+  [data-experience='seeing'] .cp-side figcaption { margin-block-start: 0.4rem; font: 600 0.9375rem/1.3 var(--see-sign); }
+  [data-experience='seeing'] .cp-wipe.is-wipe { display: grid; grid-template-columns: 1fr; gap: 0; }
+  [data-experience='seeing'] .cp-wipe.is-wipe .cp-side { grid-area: 1 / 1; position: relative; }
+  [data-experience='seeing'] .cp-wipe.is-wipe .cp-side--b { clip-path: inset(0 0 0 var(--cp-split, 50%)); }
+  [data-experience='seeing'] .cp-wipe.is-wipe .cp-side figcaption { position: absolute; inset-block-start: 0.5rem; padding: 0.25rem 0.6rem; background: var(--see-bistre); color: var(--see-pin); }
+  [data-experience='seeing'] .cp-wipe.is-wipe .cp-side--a figcaption { inset-inline-start: 0.5rem; }
+  [data-experience='seeing'] .cp-wipe.is-wipe .cp-side--b figcaption { inset-inline-end: 0.5rem; }
+  [data-experience='seeing'] .cp-range { display: grid; gap: 0.25rem; margin-block-start: 0.75rem; font: 400 0.9375rem/1.3 var(--see-sign); }
+  [data-experience='seeing'] .cp-range[hidden] { display: none; }
+  [data-experience='seeing'] .cp-range input { inline-size: 100%; min-block-size: 44px; accent-color: var(--see-pin); }
+  [data-experience='seeing'] .cp-table { overflow-x: auto; }
+  [data-experience='seeing'] .cp table { inline-size: 100%; min-inline-size: 40rem; border-collapse: collapse; font-size: 1rem; }
+  [data-experience='seeing'] .cp th, [data-experience='seeing'] .cp td { padding: 0.8rem 1rem 0.8rem 0; border-block-end: 1px solid var(--see-line); text-align: start; vertical-align: top; }
+  [data-experience='seeing'] .cp thead th { color: var(--see-pin); font: 700 1.05rem/1.3 var(--see-text); border-block-end-width: 2px; }
+  [data-experience='seeing'] .cp tbody th { inline-size: 9rem; font: italic 400 1rem/1.4 var(--see-text); color: var(--see-soot); }
+  [data-experience='seeing'] .cp-take { font-size: 1.3rem; line-height: 1.5; max-inline-size: 44rem; }
+  [data-experience='seeing'] .cp-sources { font: 400 0.875rem/1.5 var(--see-sign); color: var(--see-soot); }
+  [data-experience='seeing'] .cp-sources a { color: var(--see-wash); }
+}

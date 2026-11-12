@@ -1,0 +1,20 @@
+---
+// One whiplash stem with its leaves and bud, drawn at build time (stem.ts). Decorative: the
+// reading text flows along it through a shape-outside polygon in chapter.css.
+import { leaves, stemPath } from './stem.ts';
+
+interface Props { side: 'left' | 'right'; class?: string }
+const { side, class: cls } = Astro.props;
+const d = stemPath();
+const leafList = leaves();
+---
+<div class:list={['n-float', `n-float--${side}`, cls]} aria-hidden="true">
+  <svg class="n-stem" viewBox="0 0 300 1000" preserveAspectRatio="none">
+    <g transform={side === 'right' ? 'translate(300 0) scale(-1 1)' : undefined}>
+      {leafList.map((l, i) => <path d={l.d} transform={l.transform} class={`n-leaf n-leaf--${i % 3}`} />)}
+      <path d={d} class="n-stem__iron" pathLength="1" />
+      <path d={d} class="n-stem__light" pathLength="1" />
+      <ellipse cx="130" cy="122" rx="14" ry="22" transform="rotate(-24 130 122)" class="n-bud" />
+    </g>
+  </svg>
+</div>

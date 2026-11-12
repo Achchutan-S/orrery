@@ -1,0 +1,48 @@
+---
+// The world outside: one ordinary view (a road, a tree, a house, a church on the hill) that the
+// camera obscura projects and that Reframing the World keeps behind its window. Original drawing
+// for this atlas. Drawn in a 1200 × 800 box; the caller places and transforms it.
+interface Props { id: string }
+const { id } = Astro.props;
+---
+<defs>
+  <linearGradient id={`${id}-sky`} x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8fb0c4" />
+    <stop offset="0.7" stop-color="#d9d8c6" />
+    <stop offset="1" stop-color="#ecdcb8" />
+  </linearGradient>
+  <linearGradient id={`${id}-field`} x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#7f8f5c" />
+    <stop offset="1" stop-color="#4f5e38" />
+  </linearGradient>
+</defs>
+<rect width="1200" height="800" fill={`url(#${id}-sky)`} />
+<circle cx="905" cy="175" r="54" fill="#f7ecc6" />
+<g fill="#f1efe6" opacity="0.85">
+  <ellipse cx="260" cy="150" rx="110" ry="26" />
+  <ellipse cx="330" cy="132" rx="70" ry="22" />
+  <ellipse cx="640" cy="225" rx="90" ry="18" />
+</g>
+<path d="M0 520 C 140 440 300 470 430 500 S 720 430 860 470 1080 455 1200 500 V800 H0Z" fill="#8a9a8e" />
+<path d="M0 565 C 200 530 420 560 600 548 S 980 525 1200 560 V800 H0Z" fill={`url(#${id}-field)`} />
+<path d="M560 556 L640 556 L860 800 L340 800Z" fill="#b6a37f" />
+<path d="M597 556 L603 556 L612 800 L588 800Z" fill="#d8c9a4" opacity="0.7" />
+<g>
+  <rect x="236" y="430" width="22" height="150" fill="#4a3a2a" />
+  <circle cx="246" cy="400" r="74" fill="#3f5a33" />
+  <circle cx="196" cy="438" r="52" fill="#46633a" />
+  <circle cx="300" cy="436" r="56" fill="#3a5230" />
+</g>
+<g>
+  <rect x="390" y="500" width="96" height="62" fill="#c9b79a" />
+  <path d="M380 502 L438 462 L496 502Z" fill="#7c4a3a" />
+  <rect x="425" y="526" width="20" height="36" fill="#4b3b30" />
+</g>
+<g>
+  <rect x="860" y="430" width="150" height="88" fill="#b9ab92" />
+  <path d="M850 432 L935 392 L1020 432Z" fill="#6f665c" />
+  <rect x="1010" y="370" width="44" height="148" fill="#b2a48a" />
+  <path d="M1006 372 L1032 238 L1058 372Z" fill="#6f665c" />
+  <path d="M902 518 V470 Q915 446 928 470 V518Z" fill="#4b4540" />
+  <path d="M1024 410 V392 Q1032 380 1040 392 V410Z" fill="#4b4540" />
+</g>

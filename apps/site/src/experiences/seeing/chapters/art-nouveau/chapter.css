@@ -1,0 +1,160 @@
+/* Art Nouveau: pale celadon ground, iron green-black, verdigris leaves, an amber bud. The display
+   face only for the title; a light reading face so the line, not the type, leads. */
+@layer experience {
+  @font-face { font-family: 'N Amarante'; src: url('/seeing/fonts/amarante-400/face.woff2') format('woff2'); font-display: swap; }
+  @font-face { font-family: 'N Spectral'; src: url('/seeing/fonts/spectral-300/face.woff2') format('woff2'); font-weight: 300; font-display: swap; }
+  @font-face { font-family: 'N Spectral'; src: url('/seeing/fonts/spectral-300-italic/face.woff2') format('woff2'); font-weight: 300; font-style: italic; font-display: swap; }
+
+  [data-experience='seeing'] {
+    color-scheme: light;
+    --n-ground: #e4e9dc;
+    --n-paper: #f3f2e9;
+    --n-iron: #1d3127;
+    --n-verdigris: #3b6654;
+    --n-leaf: #6f9a7f;
+    --n-amber: #b2692a;
+    --n-ink: #1f2b25;
+    --n-read: 'N Spectral', 'Iowan Old Style', Georgia, serif;
+  }
+  [data-experience='seeing'] body {
+    margin: 0;
+    background: var(--n-ground);
+    color: var(--n-ink);
+    font: 300 1.25rem/1.68 var(--n-read);
+  }
+  [data-experience='seeing'] .n strong { font-weight: 400; font-style: italic; }
+  [data-experience='seeing'] .n a { color: #7a4317; text-underline-offset: 0.18em; }
+  [data-experience='seeing'] .n { padding: 5.5rem clamp(1rem, 5vw, 3rem) 4rem; overflow-x: clip; }
+  [data-experience='seeing'] .n > * { max-inline-size: 56rem; margin-inline: auto; }
+
+  /* Stems: floated, with the text wrapping along the curve. Polygons from stem.ts wrapPolygon(),
+     kept in step by apps/site/test/seeing.test.ts. */
+  [data-experience='seeing'] .n-float {
+    inline-size: clamp(6.5rem, 22vw, 14rem);
+    aspect-ratio: 3 / 10;
+    shape-margin: 0.5rem;
+  }
+  [data-experience='seeing'] .n-float--left {
+    float: left;
+    margin: 0 0.5rem 1rem -1rem;
+    shape-outside: polygon(0% 0%, 72.0% 5.0%, 85.9% 10.0%, 88.7% 15.0%, 88.3% 20.0%, 96.8% 25.0%, 69.0% 30.0%, 48.6% 35.0%, 41.4% 40.0%, 41.2% 45.0%, 43.7% 50.0%, 68.3% 55.0%, 65.3% 60.0%, 71.8% 65.0%, 75.2% 70.0%, 73.5% 75.0%, 70.4% 80.0%, 62.7% 85.0%, 57.4% 90.0%, 78.7% 95.0%, 65.3% 100.0%, 0% 100%);
+  }
+  [data-experience='seeing'] .n-float--right {
+    float: right;
+    margin: 0 -1rem 1rem 0.5rem;
+    shape-outside: polygon(100% 0%, 28.0% 5.0%, 14.1% 10.0%, 11.3% 15.0%, 11.8% 20.0%, 3.2% 25.0%, 31.0% 30.0%, 51.4% 35.0%, 58.6% 40.0%, 58.8% 45.0%, 56.3% 50.0%, 31.7% 55.0%, 34.7% 60.0%, 28.2% 65.0%, 24.8% 70.0%, 26.5% 75.0%, 29.6% 80.0%, 37.3% 85.0%, 42.6% 90.0%, 21.3% 95.0%, 34.7% 100.0%, 100% 100%);
+  }
+  [data-experience='seeing'] .n-float--hero { inline-size: clamp(8rem, 30vw, 19rem); view-transition-name: see-aperture; }
+  [data-experience='seeing'] .n-stem { display: block; inline-size: 100%; block-size: 100%; overflow: visible; }
+  [data-experience='seeing'] .n-stem__iron { fill: none; stroke: var(--n-iron); stroke-width: 9; stroke-linecap: round; }
+  [data-experience='seeing'] .n-stem__light { fill: none; stroke: var(--n-verdigris); stroke-width: 2; stroke-linecap: round; transform: translate(4px, 0); }
+  [data-experience='seeing'] .n-leaf { stroke: var(--n-iron); stroke-width: 2; }
+  [data-experience='seeing'] .n-leaf--0 { fill: var(--n-leaf); }
+  [data-experience='seeing'] .n-leaf--1 { fill: var(--n-verdigris); }
+  [data-experience='seeing'] .n-leaf--2 { fill: #93b29a; }
+  [data-experience='seeing'] .n-bud { fill: var(--n-amber); stroke: var(--n-iron); stroke-width: 3; }
+
+  /* Growth, where the browser can tie it to scrolling and motion is welcome. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-experience='seeing'] .n-stem__iron,
+      [data-experience='seeing'] .n-stem__light {
+        stroke-dasharray: 1;
+        animation: n-grow linear both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 45%;
+      }
+      [data-experience='seeing'] .n-leaf,
+      [data-experience='seeing'] .n-bud {
+        transform-box: fill-box;
+        transform-origin: 0 50%;
+        animation: n-unfold linear both;
+        animation-timeline: view();
+        animation-range: cover 25% cover 55%;
+      }
+      @keyframes n-grow { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+      @keyframes n-unfold { from { scale: 0; opacity: 0; } to { scale: 1; opacity: 1; } }
+    }
+  }
+
+  [data-experience='seeing'] .n-hero::after,
+  [data-experience='seeing'] .n-flow::after { content: ''; display: block; clear: both; }
+  [data-experience='seeing'] .n-title {
+    margin: 0.5rem 0 0;
+    font: 400 clamp(3rem, 9vw, 6.5rem)/0.95 'N Amarante', 'Papyrus', serif;
+    color: var(--n-iron);
+  }
+  [data-experience='seeing'] .n-thesis { margin: 0.5rem 0 2rem; font-style: italic; font-size: 1.5rem; color: var(--n-verdigris); }
+  [data-experience='seeing'] .n-label { margin: 0 0 1.5rem; font-size: 1rem; }
+  [data-experience='seeing'] .n-label div { display: flex; flex-wrap: wrap; gap: 0 0.6rem; }
+  [data-experience='seeing'] .n-label dt { font-style: italic; color: var(--n-verdigris); }
+  [data-experience='seeing'] .n-label dd { margin: 0; }
+  [data-experience='seeing'] .n-encounter { margin: 0 0 1rem; }
+  [data-experience='seeing'] .n-encounter:first-of-type { font-size: 1.4rem; line-height: 1.55; }
+
+  [data-experience='seeing'] .n-h2 {
+    margin: 5rem 0 2rem;
+    font: italic 300 clamp(2rem, 4.6vw, 3.25rem)/1.1 var(--n-read);
+    color: var(--n-iron);
+  }
+  [data-experience='seeing'] .n .see-block { margin-block-end: 1.75rem; }
+  [data-experience='seeing'] .n .see-block__title { margin: 0 0 0.4rem; font: 400 1.45rem/1.25 var(--n-read); color: var(--n-iron); }
+  [data-experience='seeing'] .n .see-block p { margin: 0 0 1rem; }
+  [data-experience='seeing'] .n .see-block--interpretation,
+  [data-experience='seeing'] .n .see-block--editor { padding: 1rem 1.25rem; background: var(--n-paper); border-radius: 0 2rem 0 2rem; }
+  [data-experience='seeing'] .n .see-block__kind { color: var(--n-verdigris); }
+
+  [data-experience='seeing'] .n-media { clear: both; }
+  [data-experience='seeing'] .n-media__intro { max-inline-size: 40rem; }
+  [data-experience='seeing'] .n-media__pick { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.5rem 0; padding: 0; border: 0; }
+  [data-experience='seeing'] .n-media__pick label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 44px;
+    padding: 0 1.25rem 0 1rem;
+    border: 2px solid var(--n-iron);
+    border-radius: 2rem 0.4rem 2rem 0.4rem;
+    cursor: pointer;
+  }
+  [data-experience='seeing'] .n-media__pick label:has(input:checked) { background: var(--n-iron); color: var(--n-paper); }
+  [data-experience='seeing'] .n-media__pick input { margin: 0; accent-color: var(--n-amber); }
+  [data-experience='seeing'] .n-media__fig { margin: 0; }
+  [data-experience='seeing'] .n-media__fig svg { display: block; inline-size: 100%; block-size: auto; background: var(--n-paper); border-radius: 0 3rem 0 3rem; }
+  [data-experience='seeing'] .n-ctx, [data-experience='seeing'] .n-cap { display: none; }
+  [data-experience='seeing'] .n:has(#n-m-iron:checked) :is(.n-ctx--iron, .n-cap--iron),
+  [data-experience='seeing'] .n:has(#n-m-paper:checked) :is(.n-ctx--paper, .n-cap--paper),
+  [data-experience='seeing'] .n:has(#n-m-glass:checked) :is(.n-ctx--glass, .n-cap--glass),
+  [data-experience='seeing'] .n:has(#n-m-letter:checked) :is(.n-ctx--letter, .n-cap--letter) { display: block; animation: n-appear 0.6s ease-out; }
+  @keyframes n-appear { from { opacity: 0; } to { opacity: 1; } }
+  [data-experience='seeing'] .n-iron { fill: none; stroke: var(--n-iron); stroke-width: 8; stroke-linecap: round; }
+  [data-experience='seeing'] .n-iron--thin { stroke-width: 5; }
+  [data-experience='seeing'] .n-iron--whip { stroke-width: 11; }
+  [data-experience='seeing'] .n-rivet { fill: var(--n-amber); }
+  [data-experience='seeing'] .n-paper { fill: #efe2c4; stroke: var(--n-iron); stroke-width: 3; }
+  [data-experience='seeing'] .n-paper-band { fill: var(--n-verdigris); }
+  [data-experience='seeing'] .n-paper-line { fill: none; stroke: var(--n-iron); stroke-width: 5; }
+  [data-experience='seeing'] .n-paper-sun { fill: var(--n-amber); opacity: 0.85; }
+  [data-experience='seeing'] .n-vase { stroke: none; }
+  [data-experience='seeing'] .n-glass-line { fill: none; stroke: rgb(255 255 255 / 0.65); stroke-width: 4; }
+  [data-experience='seeing'] .n-letter { fill: none; stroke: var(--n-iron); stroke-width: 42; stroke-linecap: round; }
+  [data-experience='seeing'] .n-letter-serif { stroke: var(--n-iron); stroke-width: 10; stroke-linecap: round; }
+  [data-experience='seeing'] .n-media__fig figcaption { min-block-size: 4rem; margin-block-start: 1rem; }
+
+  [data-experience='seeing'] .n-study { clear: both; margin-block: 4rem; padding: 0 1.25rem; border: 2px solid var(--n-iron); border-radius: 0 3rem 0 3rem; }
+  [data-experience='seeing'] .n-study summary { display: flex; align-items: center; min-block-size: 3.5rem; font: italic 300 1.4rem/1.2 var(--n-read); cursor: pointer; }
+  [data-experience='seeing'] .n-works ul { margin: 0; padding: 0; list-style: none; columns: 2 18rem; column-gap: 3rem; }
+  [data-experience='seeing'] .n-works li { break-inside: avoid; display: grid; padding-block: 0.6rem; border-block-start: 1px solid rgb(29 49 39 / 0.25); }
+  [data-experience='seeing'] .n-works__what { font-style: italic; }
+  [data-experience='seeing'] .n-works__meta { font-size: 1rem; color: #43574b; }
+  [data-experience='seeing'] .n-recognise { margin-block: 4rem 0; font-size: 1.5rem; line-height: 1.5; }
+  [data-experience='seeing'] .n-recognise span { font-style: italic; color: var(--n-verdigris); }
+
+  /* Arriving: the page grows upward into view. */
+  ::view-transition-new(root) { animation: n-rise 0.9s cubic-bezier(0.3, 0, 0.2, 1) both; }
+  @keyframes n-rise { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
+
+  @media (max-width: 34rem) {
+    [data-experience='seeing'] .n-float:not(.n-float--hero) { inline-size: 5.5rem; }
+  }
+}

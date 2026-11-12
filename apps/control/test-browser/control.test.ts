@@ -142,7 +142,8 @@ test('registry: search, filters, sort, external entries and the environment matr
   assert.equal(await rows.count(), inProduction);
   await p.getByRole('radio', { name: 'All' }).check({ force: true });
   await p.getByLabel('Sort by').selectOption('name');
-  assert.equal(await rows.first().getAttribute('data-id'), 'canary-draft');
+  // Whatever the catalog holds, the first row by name is the alphabetically first title.
+  assert.equal(await rows.first().getAttribute('data-id'), [...experiences].sort((a, b) => a.title.localeCompare(b.title))[0]!.id);
   await p.getByLabel('Search by name or id').fill('nothing-matches');
   assert.ok(await p.getByText('No experience matches').isVisible());
   await p.getByRole('button', { name: 'Show all' }).click();
