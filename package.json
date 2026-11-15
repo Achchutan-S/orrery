@@ -22,7 +22,8 @@
     "check:metadata": "node tools/checks/src/metadata.ts apps/site/dist",
     "check:leaks": "node tools/checks/src/leaks.ts apps/site/dist",
     "check:budgets": "node tools/checks/src/budgets.ts apps/site/dist",
-    "smoke": "node tools/checks/src/smoke.ts"
+    "smoke": "node tools/checks/src/smoke.ts",
+    "capture": "pnpm --filter @pu/site run capture"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

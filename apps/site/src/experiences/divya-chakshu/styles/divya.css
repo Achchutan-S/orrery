@@ -41,7 +41,6 @@
     font: 400 1.1875rem/1.68 var(--dc-text);
     font-kerning: normal;
     text-rendering: optimizeLegibility;
-    overflow-x: clip;
   }
 
   /* `hidden` wins over any display this file sets (the script-only controls). */
@@ -69,6 +68,16 @@
   [data-experience='divya-chakshu'].dc-gl .dc-canvas { opacity: 1; }
   [data-experience='divya-chakshu'].dc-still .dc-canvas { display: none; }
 
+  /* The three Arjuna recognises, labelled where the canvas draws them (set by client/boot.ts). */
+  [data-experience='divya-chakshu'] .dc-names { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; display: none; }
+  [data-experience='divya-chakshu'].dc-gl .dc-names { display: block; }
+  [data-experience='divya-chakshu'] .dc-name {
+    position: absolute; inset-block-start: 0; inset-inline-start: 0; opacity: 0; padding-block-end: 0.45rem;
+    font: 400 0.8rem/1.2 var(--dc-sans); letter-spacing: 0.08em; color: var(--dc-ink); white-space: nowrap;
+    text-shadow: 0 0 0.6rem rgb(0 0 0 / 0.95), 0 0 0.2rem rgb(0 0 0 / 0.9);
+  }
+  [data-experience='divya-chakshu'] .dc-name::after { content: ''; position: absolute; inset-inline-start: 50%; inset-block-end: 0; inline-size: 1px; block-size: 0.35rem; background: var(--dc-gold); }
+
   /* Without script the stage cannot follow the reader, so each section carries its own still. */
   [data-experience='divya-chakshu']:not(.dc-js) .dc-stage { display: none; }
   [data-experience='divya-chakshu']:not(.dc-js) .seq--prologue { background: var(--dc-still-0); }
@@ -82,7 +91,12 @@
   [data-experience='divya-chakshu']:not(.dc-js) .seq--return { background: var(--dc-still-8); }
 
   /* ---- The text ---- */
-  [data-experience='divya-chakshu'] .dc { position: relative; z-index: 1; }
+  /*
+   * The passage halos (.beat__in::before, .title::before) bleed past the text on purpose and are cut
+   * at the page edge here. Clipping on <body> does not work: a body's overflow propagates to the
+   * viewport, where the halos still count as scrollable width (90 px at 768 px wide).
+   */
+  [data-experience='divya-chakshu'] .dc { position: relative; z-index: 1; overflow-x: clip; }
   [data-experience='divya-chakshu'] .beat {
     min-block-size: 92svh;
     display: grid;
@@ -188,7 +202,7 @@
   [data-experience='divya-chakshu'] .sight { text-align: center; display: grid; justify-items: center; gap: 1.4rem; }
   [data-experience='divya-chakshu'] .dc-sight { display: inline-flex; align-items: center; gap: 0.8rem; padding: 0.8rem 1.6rem 0.8rem 1.2rem; }
   [data-experience='divya-chakshu'] .dc-sight svg { inline-size: 2.6rem; block-size: 1.3rem; fill: none; stroke: var(--dc-gold); stroke-width: 2.5; }
-  [data-experience='divya-chakshu'] .dc-sight[aria-disabled='true'] { cursor: default; color: var(--dc-gold); border-color: transparent; background: transparent; }
+  [data-experience='divya-chakshu'][data-sighted] .dc-sight { color: var(--dc-gold); border-color: transparent; background: transparent; }
   [data-experience='divya-chakshu'] .sight__hint { font: 400 0.9rem/1.4 var(--dc-sans); color: var(--dc-ink-soft); }
   [data-experience='divya-chakshu'][data-sighted] .sight__hint { visibility: hidden; }
   /* III: the blazing verse alone, larger, and in dark ink once the light turns white. */
@@ -202,6 +216,8 @@
   [data-experience='divya-chakshu'] .seq--universe-within .beat:not(.beat--title) { justify-items: start; }
   [data-experience='divya-chakshu'] .seq--universe-within .beat:not(.beat--title):nth-child(odd) { justify-items: end; }
   [data-experience='divya-chakshu'] .seq--universe-within .beat:not(.beat--title) .beat__in { max-inline-size: 25rem; }
+  /* Inside the form there is light behind every passage, so each carries a deeper shadow of its own. */
+  [data-experience='divya-chakshu'] :is(.seq--universe-within, .seq--return) .beat:not(.beat--title) .beat__in::before { background: radial-gradient(closest-side, rgb(4 3 8 / 0.82), rgb(4 3 8 / 0.6) 62%, transparent); }
   [data-experience='divya-chakshu'] .seq--universe-within .verse__en { font-size: clamp(1.25rem, 2vw, 1.55rem); }
   /* V: pressed to one side, tight, hotter; the moths close and small. */
   [data-experience='divya-chakshu'] .seq--terror { --dc-ink: #f6dcc8; }

@@ -17,7 +17,7 @@ One file per decision, named `adr-NNN-short-description.md`. Numbers are permane
 | [006](adr-006-control-center.md) | Control Center as a separate app; V1 local and Git-backed | accepted |
 | [007](adr-007-presentation-ownership.md) | Presentation ownership and CSS isolation | accepted |
 | [008](adr-008-external-apps.md) | Existing apps stay external, reached by subdomain | accepted |
-| [009](adr-009-git-content.md) | Git-based content with collections and MDX | accepted, not built; decision D14 proposes superseding it |
+| [009](adr-009-git-content.md) | Git-based content with collections and MDX | superseded by ADR-026; never built |
 | [010](adr-010-identity-later.md) | Identity, authorization and analytics designed now, built later | accepted |
 | [011](adr-011-astro-7.md) | Upgrade the host to Astro 7 | accepted |
 | [012](adr-012-platform-layer.md) | Shared platform layer (task 7) | accepted; choices 4 and 7 superseded by ADR-021 |
@@ -32,5 +32,10 @@ One file per decision, named `adr-NNN-short-description.md`. Numbers are permane
 | [021](adr-021-platform-integrity.md) | Platform integrity: implemented chrome only, a permanent island fixture, one Node policy, a committed platform font | accepted |
 | [022](adr-022-link-previews-smoke-and-public-repository.md) | Link-preview images from the catalog, environment-aware smoke tests, and what a public repository exposes | accepted |
 | [023](adr-023-audit-closure.md) | Audit closure: complete budgets, durable Control Center writes, opener isolation, dependency and hygiene policy | accepted |
-| [024](adr-024-experience-contract.md) | The Experience Contract, blueprint revision 3 and the new roadmap | **proposed**, pending the owner |
-| [025](adr-025-lazy-chunk-detection.md) | The checks recognise the output of the first immersive experience: lazy chunks written as `` import(`./x.js`) ``, external page-script names | **proposed**, pending the owner |
+| [024](adr-024-experience-contract.md) | The Experience Contract, blueprint revision 3 and the new roadmap | accepted; contract amended to 1.1 by ADR-030 |
+| [025](adr-025-lazy-chunk-detection.md) | The checks recognise the output of the first immersive experience: lazy chunks written as `` import(`./x.js`) ``, external page-script names | accepted |
+| [026](adr-026-content-belongs-to-experiences.md) | Content belongs to the experience that presents it; no platform collection | accepted |
+| [027](adr-027-derived-page-coverage.md) | Browser coverage and test lists derived from the build | accepted |
+| [028](adr-028-experience-owned-fonts-and-images.md) | Experiences ship their own fonts and images as hashed assets, proven by content | accepted |
+| [029](adr-029-ci-as-the-release-gate.md) | CI is the release gate: `main` changes only by pull request | accepted; GitHub setting awaits the owner |
+| [030](adr-030-creative-process-and-design-review.md) | A creative process and a design review gate; contract 1.1 | accepted |

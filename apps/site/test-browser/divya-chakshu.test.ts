@@ -56,7 +56,7 @@ const toBeat = (page: Page, seq: number, beat: number) =>
   page.evaluate(([s, b]) => document.querySelector(`[data-seq="${s}"][data-beat="${b}"]`)!.scrollIntoView({ block: 'center' }), [seq, beat]);
 
 describe('Divya Chakshu: accessibility and structure', () => {
-  test('axe (WCAG 2.2 A/AA) at the start and inside the vision, desktop and mobile; no sideways scroll at 320 px', async () => {
+  test('axe (WCAG 2.2 A/AA) at the start and inside the vision, desktop and mobile', async () => {
     for (const [name, opts] of [['desktop', DESKTOP], ['mobile', MOBILE]] as const) {
       const page = await open(opts);
       await page.waitForTimeout(800);
@@ -69,9 +69,21 @@ describe('Divya Chakshu: accessibility and structure', () => {
       }
       await page.context().close();
     }
-    const narrow = await open({ viewport: { width: 320, height: 640 } });
-    assert.ok(await narrow.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'scrolls sideways at 320 px');
-    await narrow.context().close();
+  });
+
+  // The passage halos bleed past the text; they must be clipped inside the page, not add scrollable width
+  // (in production they added 90 px at 768 px and 8 px at 1280 px until the clip moved off <body>).
+  test('no sideways scroll from phone to desktop: 320, 360, 768, 1024, 1280 and 1440 px', async () => {
+    for (const width of [320, 360, 768, 1024, 1280, 1440]) {
+      const page = await open({ viewport: { width, height: 800 } });
+      await page.waitForTimeout(400);
+      for (const [s, b] of [[0, 0], [4, 4]] as const) {
+        await toBeat(page, s, b);
+        const m = await page.evaluate(() => ({ scroll: document.documentElement.scrollWidth, client: document.documentElement.clientWidth }));
+        assert.equal(m.scroll, m.client, `${width}px at ${s}:${b}: scrollWidth ${m.scroll}, clientWidth ${m.client}`);
+      }
+      await page.context().close();
+    }
   });
 
   test('one h1, one main, a heading per sequence, no skipped levels; the canvas is hidden and every scene is described', async () => {
@@ -112,12 +124,22 @@ describe('Divya Chakshu: interaction', () => {
     assert.equal(await page.evaluate(() => document.documentElement.hasAttribute('data-entered')), true);
 
     await toBeat(page, 2, 2);
+    const sighted = () => page.evaluate(() => document.documentElement.hasAttribute('data-sighted'));
+    assert.equal(await sighted(), false);
     await page.locator('[data-sight]').focus();
     await page.keyboard.press('Enter');
-    assert.equal(await page.locator('[data-sight]').getAttribute('aria-disabled'), 'true');
+    // The button carries the reader forward to where the eye is open; sight follows from the position.
+    await page.waitForFunction(() => document.documentElement.hasAttribute('data-sighted'), undefined, { timeout: 8000 });
     assert.match(await page.locator('[data-status]').textContent() ?? '', /Divine sight received/);
-    await page.waitForTimeout(5600);
+    assert.equal(await page.locator('[data-sight-label]').textContent(), 'Divine sight received');
+    await page.waitForTimeout(2500);
     await page.screenshot({ path: join(shots, 'divya-chakshu-sight.png') });
+    // And it closes again when the reader goes back: nothing is latched.
+    await toBeat(page, 1, 2);
+    await page.waitForFunction(() => !document.documentElement.hasAttribute('data-sighted'), undefined, { timeout: 8000 });
+    assert.equal(await page.locator('[data-sight-label]').textContent(), 'Receive divine sight');
+    await toBeat(page, 2, 4);
+    await page.waitForFunction(() => document.documentElement.hasAttribute('data-sighted'), undefined, { timeout: 8000 });
 
     const motion = page.locator('[data-motion]');
     await motion.focus();
@@ -184,6 +206,32 @@ describe('Divya Chakshu: interaction', () => {
     for (const [s, b] of [[2, 1], [5, 4], [8, 5]] as const) { await toBeat(page, s, b); await page.waitForTimeout(700); }
     assert.match(await page.evaluate(() => getComputedStyle(document.querySelector('[data-seq="8"][data-beat="5"] .beat__in')!).translate), /^(none|0px)$/);
     await page.screenshot({ path: join(shots, 'divya-chakshu-reduced.png') });
+    await page.context().close();
+  });
+
+  // The picture is a function of the reading position. With motion reduced nothing moves by itself,
+  // so the same place must render the same pixels whether it is reached going forward or coming back.
+  test('scrolling back restores every scene exactly: the chariot, divine sight and the universal form', async () => {
+    const page = await open({ ...DESKTOP, reducedMotion: 'reduce' });
+    await page.locator('[data-enter]').click();
+    // The part of the frame that holds the picture and no text, controls or Beacon.
+    const clip = { x: 704, y: 120, width: 544, height: 440 };
+    const places = [[1, 2], [2, 4], [4, 4], [5, 5]] as const;
+    const shot = async (s: number, b: number) => { await toBeat(page, s, b); await page.waitForTimeout(900); return page.screenshot({ clip }); };
+    // Visit each place once first, so every program has compiled (SwiftShader is slow): this test is
+    // about the picture depending only on the place, not about how fast shaders link.
+    for (const [s, b] of places) { await toBeat(page, s, b); await page.waitForTimeout(2500); }
+    await toBeat(page, 0, 1);
+    await page.waitForTimeout(600);
+    const forward: Buffer[] = [];
+    for (const [s, b] of places) forward.push(await shot(s, b));
+    await toBeat(page, 8, 6);
+    await page.waitForTimeout(600);
+    for (let i = places.length - 1; i >= 0; i--) {
+      const back = await shot(places[i]![0], places[i]![1]);
+      assert.ok(back.equals(forward[i]!), `${places[i]!.join(':')} differs after scrolling on and coming back`);
+    }
+    assert.ok(!forward[0]!.equals(forward[1]!), 'the places are different pictures (the comparison can fail)');
     await page.context().close();
   });
 

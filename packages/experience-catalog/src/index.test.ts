@@ -6,7 +6,9 @@ import { CANARY, catalog, parseCatalog } from './index.ts';
 test('the catalog parses with no issues', () => {
   const { experiences, issues } = parseCatalog();
   assert.deepEqual(issues, []);
-  assert.deepEqual(experiences.map((e) => e.id), ['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app', 'skills', 'divya-chakshu', 'resume', 'canary-draft', 'sample-hostile']);
+  // No pinned list: a new entry needs no edit here. The permanent fixtures and external projects must stay.
+  for (const id of ['index', 'sample-app', 'canary-draft', 'sample-hostile', 'kawaiui', 'devxray']) assert.ok(experiences.some((e) => e.id === id), id);
+  assert.equal(experiences[0]!.id, 'index', 'the Index is first: catalog order is discovery order');
 });
 
 test('every entry passes the shared definition schema (no local schema copies)', () => {

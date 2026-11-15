@@ -1,6 +1,6 @@
 # ADR-009 — Git-based content with collections and MDX
 
-Status: accepted, not built: no `writing` collection exists, and the Journal and the Skills Archive own their content; blueprint decision D14 proposes superseding it (not decided)
+Status: superseded by [ADR-026](adr-026-content-belongs-to-experiences.md) (13 November 2026); never built
 
 **Decision:** one `writing` collection, draft by default, gated by one `isPublishable(entry, env)` function. `@astrojs/mdx` is installed now so the spike covers the full integration set.
 

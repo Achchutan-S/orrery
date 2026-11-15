@@ -1,6 +1,6 @@
 # ADR-025 — The checks recognise the output of the first immersive experience
 
-Status: proposed (8 November 2026), pending the owner · Corrects the measurement of [ADR-023](adr-023-audit-closure.md) decision 1; the budgets themselves are unchanged.
+Status: accepted (13 November 2026; proposed 8 November 2026) · Corrects the measurement of [ADR-023](adr-023-audit-closure.md) decision 1; the budgets themselves are unchanged.
 
 ## Context
 

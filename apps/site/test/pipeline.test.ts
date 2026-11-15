@@ -17,6 +17,7 @@ import { SHELVES } from '../src/experiences/skills/shelves.ts';
 import { scanLeaks } from '@pu/checks/leaks';
 import { readSources } from '@pu/checks/repo';
 import { pageFindings, productionOwners } from '@pu/checks/metadata';
+import { ownerOf } from '@pu/checks/routes';
 import { BEACON_MARKER, evaluate, measure } from '@pu/checks/budgets';
 import { publicDiscoveryIndex } from '../src/platform/discovery/index.ts';
 
@@ -65,16 +66,17 @@ const htmlOf = (o: Output) => o.files.filter((f) => f.endsWith('.html'));
 const realState = parseRelease(release).state!;
 const resolution = (id: string, env: 'production' | 'preview') => resolveAll(parseCatalog().experiences, realState, env).find((r) => r.id === id)!;
 const mounted = (env: 'production' | 'preview') => resolveAll(parseCatalog().experiences, realState, env).filter((r) => r.mounted).map((r) => r.id);
-/** The pages each experience builds (code, not release state). */
-const PAGES: Record<string, string[]> = {
-  index: ['index.html'], journal: journalPages, 'sample-content': ['sample-content.html'], 'sample-app': ['sample-app.html', ...appPages],
-  resume: ['resume.html'], skills: skillsPages, 'divya-chakshu': ['divya-chakshu.html'], 'canary-draft': ['canary-draft.html'], 'sample-hostile': ['sample-hostile.html'],
-};
-/** Experiences that load the platform font (opt in), besides the platform's own pages. */
-const FONT = new Set(['index', 'journal', 'resume']);
+/**
+ * Exact page lists for the experiences whose pages come from a table this file can read (the Journal's
+ * chapters, the sample app's views, the Archive's shelves and entries). Every other experience needs no
+ * entry: its pages are whatever its routes built (decision D12).
+ */
+const ENUMERATED: Record<string, string[]> = { journal: journalPages, 'sample-app': ['sample-app.html', ...appPages], skills: skillsPages };
+const allExperiences = parseCatalog().experiences;
+const pagesOf = (id: string, o: Output): string[] => ENUMERATED[id] ?? htmlOf(o).filter((f) => ownerOf(f, allExperiences)?.id === id);
 
 describe('planMount (pure)', () => {
-  const folders = ['index', 'journal', 'sample-content', 'sample-app', 'resume', 'skills', 'divya-chakshu', 'canary-draft', 'sample-hostile'];
+  const folders = catalog.filter((e) => e.kind === 'internal').map((e) => e.id);
   const input = { catalog, release, folders, fileExists: () => true };
 
   test('production plans only the public internal experiences; externals are never mounted', () => {
@@ -112,7 +114,18 @@ describe('production build', () => {
   before(() => { out = built('production'); });
 
   test('mounts every public route; Astro emits exactly the views the React router knows', () => {
-    assert.deepEqual(htmlOf(out).sort(), ['404.html', ...mounted('production').flatMap((id) => PAGES[id]!)].sort());
+    for (const id of mounted('production')) assert.ok(pagesOf(id, out).length > 0, `${id} is mounted and built no page`);
+    assert.deepEqual(htmlOf(out).sort(), ['404.html', ...mounted('production').flatMap((id) => pagesOf(id, out))].sort());
+    // Every page belongs to an experience mounted in production, or is the platform's 404.
+    for (const f of htmlOf(out).filter((x) => x !== '404.html')) assert.ok(mounted('production').includes(ownerOf(f, allExperiences)?.id ?? ''), f);
+  });
+
+  test('sitemap.xml lists exactly the entry page of each listed experience hosted here; robots.txt allows crawling and names it', () => {
+    const listed = publicDiscoveryIndex(parseCatalog().experiences, realState, 'production').filter((e) => e.weight !== 'external').map((e) => `http://localhost:4321${e.href}`);
+    const locs = [...out.text('sitemap.xml').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+    assert.deepEqual(locs, listed);
+    assert.ok(locs.length > 0 && !locs.some((l) => /canary-draft|sample-hostile|vercel\.app/.test(l!)));
+    assert.equal(out.text('robots.txt'), 'User-agent: *\nAllow: /\n\nSitemap: http://localhost:4321/sitemap.xml\n');
   });
 
   test('each view has its own title', () => {
@@ -121,12 +134,14 @@ describe('production build', () => {
     }
   });
 
-  test('every page runs exactly one Beacon script; React only with a React island; other scripts only on the Skills Archive and Divya Chakshu', () => {
+  test('every page runs exactly one Beacon script; React only with a React island; other scripts never on a content-class experience', () => {
     for (const f of htmlOf(out)) assert.equal(scripts(out.text(f)).filter(isBeacon).length, 1, f);
     const withScript = htmlOf(out).filter((f) => scripts(out.text(f)).some((s) => !isBeacon(s))).sort();
-    const expected = [...(mounted('production').includes('sample-app') ? appPages : []), ...(mounted('production').includes('skills') ? skillsPages : []),
-      ...(mounted('production').includes('divya-chakshu') ? ['divya-chakshu.html'] : [])].sort();
-    assert.deepEqual(withScript, expected);
+    for (const f of withScript) {
+      const owner = ownerOf(f, allExperiences);
+      assert.ok(owner?.kind === 'internal' && owner.performanceClass !== 'content', `${f}: a content-class page ships a script of its own`);
+    }
+    if (mounted('production').includes('sample-app')) for (const f of appPages) assert.ok(withScript.includes(f), f);
     for (const f of withScript.filter((x) => x.startsWith('sample-app'))) assert.match(out.text(f), /<astro-island/);
     for (const f of htmlOf(out).filter((x) => !x.startsWith('sample-app'))) assert.doesNotMatch(out.text(f), /<astro-island/, f);
   });
@@ -197,7 +212,7 @@ describe('production build', () => {
       const e = experiences.find((x) => x.id === id)!;
       const image = (e.kind === 'internal' && e.ogImage) || '/og.png';
       assert.ok(out.files.includes(image.slice(1)), `${id}: ${image} is built`);
-      for (const f of PAGES[id]!) {
+      for (const f of pagesOf(id, out)) {
         assert.match(out.text(f), new RegExp(`<meta property="og:image" content="http://localhost:4321${image}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image">`), f);
       }
     }
@@ -205,9 +220,11 @@ describe('production build', () => {
     for (const e of experiences) if (e.kind === 'internal' && e.ogImage && !mounted('production').includes(e.id)) assert.ok(!out.files.includes(e.ogImage.slice(1)), e.ogImage);
   });
 
-  test('the platform font loads only on platform pages and the Journal, which opts in', () => {
-    const withFont = htmlOf(out).filter((f) => /\.woff2/.test(out.text(f))).sort();
-    assert.deepEqual(withFont, ['404.html', ...mounted('production').filter((id) => FONT.has(id)).flatMap((id) => PAGES[id]!)].sort());
+  test('the platform font loads on platform pages and only where an experience opts in (the fixtures do not)', () => {
+    // Astro's Fonts API names the platform face _astro/fonts/<16 hex>.woff2; an experience's own font has another name.
+    const withFont = htmlOf(out).filter((f) => /_astro\/fonts\/[0-9a-f]{16}\.woff2/.test(out.text(f)));
+    assert.ok(withFont.includes('404.html'));
+    for (const f of withFont) assert.ok(!/^sample-(content|app)/.test(f), `${f}: a fixture that never opted in loads the platform font`);
   });
 
   test('Journal: a cover and one page per chapter file, no scripts but the Beacon, canonical URLs', () => {
@@ -272,6 +289,8 @@ describe('preview build', () => {
     const preview = built('preview');
     const html = preview.text('resume.html');
     for (const h of ['Summary', 'Experience', 'Projects', 'Skills', 'Education', 'Recognition and learning']) assert.match(html, new RegExp(`<h2 id="[a-z]+-h">${h}</h2>`), h);
+    assert.equal(preview.text('robots.txt'), 'User-agent: *\nDisallow: /\n', 'a preview holds drafts and asks crawlers to stay out');
+    assert.doesNotMatch(preview.text('sitemap.xml'), /canary-draft|sample-hostile/);
     assert.match(html, /<a href="\/resume\/resume\.pdf" download="Achchutan-S-Resume\.pdf" type="application\/pdf">Download as PDF<\/a>/);
     assert.match(html, /A4, [12] pages?, \d+ KB\./);
     assert.match(html, /<title>Achchutan S · Resume<\/title>/);

@@ -1,6 +1,6 @@
 # Orrery — Architecture Blueprint
 
-Revision 3 · 7 November 2026 · **proposed, pending the owner's approval** ([ADR-024](adr/adr-024-experience-contract.md))
+Revision 3 · 7 November 2026 · **accepted on 13 November 2026** ([ADR-024](adr/adr-024-experience-contract.md)); decisions D10, D11, D12, D14 and D16 decided the same day as recommended (§ 12; the basis is recorded in the [tracker](tracker.md#the-13-november-2026-programme), task A-1)
 
 Orrery (the workspace's internal name is Personal Universe) is one static Astro site that hosts independent experiences, each designed in its own way, under one set of rules for release, discovery, accessibility, security and quality. This blueprint describes the architecture as it stands, the agreement every experience works under ([Experience Contract](experience-contract.md)), and the order in which the platform grows next.
 
@@ -128,17 +128,19 @@ At runtime every request is a CDN file hit. There is no server code path in prod
 | Validation rules (reserved prefixes, lifecycle rules, phase-gated access and rendering, route ownership, `ogImage` routes, exclusive imports) | built, tested |
 | Kernel: `ExperienceRoot`, `SeoHead`, cascade layers and tokens, Beacon and palette, colophon, discovery index, `flag()` | built, deployed |
 | Experience-owned Beacon presentation | designed ([contract § 3.5](experience-contract.md#35-the-beacon-platform-function-experience-presentation)); only the default presentation is built |
-| Experience-owned web fonts and in-page images as hashed assets | designed ([contract § 3.6](experience-contract.md#36-experience-owned-assets-and-fonts)); rejected by the output allowlist today (decision D11) |
+| Experience-owned web fonts and in-page images as hashed assets | built, tested: accepted when their bytes are a released experience's own file ([ADR-028](adr/adr-028-experience-owned-fonts-and-images.md)); no released experience uses one yet |
 | `track()`, `authorize()` | stubs: no-op and deny-all |
-| Experiences in production: Index, Journal, resume, Skills Archive, sample-content, sample-app; external links to KawaiUI and Dev X-Ray | deployed |
+| Experiences in production: Index, Journal, resume, Skills Archive, Divya Chakshu, sample-content, sample-app; external links to KawaiUI and Dev X-Ray | deployed |
 | Fixtures never in production: `canary-draft`, `sample-hostile` | built, verified absent |
 | Checks: boundaries, metadata, leaks, budgets; production build gate | built, gating Vercel production builds |
-| CI: typecheck, tests, checks, browser tests with axe | passing on `c7ec5cd` |
+| CI: typecheck, tests, checks, browser tests with axe on pages derived from the build ([ADR-027](adr/adr-027-derived-page-coverage.md)) | passing; the release gate once `main` is protected ([ADR-029](adr/adr-029-ci-as-the-release-gate.md), status in the [tracker](tracker.md)) |
 | Security headers and CSP | deployed, verified by the smoke test |
 | Control Center V1 (local release editor) | built, tested, local only |
 | Automated accessibility checks | built, passing; manual checklist not performed |
-| Writing collection, RSS, sitemap, search, analytics, privacy page, custom domain | not built |
-| Design methodology, skills and registry (Phase 2A); Design Laboratory (Phase 2B) | not built; one earlier exploration is recorded in [design/platform-identity.md](design/platform-identity.md) |
+| `sitemap.xml` and `robots.txt` from `publicDiscoveryIndex()` | built, tested |
+| Writing collection (superseded, [ADR-026](adr/adr-026-content-belongs-to-experiences.md)), RSS, search, analytics, privacy page, custom domain | not built |
+| Creative process, direction registry, design review gate, review captures (Phase 2A, as [ADR-030](adr/adr-030-creative-process-and-design-review.md) reduced it) | built: [design/creative-process.md](design/creative-process.md); not yet used on a new experience |
+| Design Laboratory application (Phase 2B) | deferred by ADR-030 |
 | Identity, authorization, protected delivery | designed, not built |
 
 ## 3. Platform and experience responsibilities
@@ -306,9 +308,9 @@ When the first protected experience exists: add the Vercel adapter, verify the `
 
 **Performance.** Budgets per performance class (`content`, `interactive`, `immersive`) cover JavaScript, the Beacon, CSS, fonts, images, lazy chunks and transfer on every page, plus per-kind limits for files no page loads ([ADR-023](adr/adr-023-audit-closure.md)). An experience picks its class honestly and justifies any override in its catalog entry. Lighthouse and Core Web Vitals are measured by hand, not in CI.
 
-**Accessibility.** Outcomes, not a design system (contract § 5). The platform makes the focus ring and CSS motion clamping non-overridable and runs axe, structure, reflow, text-spacing, forced-colour and keyboard checks in CI on the pages its suites list. Two gaps matter before new experiences arrive: page coverage is hand-listed (contract gap G7, decision D12), and the manual checklist has never been performed. Both are therefore explicit prerequisites for publishing a new experience ([contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience), P1 and P2).
+**Accessibility.** Outcomes, not a design system (contract § 5). The platform makes the focus ring and CSS motion clamping non-overridable and runs axe, structure, reflow, text-spacing, forced-colour and keyboard checks in CI on the pages its suites list. Page coverage is derived from the build since [ADR-027](adr/adr-027-derived-page-coverage.md). One gap remains: the manual checklist has never been performed. It is therefore an explicit prerequisite for publishing a new experience ([contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience), P1 and P2).
 
-**Quality gates.** Typecheck, boundaries, validation, metadata, leaks and budgets gate every Vercel production build. Unit and browser tests run in CI on every push, but CI does not gate deployment: Vercel builds `main` in parallel and `main` has no branch protection (tracker decision 7, decision D16). Until that changes, a passing CI run on the publishing commit and a passing preview smoke test are prerequisites the owner checks by hand (contract § 8.5, P3 and P4).
+**Quality gates.** Typecheck, boundaries, validation, metadata, leaks and budgets gate every Vercel production build. Unit and browser tests run in CI on every pull request; `main` changes only by pull request with both CI jobs required, so the production build only sees tested commits ([ADR-029](adr/adr-029-ci-as-the-release-gate.md); whether the GitHub setting is on is recorded in the [tracker](tracker.md), and until it is, P3 stays a manual check). The preview smoke test (P4), the manual accessibility check (P2) and the design reviews (P0, P7) are the owner's, asked for by the pull request template.
 
 **Strategy.** Add a gate when a real mistake shows it is needed or a contract requirement cannot be checked otherwise; measure before setting limits; record every exception where it is made.
 
@@ -316,7 +318,7 @@ When the first protected experience exists: add the Vercel adapter, verify the `
 
 Each phase lists what it needs, what it delivers and how it ends. A phase starts only when its dependencies are met.
 
-### Phase 1 — Architecture and Experience Contract (this phase)
+### Phase 1 — Architecture and Experience Contract (complete, 13 November 2026)
 
 - **Scope:** review the architecture against the code; write the Experience Contract; revise this blueprint; record decisions.
 - **Deliverables:** [experience-contract.md](experience-contract.md), this revision, [architecture-review.md](architecture-review.md), [ADR-024](adr/adr-024-experience-contract.md), and the amendment pass of 7 November 2026.
@@ -327,6 +329,8 @@ Phase 2 has two parts. Phase 2A is documents and agent skills: it describes how 
 
 ### Phase 2A — Design methodology, skills and aesthetic registry
 
+> **Delivered in a smaller form on 13 November 2026 ([ADR-030](adr/adr-030-creative-process-and-design-review.md)):** one process document ([design/creative-process.md](design/creative-process.md)), a [direction registry](design/registry/README.md) with reconstructed records and the Seeing retrospective, a two-checkpoint design review that only the owner decides, contract prerequisites P0 and P7, and `pnpm capture`. The two agent skills below were not written: the vendored skills remain tools. The exit criterion (one dry run through exploration, critique and selection) is **not yet met**: the Seeing retrospective waits for the owner's reasons ([tracker](tracker.md)). The plan as first written follows.
+
 - **Depends on:** Phase 1 accepted (the contract defines what a design must satisfy).
 - **Scope:** an Art Director methodology (how a direction is found: subject, audience, references, several directions, critique, selection); an Experience Builder methodology (how a selected direction becomes an experience that meets the contract); critique and iteration workflows; an Art Director skill and an Experience Builder skill that apply the two methodologies when an agent does design or build work (alongside the vendored `frontend-design` and `web-design-guidelines`); an aesthetic registry as creative memory: one record per direction explored, with its references, the reasoning, what was selected or rejected and why, and the experience it led to.
 - **Where it lives:** documents under `docs/design/`; the skills under `.claude/skills/`. Neither is imported by code or read by the build or the catalog. The repository is public, so the methodology, the skills and every registry record are public too.
@@ -335,6 +339,8 @@ Phase 2 has two parts. Phase 2A is documents and agent skills: it describes how 
 - **Out of scope:** any rendering or experimentation environment (Phase 2B), platform themes, shared component libraries, building experiences, code changes.
 
 ### Phase 2B — Design Laboratory (local visual experimentation)
+
+> **Deferred by [ADR-030](adr/adr-030-creative-process-and-design-review.md).** Draft experiences in preview builds, photographed by `pnpm capture`, serve the same purpose without a second local application. Reconsider when that loop has been used on two experiences and found insufficient. Phase 3 therefore depends on Phase 2A only.
 
 - **Depends on:** Phase 2A (the laboratory serves the methodology; the registry is where its results are recorded).
 - **Scope:** a local-only environment where directions from the registry are sketched and compared visually in a browser: type, colour, composition, motion and the Beacon's presentation side by side at several viewport sizes, in light, dark and forced colours, with reduced motion on and off.
@@ -369,15 +375,15 @@ Work revision 2 planned for its Phases 1–3 that is not done. None of it blocks
 | --- | --- | --- |
 | Cookieless page analytics, privacy page, Speed Insights | 1 | needs the privacy page first; DPDP question open |
 | Custom domain and subdomains for KawaiUI and Dev X-Ray | 1 | blocked on choosing a domain |
-| Writing collection, tag pages, RSS, sitemap, search | 2 | see decision D14 |
+| Tag pages, RSS, search | 2 | no consumer yet (D14, ADR-026); the sitemap is built |
 | Archive flow with redirects or snapshots | 3 | `archivedTo` validated, not implemented |
 | Rollback drill, dependency routine | 3 | runbook exists; drill not recorded |
 | Manual accessibility checklist for the published experiences | audit F12 | outstanding; for new experiences it is a publishing prerequisite (contract § 8.5, P2) |
-| CI as a deployment gate | tracker decision 7 | decision D16; until then a manual publishing prerequisite (P3) |
+| CI as a deployment gate | tracker decision 7 | decided (ADR-029); waits for the owner to protect `main` |
 
 ## 12. Decision register
 
-*Now* means decided by accepting this revision (documentation only, no code). *Later* means the direction is set and implementation waits for its trigger. *Proposed* means it needs the owner's decision.
+*Now* means decided by accepting this revision on 13 November 2026 (documentation only, no code). *Later* means the direction is set and implementation waits for its trigger. *Proposed* means it needs the owner's decision.
 
 | # | Question | Current state | Recommended direction | Reasoning | Alternatives considered | Consequences | When |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -390,13 +396,13 @@ Work revision 2 planned for its Phases 1–3 that is not done. None of it blocks
 | D7 | How do access policies evolve without pretending static output is secure? | `public` and `owner` usable; `signed-in`, `policy`, on-demand rejected | Keep the reserved kinds; map authenticated, allowlisted and group-restricted onto them; protected means on-demand, server-authorized, never committed (§ 6.4) | The schema already carries the model; a static page can never be protected | an "unlisted = private" shortcut (insecure); client-side gates (insecure) | No schema migration needed for the Identity phase | later (Identity phase) |
 | D8 | Is the catalog schema sufficient? | Covers every current experience | Sufficient for Phases 2 and 3; expected additive changes: Beacon options (G1), more budget overrides (G4). No contract-version field | Every change so far was additive; one repository means migrations travel with the change | a versioned schema with per-experience opt-in (unneeded in one build) | Breaking changes are major contract versions with migrations in the same change | now |
 | D9 | How do design methodology and implementation stay separate? | Design notes in `docs/design/`; experiences in `apps/site` | Methodology, skills and registry are documents (Phase 2A); the laboratory is a local tool (Phase 2B); the catalog never references design records; an experience may link to its record from a comment or README | Keeps the platform from turning design records into a theme catalogue | a `design` field in the catalog (couples build data to creative notes) | The Control Center can show a linked record later only by convention | now |
-| D10 | How should the roadmap and phase labels change? | Revision 2 phases 0–5, partly done; code says "Phase 4" for identity | New sequence (§ 11); legacy labels kept in code and mapped here | Renaming rule ids and messages is churn with no behaviour change | renumber code and ADRs (rewrites history-like records) | Readers need the mapping in this document's header | proposed (ADR-024) |
-| D11 | How can experiences own fonts and images? | Allowlist rejects hashed font and image assets; workarounds: system stacks, the platform face, image routes, an `astro.config.ts` entry. The requirements any route must meet are in contract § 3.6 | Allow content-hashed fonts and images emitted from a mounted experience's own folder; keep the byte, base64 and prose protections for unreleased files, and prove each asset belongs to a mounted experience and is budgeted | Visual autonomy needs real type and imagery without editing platform files | per-experience entries in `astro.config.ts` (breaks "one folder, one entry, one line"); everything as routes (no hashing, no immutable caching) | A leaks change with tests; budgets already count both | proposed; to be decided before Phase 3 |
-| D12 | How is accessibility coverage guaranteed for new experiences? | Hand-written page lists in the browser suites | Derive the pages from the build, as the smoke test derives routes | A contract requirement that is not checked for new pages is a promise, not a gate | keep hand lists (new experiences silently uncovered) | Browser runs grow with the site; until decided, coverage of a new experience is added by hand (contract § 8.5, P1) | proposed, before Phase 3 |
+| D10 | How should the roadmap and phase labels change? | Revision 2 phases 0–5, partly done; code says "Phase 4" for identity | New sequence (§ 11); legacy labels kept in code and mapped here | Renaming rule ids and messages is churn with no behaviour change | renumber code and ADRs (rewrites history-like records) | Readers need the mapping in this document's header | **decided 13 November 2026: keep the labels** (ADR-024) |
+| D11 | How can experiences own fonts and images? | Allowlist rejects hashed font and image assets; workarounds: system stacks, the platform face, image routes, an `astro.config.ts` entry. The requirements any route must meet are in contract § 3.6 | Allow content-hashed fonts and images emitted from a mounted experience's own folder; keep the byte, base64 and prose protections for unreleased files, and prove each asset belongs to a mounted experience and is budgeted | Visual autonomy needs real type and imagery without editing platform files | per-experience entries in `astro.config.ts` (breaks "one folder, one entry, one line"); everything as routes (no hashing, no immutable caching) | A leaks change with tests; budgets already count both | **decided 13 November 2026: allow, proven by content hash**; implemented ([ADR-028](adr/adr-028-experience-owned-fonts-and-images.md)) |
+| D12 | How is accessibility coverage guaranteed for new experiences? | Hand-written page lists in the browser suites | Derive the pages from the build, as the smoke test derives routes | A contract requirement that is not checked for new pages is a promise, not a gate | keep hand lists (new experiences silently uncovered) | Browser runs grow with the site; until decided, coverage of a new experience is added by hand (contract § 8.5, P1) | **decided 13 November 2026: derive**; implemented ([ADR-027](adr/adr-027-derived-page-coverage.md)) |
 | D13 | Which kernel modules may experiences rely on? | Any file under `src/platform` is importable | The supported surface in contract § 6.2; everything else internal | Lets the kernel change without breaking experiences | a barrel module (no need yet) | Documentation only | now |
-| D14 | Who owns long-form content? | Revision 2 planned a platform `writing` collection; none exists. The Journal and the Archive own their content in their folders | Content belongs to the experience that presents it; a shared collection appears only when two experiences present the same corpus | Matches what was built; the kernel rule applies to content too | the revision 2 collection by default (no second consumer yet) | ADR-009 would be superseded by a new ADR if accepted; RSS, sitemap and search wait for a reason | proposed |
+| D14 | Who owns long-form content? | Revision 2 planned a platform `writing` collection; none exists. The Journal and the Archive own their content in their folders | Content belongs to the experience that presents it; a shared collection appears only when two experiences present the same corpus | Matches what was built; the kernel rule applies to content too | the revision 2 collection by default (no second consumer yet) | ADR-009 is superseded by [ADR-026](adr/adr-026-content-belongs-to-experiences.md); RSS and search wait for a reason | **decided 13 November 2026: accepted** |
 | D15 | What may the Control Center become? | Local release editor | Phase 4 scope in § 11; local until the Identity phase; never a shell, never Git | Keeps the tool honest and small | a deployed admin now (needs identity first); a CMS (wrong shape) | Check results reach it as report files written by the CLI | later (Phase 4) |
-| D16 | Should CI gate deployment? | Vercel builds `main` in parallel with CI | Require CI before production (branch protection or Vercel's deployment checks) | Unit and browser tests do not gate production today | rely on the build gate only (misses tests) | A GitHub or Vercel dashboard change by the owner; until decided, a passing CI run on the publishing commit is checked by hand (contract § 8.5, P3) | proposed, before Phase 3 |
+| D16 | Should CI gate deployment? | Vercel builds `main` in parallel with CI | Require CI before production (branch protection or Vercel's deployment checks) | Unit and browser tests do not gate production today | rely on the build gate only (misses tests) | A GitHub or Vercel dashboard change by the owner; until decided, a passing CI run on the publishing commit is checked by hand (contract § 8.5, P3) | **decided 13 November 2026: require CI, `main` by pull request only** ([ADR-029](adr/adr-029-ci-as-the-release-gate.md)); the GitHub setting is the owner's to apply ([tracker](tracker.md)) |
 
 ## 13. Deferred decisions and non-goals
 

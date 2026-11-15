@@ -4,11 +4,15 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { CANARY } from '@pu/experience-catalog';
 import { fixtureRelease } from '@pu/experience-catalog/fixture-release';
+import { validateCatalog } from '@pu/platform-schema';
 import { loadPlatform, repoRoot } from './repo.ts';
 import { smoke, type Fetch, type SmokeInput } from './smoke.ts';
 
-// Synthetic deployments against a fixed release state (resume a draft), not config/release.json.
-const { experiences } = loadPlatform();
+// Synthetic deployments against a fixed release state (resume a draft), not config/release.json,
+// and a fixed set of experiences: the ones site() below knows how to serve. An experience added to
+// the catalog later does not change these tests (decision D12).
+const SERVED = new Set(['index', 'journal', 'kawaiui', 'devxray', 'sample-content', 'sample-app', 'skills', 'divya-chakshu', 'resume', 'canary-draft', 'sample-hostile']);
+const experiences = loadPlatform().experiences.filter((e) => SERVED.has(e.id));
 const state = fixtureRelease();
 const vercel = JSON.parse(readFileSync(join(repoRoot, 'apps/site/vercel.json'), 'utf8')) as SmokeInput['vercel'];
 const GLOBAL = vercel.headers.find((h) => h.source === '/(.*)')!.headers;
@@ -31,6 +35,8 @@ function site(env: 'production' | 'preview') {
     ['_astro/fonts/f.woff2', 'font'],
     ['favicon.svg', '<svg/>'],
     ['og.png', 'png'],
+    ['sitemap.xml', '<urlset/>'],
+    ['robots.txt', 'User-agent: *'],
   ]);
   if (env === 'preview') {
     files.set('canary-draft.html', html(`${CANARY}-PAGE`));
@@ -55,7 +61,7 @@ type Mutate = {
   files?: (f: Map<string, string>) => void; noHeaders?: boolean; noRedirects?: boolean; mutableAssets?: boolean; spaFallback?: boolean;
   /** Overrides the Content-Type for one path. */ types?: Record<string, string>; noHeadersOn404?: boolean; cachedHtml?: boolean;
 };
-const TYPES: Record<string, string> = { js: 'text/javascript; charset=utf-8', woff2: 'font/woff2', svg: 'image/svg+xml', png: 'image/png', pdf: 'application/pdf', md: 'text/markdown', zip: 'application/zip', py: '' };
+const TYPES: Record<string, string> = { js: 'text/javascript; charset=utf-8', woff2: 'font/woff2', webp: 'image/webp', xml: 'application/xml; charset=utf-8', txt: 'text/plain; charset=utf-8', svg: 'image/svg+xml', png: 'image/png', pdf: 'application/pdf', md: 'text/markdown', zip: 'application/zip', py: '' };
 
 function deployment(env: 'production' | 'preview', m: Mutate = {}): Fetch {
   const files = site(env);
@@ -211,4 +217,19 @@ test('a network error is retried once, then reported with its path and cause ins
   const down: Fetch = async (url, init) => { if (url.endsWith('/journal')) throw new TypeError('fetch failed', { cause: { code: 'ECONNRESET' } }); return ok(url, init); };
   const out = (await smoke({ base: 'https://pu.example', env: 'production', experiences, state: state!, vercel, fetch: down })).map((x) => `${x.file}: ${x.reason}`);
   assert.equal(out.at(-1), '/journal: request failed twice (ECONNRESET), a network error rather than an answer from the site; the run stopped here, so re-run it');
+});
+
+test('a dynamic route that serves files (fonts, images) is fetched as files and never probed with a query string', async () => {
+  const filey = validateCatalog([{ kind: 'internal', id: 'filey', title: 'Filey', summary: 'Serves its own font and image.', capabilities: ['content'], performanceClass: 'content',
+    routes: [{ pattern: '/filey', entrypoint: 'filey/routes/index.astro' }, { pattern: '/filey/fonts/[face]/face.woff2', entrypoint: 'filey/routes/font.ts' },
+      { pattern: '/filey/images/[image]/image.webp', entrypoint: 'filey/routes/image.ts' }] }]).experiences;
+  const released = { ...state!, experiences: { ...state!.experiences, filey: { lifecycle: 'published' as const, access: { kind: 'public' as const }, discoverability: 'unlisted' as const, flags: {} } } };
+  const out = await smoke({ base: 'https://pu.example', env: 'production', experiences: [...experiences, ...filey], state: released, vercel, fetch: deployment('production', {
+    files: (f) => {
+      f.set('filey.html', html('Filey', '<link rel="preload" href="/filey/fonts/a/face.woff2"><a href="/filey/images/b/image.webp">i</a>'));
+      f.set('filey/fonts/a/face.woff2', 'font');
+      f.set('filey/images/b/image.webp', 'webp');
+    },
+  }) });
+  assert.deepEqual(out.map((x) => `${x.file}: ${x.reason}`), []);
 });

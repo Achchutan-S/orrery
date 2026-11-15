@@ -23,3 +23,30 @@ export function ownerOf(page: string, experiences: readonly Experience[]): Exper
 export const productionOwners = (experiences: readonly Experience[], state: ReleaseState) =>
   experiences.filter((e) => resolveAll([e], state, 'production')[0]!.mounted);
 
+
+/** The URL path of a built page: 'index.html' is '/', 'a/b.html' is '/a/b'. */
+export const pagePath = (file: string): string => (file === 'index.html' ? '/' : `/${file.replace(/\.html$/, '')}`);
+
+/**
+ * The pages a browser suite visits, derived from a build's HTML files so that a new experience is
+ * covered without anyone listing its pages (decision D12, ADR-027). Every page of a parameter-free
+ * route is included; a dynamic route contributes its first and last page by name, which keeps the
+ * run inside CI's time limit while still visiting every kind of page. 404.html is left to the caller.
+ */
+export function samplePages(htmlFiles: readonly string[], experiences: readonly Experience[]): string[] {
+  const groups = new Map<string, string[]>();
+  for (const file of htmlFiles.filter((f) => f.endsWith('.html') && f !== '404.html')) {
+    const owner = ownerOf(file, experiences);
+    if (owner?.kind !== 'internal') continue;
+    // The route that produced it: an exact match, else the dynamic route with the longest folder.
+    const route = owner.routes.map(({ pattern }) => ({ pattern, ...routeFiles(pattern) }))
+      .filter((r) => r.exact === file || (r.under !== undefined && file.startsWith(r.under)))
+      .sort((a, b) => Number(b.exact !== undefined) - Number(a.exact !== undefined) || (b.under?.length ?? 0) - (a.under?.length ?? 0))[0]!;
+    const key = `${owner.id} ${route.pattern}`;
+    groups.set(key, [...(groups.get(key) ?? []), file]);
+  }
+  return [...groups.values()].flatMap((files) => {
+    const sorted = [...files].sort();
+    return [...new Set([sorted[0]!, sorted.at(-1)!])].map(pagePath);
+  });
+}

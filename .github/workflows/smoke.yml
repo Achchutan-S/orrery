@@ -1,0 +1,42 @@
+# Daily check that production still serves what config/release.json on main promises
+# (docs/deployment.md § Smoke test). No secrets: production is public.
+name: Production smoke
+
+on:
+  schedule:
+    - cron: '17 3 * * *' # 03:17 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-smoke
+  cancel-in-progress: true
+
+env:
+  COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+
+jobs:
+  smoke:
+    name: Smoke test production
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+
+      - name: Enable pnpm at the version in package.json "packageManager"
+        run: corepack enable
+
+      - name: Install (fails if pnpm-lock.yaml is out of date)
+        run: pnpm install --frozen-lockfile
+
+      - name: Smoke test https://orrery-teal.vercel.app
+        run: pnpm smoke https://orrery-teal.vercel.app --env production

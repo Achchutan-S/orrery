@@ -70,6 +70,7 @@ export const BUDGETS: Record<BudgetClass, Record<Metric, number>> = {
  * resume/og.png 53 KB, resume/resume.pdf 211 KB.
  */
 export const FILE_BUDGETS: { kind: string; kb: number; why: string; matches: (path: string, ogImages: ReadonlySet<string>) => boolean }[] = [
+  { kind: 'crawler file', kb: 16, why: 'the platform\'s sitemap.xml and robots.txt, fetched by crawlers, never by a page; one line per listed experience', matches: (p) => p === 'sitemap.xml' || p === 'robots.txt' },
   { kind: 'link-preview image', kb: 150, why: 'fetched by link-preview crawlers, never by a page; about three times the generated 1200×630 cards', matches: (p, og) => og.has(p) },
   { kind: 'document', kb: 400, why: 'a download the reader asks for (the resume PDF); about twice its size today', matches: (p) => p.endsWith('.pdf') },
   // Measured 7 November 2026 (Skills Archive, preview build): largest source file 9 KB gzip (conceptcast/SKILL.md), largest package 11 KB.
