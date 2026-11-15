@@ -4,12 +4,14 @@ Two kinds of evidence, never mixed: what the browser suites prove automatically 
 
 ## Automated (`pnpm test:browser`, every CI run)
 
+"Every page" below means the pages the suite derives from the builds ([ADR-027](adr/adr-027-derived-page-coverage.md)): each parameter-free page and the first and last page of each dynamic route, in the production build and, for drafts, the preview build. Nobody lists them; a new experience is visited as soon as it builds.
+
 | Check | Where | Pages |
 | --- | --- | --- |
 | axe, WCAG 2.2 A/AA rules, light and dark, desktop and phone | `apps/site/test-browser/browser.test.ts` § axe; Control Center `apps/control/test-browser/control.test.ts` § axe | every main page; the palette open; every Control Center screen, its preview and its confirm dialog |
 | axe best practices (landmarks, heading order, unique regions) | site § accessibility beyond axe | every production page |
 | One `h1`, one `main`, no skipped heading levels, `lang`, `<title>` | site § accessibility beyond axe | every production page |
-| Reflow: no sideways scrolling at 320 and 640 CSS px (400% and 200% of a 1280 px window) | site § accessibility beyond axe; Control Center § reflow | every production page; every Control Center screen at 320 px |
+| Reflow: no sideways scrolling at 320, 640, 768 and 1024 CSS px (phone, 200% zoom, tablet, small laptop) | site § accessibility beyond axe; Control Center § reflow | every production page; every Control Center screen at 320 px |
 | Text spacing (WCAG 1.4.12: line height 1.5, letter 0.12em, word 0.16em, paragraph 2em) | site § accessibility beyond axe | every production page, desktop and phone |
 | Forced colours: the focus outline survives (the box-shadow band does not), the Beacon stays visible | site § accessibility beyond axe; Control Center § reflow | every production page; every Control Center screen |
 | Keyboard order, visible two-band focus ring | site § The Index, Journal, Resume; Control Center § keyboard | Index, Journal, resume; Control Center skip link and navigation |
@@ -22,7 +24,7 @@ Two kinds of evidence, never mixed: what the browser suites prove automatically 
 
 ## Manual checklist
 
-**New experiences.** The pages the automated checks visit are listed by hand in the suites, so a new experience is covered only when its pages are added (decision D12 proposes deriving them from the build). Covering its pages and recording a person's manual check below are both prerequisites for publishing it ([contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience), P1 and P2).
+**New experiences.** The generic automated checks reach a new experience's pages by themselves; its interactions need its own suite. Passing them and recording a person's manual check below are both prerequisites for publishing it ([contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience), P1 and P2).
 
 About 90 minutes. Use the live site (https://orrery-teal.vercel.app) once this tree is deployed, or a local production build: `pnpm build:production`, then `pnpm --filter @pu/site preview` (http://localhost:4321). The Control Center: `pnpm control` (http://127.0.0.1:4317). Record each check as pass or fail with a note in [Results](#results); a failure gets an issue, a fix and, where a browser can detect it, an automated regression test.
 
@@ -74,12 +76,23 @@ Start VoiceOver with ⌘F5. VO = Control+Option.
 | 18 | `/skills/sidequest` | VoiceOver: VO+U Headings and Landmarks; activate "Copy SKILL.md", then a section button; VO into the SKILL.md region | Six numbered sections in order; each copy is announced ("Copied SKILL.md: 188 lines, exactly as written.") without focus moving; the region reads as "SKILL.md, original text" and its lines read as text, without line numbers |
 | 19 | `/skills`, `/skills/conceptcast` | Reduce motion on, then off; 200% and 400% zoom; "Light the lanterns" | No drifting dust, light or blinking with reduced motion; nothing cut off or sideways at 400%; night mode keeps readable contrast, and the button says "Let in the daylight" when pressed |
 
+### F. Divya Chakshu (`/divya-chakshu`)
+
+Never performed. Outstanding since the experience was published on 8 November 2026 ([tracker](tracker.md), O4). Use a real phone and a computer with a real GPU: the automated suite draws WebGL in software.
+
+| # | Route | Action | Expected |
+| --- | --- | --- | --- |
+| 20 | `/divya-chakshu` | Keyboard only: Tab from the address bar; Enter on "Enter the experience"; reach "Receive divine sight", Sound, Pause motion and Sequences; open Sequences, choose one, press Escape | Every control reachable in a sensible order with the two-band ring visible against the scene; choosing a sequence moves there with focus on its heading; Escape closes the list and returns focus to its button; the Beacon is reachable and never covered by the control bar |
+| 21 | `/divya-chakshu` | VoiceOver: VO+U Headings and Landmarks; read one sequence from its heading through a verse; turn Sound on and off | One level-1 heading and a heading per sequence; "Reading controls" and "Sequences" landmarks; each scene is described in words once; Sanskrit, transliteration and English are read in that order with the verse reference; the canvas is never announced; pressed states of Sound and Pause motion are announced |
+| 22 | `/divya-chakshu` | Reduce motion on, reload, scroll the whole chapter; then off, and use Pause motion | With reduced motion: a still picture per beat, no drifting, no text movement. Pause motion stops the scene and scrolling still works. Nothing flashes more than three times a second anywhere, especially in "A thousand suns" and "Terror" |
+| 23 | `/divya-chakshu` | A real iPhone and Android phone, then a laptop or desktop with a discrete or integrated GPU; 200% and 400% zoom on the computer; sound on | The title and "Enter the experience" are visible without scrolling on the phone; scrolling stays smooth enough to read; the device does not become hot or the page unresponsive over the full chapter; nothing is cut off or scrolls sideways at any zoom; sound starts only when turned on and stops when turned off or when leaving the page |
+
 ## Results
 
 Record only what a person actually did. One row per session.
 
 | Date | Checks | Browser and assistive technology | Pass | Fail (with note) | By |
 | --- | --- | --- | --- | --- | --- |
-| — | 1–19 | — | — | — | — |
+| — | 1–23 | — | — | — | — |
 
 Until a row is filled in, nothing here is manually verified ([tracker § Open work](tracker.md#open-work)).

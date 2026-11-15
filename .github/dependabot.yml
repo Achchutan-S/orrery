@@ -1,0 +1,20 @@
+# Dependency updates as pull requests, which pass through CI like any other change (ADR-029).
+# Versions stay pinned exactly; minor and patch updates are grouped to keep the noise low.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Node 22 only (ADR-021): the types follow the runtime, not the latest release.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -26,7 +26,7 @@
         "kind": "public"
       },
       "discoverability": "listed",
-      "note": "Divya Chakshu (Bhagavad Gita chapter 11). Prepared for publication on 8 November 2026; contract § 8.5 prerequisites P2–P4 to be met by the owner before this reaches main."
+      "note": "Divya Chakshu (Bhagavad Gita chapter 11). Published by the owner on 8 November 2026 (b9555cc). Contract § 8.5 P2 (manual accessibility check) and P4 (preview smoke test) were not met first and are open in docs/tracker.md."
     },
     "index": {
       "lifecycle": "published",

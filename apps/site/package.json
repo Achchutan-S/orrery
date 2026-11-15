@@ -12,6 +12,7 @@
     "resume:assets": "node scripts/resume-assets.ts",
     "og:platform": "node scripts/platform-og.ts",
     "skills:og": "node scripts/skills-og.ts",
+    "capture": "node scripts/capture.ts",
     "skills:source": "node scripts/skills-source.ts",
     "test": "node --test --test-concurrency=1 --test-reporter=spec \"test/**/*.test.ts\"",
     "typecheck": "astro check",

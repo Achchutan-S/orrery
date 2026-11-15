@@ -55,6 +55,8 @@ Primary source: the owner's resume **Achchutan_S_ResumeV3.pdf** (dated September
 
 ## Privacy check
 
+**Before publishing any resume change, the owner runs the private-term check below on their own machine.** Public CI cannot: the term list is exactly what must not be published, so in CI that one test is skipped, not passed. The pull request template has a box for it.
+
 This repository is public, so it never names what the resume leaves out. `apps/site/test/resume.test.ts` checks `content.ts` and the PDF in two ways:
 
 - **Generic patterns, always:** internal e-mail domains and hosts, `localhost`, and the words salary, CTC, appraisal and rating.

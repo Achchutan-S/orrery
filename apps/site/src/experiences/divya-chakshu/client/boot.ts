@@ -3,7 +3,7 @@
 // shows a CSS still per sequence until — or instead of — the WebGL engine, which it imports lazily.
 // The text never depends on it: without JavaScript the whole chapter is there to read.
 import { track } from '../../../platform/analytics/track.ts';
-import { B, position, SEQUENCE_COUNT, sequenceAt, ss } from './timeline.ts';
+import { B, position, SEQUENCE_COUNT, sequenceAt, SIGHT_OPEN, sightAt, ss } from './timeline.ts';
 import type { Cue, Score } from './audio.ts';
 
 const ID = 'divya-chakshu';
@@ -19,7 +19,6 @@ const state = {
   velocity: 0,
   entered: false,
   openAt: -1,
-  sightAt: -1,
   paused: false,
   ptr: [0, 0] as [number, number],
 };
@@ -47,6 +46,7 @@ function read() {
   lastG = state.g; lastT = now;
   if (!state.entered && state.g > 0.33) enter(false);
   onSequence(sequenceAt(state.g));
+  onSight(sightAt(state.g) > 0.5);
 }
 
 // ---- Stills, progress and the sequence list ---------------------------------------------------
@@ -78,11 +78,11 @@ const now = () => performance.now();
 function moments() {
   const t = now();
   const open = state.openAt < 0 ? 0 : reduced() ? 1 : ss(0, 4200, t - state.openAt);
-  const sight = state.sightAt < 0 ? 0 : reduced() ? 1 : Math.min(1, (t - state.sightAt) / 5200);
-  return { open, sight };
+  return { open };
 }
 
 const enterBtn = $<HTMLButtonElement>('[data-enter]');
+let carryOn = 0;
 function enter(byButton: boolean) {
   if (state.entered) return;
   state.entered = true;
@@ -93,28 +93,42 @@ function enter(byButton: boolean) {
   if (byButton) {
     const next = $('[data-seq="0"][data-beat="1"]');
     // Carry the visitor on only if they have not already moved on themselves.
-    window.setTimeout(() => { if (state.g < 0.3) next?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }); }, reduced() ? 0 : 2600);
+    // Cancelled by Replay: otherwise it could fire after the reader has been taken back to the top.
+    carryOn = window.setTimeout(() => { if (state.g < 0.3) next?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' }); }, reduced() ? 0 : 2600);
   }
 }
 enterBtn?.addEventListener('click', () => enter(true));
 
+// Divine sight belongs to a place in the text, not to a moment in time: the picture is a function of
+// the reading position, so it closes again when the reader scrolls back. The button carries the
+// reader to where the eye is open; everything else follows from the position.
 const sightBtn = $<HTMLButtonElement>('[data-sight]');
+const sightLabel = sightBtn?.querySelector('[data-sight-label]');
+let sighted = false;
+function onSight(open: boolean) {
+  if (open === sighted) return;
+  sighted = open;
+  root.toggleAttribute('data-sighted', open);
+  if (sightLabel) sightLabel.textContent = open ? 'Divine sight received' : 'Receive divine sight';
+  if (open) { announce('Divine sight received. The view opens.'); cue('sight'); }
+  else announce('');
+}
+function scrollToPosition(g: number) {
+  const seq = Math.floor(g), n = offsets.filter((o) => o.seq === seq).length;
+  const beat = Math.min(n - 1, Math.floor((g - seq) * n));
+  const o = offsets.find((x) => x.seq === seq && x.beat === beat);
+  if (!o) return;
+  scrollTo({ top: o.top + o.height * ((g - seq) * n - beat) - innerHeight * 0.5, behavior: reduced() ? 'auto' : 'smooth' });
+}
 sightBtn?.addEventListener('click', () => {
-  if (state.sightAt >= 0) return;
-  state.sightAt = now();
-  sightBtn.setAttribute('aria-disabled', 'true');
-  const text = sightBtn.querySelector('[data-sight-label]');
-  if (text) text.textContent = 'Divine sight received';
-  root.dataset.sighted = '';
-  announce('Divine sight received. The view opens.');
-  cue('sight');
   track(ID, 'sight', {});
+  scrollToPosition(SIGHT_OPEN);
 });
 
 $('[data-replay]')?.addEventListener('click', () => {
-  state.entered = false; state.openAt = -1; state.sightAt = -1;
-  delete root.dataset.entered; delete root.dataset.sighted;
-  if (sightBtn) { sightBtn.removeAttribute('aria-disabled'); const t = sightBtn.querySelector('[data-sight-label]'); if (t) t.textContent = 'Receive divine sight'; }
+  clearTimeout(carryOn);
+  state.entered = false; state.openAt = -1;
+  delete root.dataset.entered;
   for (const b of beats) b.classList.remove('is-in');
   scrollTo({ top: 0, behavior: 'auto' });
   enterBtn?.focus({ preventScroll: true });
@@ -190,6 +204,22 @@ const wake = () => { controls?.classList.remove('is-idle'); clearTimeout(idle); 
 for (const ev of ['pointermove', 'keydown', 'focusin', 'touchstart'] as const) addEventListener(ev, wake, { passive: true });
 wake();
 
+// ---- Names: labels for the three Arjuna recognises, placed where the canvas draws them ----------
+// Decorative (aria-hidden): the text already names them. Hidden whenever WebGL is not drawing.
+const nameEls = $$('[data-name]');
+let lastNames = '';
+function placeNames(list: { x: number; y: number; a: number }[]) {
+  const key = list.map((n) => `${n.x.toFixed(4)},${n.y.toFixed(4)},${n.a.toFixed(2)}`).join('|');
+  if (key === lastNames) return;
+  lastNames = key;
+  list.forEach((n, i) => {
+    const el = nameEls[i];
+    if (!el) return;
+    el.style.transform = `translate(${innerWidth / 2 + n.x * innerHeight}px, ${innerHeight / 2 - n.y * innerHeight}px) translate(-50%, -100%)`;
+    el.style.opacity = String(n.a);
+  });
+}
+
 // ---- WebGL --------------------------------------------------------------------------------------
 const canvas = $<HTMLCanvasElement>('[data-canvas]');
 const gl = canvas?.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, powerPreference: 'high-performance' }) ?? null;
@@ -212,6 +242,7 @@ else {
         if ((ink > 0.5) !== (lastInk > 0.5)) { root.toggleAttribute('data-ink', ink > 0.5); if (ink > 0.5) cue('blaze'); }
         lastInk = ink;
       },
+      onNames: placeNames,
       onFail: fallback,
       onRecover: () => { root.classList.add('dc-gl'); root.classList.remove('dc-still'); },
     });

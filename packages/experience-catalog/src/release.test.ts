@@ -50,9 +50,10 @@ test('the fixture release state is valid; production mounts the public samples a
     ['/', '/journal', '/journal/[chapter]', '/sample-content', '/sample-app', '/sample-app/[...path]']);
 });
 
-test('preview and development also mount the drafts (the two fixtures, Divya Chakshu), but never list the fixtures', () => {
+test('preview and development mount every internal experience that is not archived, drafts included, but never list the fixtures', () => {
   for (const env of ['development', 'preview'] as const) {
-    assert.deepEqual(ids(env, 'mounted'), ['index', 'journal', 'sample-content', 'sample-app', 'skills', 'divya-chakshu', 'resume', 'canary-draft', 'sample-hostile']);
+    assert.deepEqual(ids(env, 'mounted'), experiences.filter((e) => e.kind === 'internal' && load().experiences[e.id]?.lifecycle !== 'archived').map((e) => e.id));
+    for (const id of ['canary-draft', 'sample-hostile']) assert.ok(ids(env, 'mounted').includes(id), id);
     assert.ok(!ids(env, 'listed').some((id) => id === 'canary-draft' || id === 'sample-hostile'));
   }
 });

@@ -131,7 +131,9 @@ test('the output allowlist: released routes, platform files and hashed assets pa
   assert.deepEqual(scan([...clean(), binary('favicon.svg', favicon), binary('_astro/fonts/7a0defe7a878018e.woff2', Buffer.from('wOF2')),
     file('_astro/client.Cd-EeyjT.js', 'x()'), file('_astro/SeoHead.DXHcJ6_d.css', 'a{}'), file('journal/today.html', '<p>Journal</p>'), file('sample-app/states/beta.html'),
     file('_astro/index.astro_astro_type_script_index_0_lang.B9txREQF.js', 'x()')]), []);
-  for (const path of ['robots.txt', 'notes.html', '_astro/notes.txt', '_astro/client.js', '_astro/x.Ab12Cd34.pdf', 'journal/notes.pdf', 'sample-content/notes.html', 'index/x.html',
+  // The platform's two crawler files (src/pages) are on the list; a look-alike name is not.
+  assert.deepEqual(scan([...clean(), file('robots.txt', 'User-agent: *'), file('sitemap.xml', '<urlset/>')]), []);
+  for (const path of ['humans.txt', 'notes.html', '_astro/notes.txt', '_astro/client.js', '_astro/x.Ab12Cd34.pdf', 'journal/notes.pdf', 'sample-content/notes.html', 'index/x.html',
     '_astro/index.astro.B9txREQF.js', '_astro/index.astro_astro_type_script_index_0_lang.js', '_astro/a.b.B9txREQF.js']) {
     assert.deepEqual(scan([...clean(), file(path)]), [`${path}: ${ALLOWLIST}`], path);
   }
@@ -155,4 +157,29 @@ test('the index never links an experience that is not listed in production', () 
   const unlisted = structuredClone(state!);
   unlisted.experiences['sample-content']!.discoverability = 'unlisted';
   assert.deepEqual(scan(clean(), unlisted), ['index.html: links "sample-content" (/sample-content), which is not listed in production']);
+});
+
+// Decision D11 (ADR-028): an experience's own fonts and images, emitted by Vite as hashed copies.
+test('a hashed font or image passes only as a byte-for-byte copy of a released experience\'s or the platform\'s file', () => {
+  const platformFont = source('src/platform/fonts/atkinson-hyperlegible-next-latin.woff2');
+  // Owned by the platform, and by content, whatever Vite named it.
+  assert.deepEqual(scan([...clean(), binary('_astro/face.Ab12Cd34.woff2', platformFont)]), []);
+  // The same kind of file with bytes nobody released: a transformed image, or something from outside the experiences.
+  assert.deepEqual(scan([...clean(), binary('_astro/picture.Ab12Cd34.webp', Buffer.from('not any source file'))]),
+    ['_astro/picture.Ab12Cd34.webp: hashed font or image that is not a byte-for-byte copy of a file in a released experience\'s folder (a transformed image, or a file from outside src/experiences)']);
+  // An unhashed name is still refused by the allowlist.
+  assert.ok(scan([...clean(), binary('_astro/face.woff2', platformFont)]).some((l) => l.startsWith('_astro/face.woff2: not on the production output allowlist')));
+});
+
+test('an unreleased experience\'s font or image fails under a hashed name, as bytes and as base64', () => {
+  // The resume is a draft in the fixture state; its link-preview image stands in for any asset it owns.
+  const draftImage = source('src/experiences/resume/assets/og.png');
+  const out = scan([...clean(), binary('_astro/og.Ab12Cd34.png', draftImage), file('_astro/index.Ab12Cd34.css', `a{background:url(data:image/png;base64,${draftImage.toString('base64')})}`)]);
+  assert.deepEqual(out, [
+    '_astro/index.Ab12Cd34.css: contains content of apps/site/src/experiences/resume/assets/og.png, which belongs to "resume" (not released to production)',
+    '_astro/og.Ab12Cd34.png: is a copy of apps/site/src/experiences/resume/assets/og.png, which belongs to "resume" (not released to production)',
+  ]);
+  // Released (the real release file publishes the resume), the same bytes are the resume's to ship.
+  const real = loadPlatform().state!;
+  assert.deepEqual(scanLeaks([...clean(), binary('_astro/og.Ab12Cd34.png', draftImage)], experiences, real, sources).filter((f) => f.file.startsWith('_astro/')), []);
 });

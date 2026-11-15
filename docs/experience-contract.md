@@ -1,6 +1,6 @@
 # Orrery Experience Contract
 
-Version 1.0 · 7 November 2026 · **proposed, pending the owner's approval** ([ADR-024](adr/adr-024-experience-contract.md)) · amended the same day by the architecture amendment pass (experience independence, the Beacon, assets and fonts, publishing prerequisites); amendments made before acceptance do not change the version number
+Version 1.1 · 13 November 2026 · 1.0 (7 November 2026) **accepted** on 13 November 2026 ([ADR-024](adr/adr-024-experience-contract.md)); the 1.1 amendments were written the same day to implement decisions D11, D12 and D16 and the creative-process task, and are accepted by the owner's merge of the pull request that adds them. 1.1 adds experience-owned hashed fonts and images ([ADR-028](adr/adr-028-experience-owned-fonts-and-images.md)), derived accessibility coverage ([ADR-027](adr/adr-027-derived-page-coverage.md)), the pull-request release gate ([ADR-029](adr/adr-029-ci-as-the-release-gate.md)) and the design review prerequisites P0 and P7 ([ADR-030](adr/adr-030-creative-process-and-design-review.md)). Existing experiences keep working unchanged
 
 This is the agreement between Orrery (the platform) and every experience it hosts. It says what an experience must provide, what it may do freely, what the platform guarantees in return, and how the agreement changes over time. Version 1.0 describes the platform as it is built today: every requirement names how it is enforced, and anything that does not exist yet is marked as such.
 
@@ -16,7 +16,7 @@ Each requirement names its enforcement:
 | --- | --- |
 | **build** | `mount-experiences` (or `validatePlatform()` in `platform-schema`) fails the site build |
 | **check** | a repository check fails: `pnpm check:boundaries`, `check:metadata`, `check:leaks`, `check:budgets` (all part of `pnpm check`, CI, and Vercel's production build gate) |
-| **test** | a unit or browser test fails (`pnpm test`, `pnpm test:browser`; CI runs both, but CI does not yet gate Vercel deployments, see [blueprint § 10](blueprint.md#10-performance-accessibility-and-quality-strategy)) |
+| **test** | a unit or browser test fails (`pnpm test`, `pnpm test:browser`; CI runs both on every pull request, and `main` accepts only pull requests that pass, [ADR-029](adr/adr-029-ci-as-the-release-gate.md)) |
 | **CSP** | the browser refuses it at runtime under the site's Content Security Policy |
 | **review** | no automation; the owner checks it when reviewing the change |
 | **planned** | not enforced today; the gap is listed in [§ 11](#11-known-gaps-and-proposed-changes) |
@@ -59,7 +59,7 @@ The schema is `packages/platform-schema/src/definition.ts`. Fields an internal e
 | `exclusiveImports` | optional | npm packages only this experience may import; one owner per package | `check:boundaries` |
 | `budgetOverrides` | optional | `jsKb`, `cssKb`, `transferMb`, with a `reason` of at least 20 characters | `check:budgets` |
 | `variantOf` | optional | the id of an existing experience | validation only |
-| `events` | reserved | event names | nothing yet; `track()` is a no-op (§ 6) |
+| `events` | optional | every event name the experience passes to `track()` | a test keeps the list and the calls in step; `track()` itself is still a no-op (§ 6) |
 
 An **external** experience (`kind: 'external'`) declares `id`, `title`, `summary`, `capabilities`, optional `tags`, `section`, `headline`, and an `https:` `url`. It has no folder and no routes; it is a link on the Index and in the Beacon, and it is never built here (KawaiUI and Dev X-Ray, [ADR-013](adr/adr-013-external-projects-and-samples.md)).
 
@@ -104,7 +104,7 @@ Inside `<body>`, and through its own additions to `<head>`, an experience define
 
 An experience is **not** required to use the platform's fonts, colours, spacing scale, components, page layout, card patterns, navigation design or visual theme. None of these exist as mandatory platform assets, and the contract will not add them. Shared UI components are opt-in only ([ADR-007](adr/adr-007-presentation-ownership.md): a component moves to an opt-in kernel folder only after three experiences copy it, and no experience is ever made to use it).
 
-The six experiences built so far already look unrelated: a broadsheet front page (Index), a mineral-toned archive (Journal), a typeset dossier (resume), a forest reading room with a day and night scene (Skills Archive), a serif essay (sample-content) and a dark tool surface (sample-app). Each declares its own tokens (`--i-*`, `--j-*`, `--r-*`, the Archive's own, `--sc-*`, `--sa-*`).
+The seven experiences built so far already look unrelated: a broadsheet front page (Index), a mineral-toned archive (Journal), a typeset dossier (resume), a forest reading room with a day and night scene (Skills Archive), a film-like scroll over WebGL scenes (Divya Chakshu), a serif essay (sample-content) and a dark tool surface (sample-app). Each declares its own tokens (`--i-*`, `--j-*`, `--r-*`, the Archive's own, `--sc-*`, `--sa-*`).
 
 ### 3.3 What the platform does impose, and why
 
@@ -124,10 +124,9 @@ Only these touch an experience's pages, and each exists because it serves every 
 
 ### 3.4 Current limits on autonomy
 
-Honest limits of version 1.0, each with a proposed change in § 11:
+Honest limits of version 1.1, each with a proposed change in § 11:
 
-- **Web fonts.** The requirements for experience-owned fonts are in § 3.6; what works today is narrower. An experience can use system font stacks (the Index's headlines, the Archive, sample-content) or the platform face (`--font-platform`). A web font of its own needs either an entry in `apps/site/astro.config.ts` (a platform file) or a font file served through one of its own routes. A font file imported from the experience's CSS would be emitted as `_astro/<name>.<hash>.woff2`, which the production output allowlist in `tools/checks/src/leaks.ts` does not accept (gap G2; found by reading the allowlist, not by a build).
-- **Images.** The same allowlist rejects images imported through `astro:assets` or CSS `url()`. Images served by the experience's own routes work (the resume's and Archive's link-preview cards; gap G3).
+- **Transformed images.** An experience's own fonts and images ship as hashed assets when their bytes are the committed file's (§ 3.6). An image optimised by `astro:assets` (`<Image>`, `getImage`) has new bytes and is refused by the leak check: commit images at the size and format they ship in ([ADR-028](adr/adr-028-experience-owned-fonts-and-images.md) § Limits).
 - **Third-party resources.** The CSP allows only the site's own origin for scripts, styles, fonts, images, media, frames and connections (`default-src 'self'`). Everything must be self-hosted; third-party embeds, CDNs and remote APIs are not available.
 - **WebAssembly and `eval`.** The CSP's `script-src` has no `'wasm-unsafe-eval'` or `'unsafe-eval'`, so an experience cannot compile WebAssembly (gap G5).
 - **The Beacon** cannot yet be moved, re-toned or minimised by an experience: § 3.5 permits it, but the only presentation implemented is the platform default (gap G1).
@@ -168,6 +167,8 @@ An experience's fonts, images, icons, audio, video and downloads are part of its
 - **Accessible.** Informative images have text alternatives; decorative ones have empty `alt` or are CSS backgrounds; text is never rendered as an image. **test** (axe) on covered pages
 - **Safe file types.** SVG files served as routes contain no scripts or event handlers, because a directly opened SVG runs on the site's origin. **review**
 
+**Typefaces are a decision.** With its own fonts available, a system font stack is a choice an experience makes for a reason (speed, a deliberately native feel), recorded in its direction record, not a default.
+
 **Budgets.** Fonts count against 110 KB per page in every class; images against 100 KB (`content`, `interactive`) or 250 KB (`immersive`); files no page loads against `FILE_BUDGETS` (§ 8.2). `budgetOverrides` cannot raise font or image limits today (gap G4).
 
 **Delivery today**
@@ -175,11 +176,12 @@ An experience's fonts, images, icons, audio, video and downloads are part of its
 | Route | Works today | Notes |
 | --- | --- | --- |
 | A file route of the experience (`/<id>/og.png` from `routes/og.ts`, the resume's PDF, the Archive's ZIPs) | yes | built only where the experience is mounted; counted by page budgets when a page loads it, otherwise by `FILE_BUDGETS` |
-| Imported from the experience's CSS or components, emitted by Vite as `_astro/<name>.<hash>.<ext>` | no for fonts and images: the production output allowlist accepts only hashed `.js` and `.css` and the platform's own font files (gaps G2, G3) | the natural route for web fonts and in-page images |
+| Referenced from the experience's CSS (`url()`) or imported as a file, emitted by Vite as `_astro/<name>.<hash>.<ext>` | yes, for `woff2`, `woff`, `png`, `jpg`, `webp`, `avif`, `gif`, `svg`, when the emitted bytes equal the committed file ([ADR-028](adr/adr-028-experience-owned-fonts-and-images.md)) | the natural route for web fonts and in-page images; cached for a year as immutable. A file under 4 KB is inlined as a `data:` URL, which the CSP allows for images and not for fonts |
+| Optimised by `astro:assets` (`<Image>`, `getImage`) | no: transformed bytes match no source file | commit the image as it ships |
 | The platform face, `--font-platform` | yes | optional, never required |
 | An entry in `apps/site/astro.config.ts` | yes, but it is a platform file | not a supported route for an experience |
 
-**Output validation an implementation of D11 must keep.** If hashed fonts and images are allowed, the leak check must still prove that every emitted asset belongs to an experience mounted in that build, that no unreleased experience's asset bytes (raw or base64) appear in production output, and that each asset is counted by a page budget or `FILE_BUDGETS`. Allowing a file type without those three proofs would turn the allowlist into a hole.
+**Output validation** (**check**). The leak check proves that every emitted font or image is a byte-for-byte copy of a file owned by an experience mounted in that build, and that no unreleased experience's bytes (raw or base64) appear in production output; the budget check counts each asset on the pages that load it and reports one no page loads. A file type is never allowed without those three proofs.
 
 ## 4. Platform integration
 
@@ -269,7 +271,7 @@ Accessibility is the one place where freedom stops. The platform defines outcome
 | Forced colours | the Beacon stays visible | not convey state by colour or background images alone | **test** on covered pages |
 | Works without JavaScript | the Beacon degrades to a link | content readable without scripts | **test** on covered pages |
 
-**Coverage today.** The browser suites run these checks on a hand-written list of pages (`apps/site/test-browser/browser.test.ts`) and on the Archive's own suite. A new experience is covered only when its author adds its pages (runbook step 8). Deriving the list from the build is gap G7.
+**Coverage.** The browser suite derives the pages it visits from the builds ([ADR-027](adr/adr-027-derived-page-coverage.md)): every parameter-free page and the first and last page of each dynamic route, in production and, for drafts, in the preview build. They get axe (light and dark, desktop and phone), best practices, structure, text spacing, forced-colours focus and reflow at 320, 640, 768 and 1024 px with nobody listing them. Interactions are covered only by the experience's own suite (§ 8.4).
 
 **Manual evidence.** Automated checks are not proof. The manual checklist in [accessibility.md](accessibility.md) has not yet been performed by a person, and no document may record it as done until someone has.
 
@@ -387,12 +389,13 @@ An external experience is a catalog entry with an `https:` URL. It has no folder
 | Metadata (title, description, Open Graph, canonical consistency, image present) | `pnpm check:metadata` | yes | yes |
 | Leaks (unreleased routes, canaries, non-public metadata and prose, output allowlist, source maps, off flags) | `pnpm check:leaks` | yes | yes |
 | Performance budgets per page and per file kind | `pnpm check:budgets` | yes | yes |
-| Unit and integration tests | `pnpm test` | yes | no (decision D16) |
-| Browser tests: accessibility, routing, CSP, isolation | `pnpm test:browser` | yes | no (decision D16) |
+| Unit and integration tests | `pnpm test` | yes | through the pull request: `main` accepts only commits that passed ([ADR-029](adr/adr-029-ci-as-the-release-gate.md)) |
+| Browser tests: accessibility, routing, CSP, isolation | `pnpm test:browser` | yes | through the pull request (ADR-029) |
 | Deployment smoke test | `pnpm smoke <url> --env production\|preview` | no (manual after deploy) | no |
 | Manual accessibility checklist | [accessibility.md](accessibility.md) | no | no |
+| Design reviews: slice and final | [design/creative-process.md](design/creative-process.md) | no | no |
 
-The last four rows do not stop a production deployment automatically, which is why § 8.5 makes them explicit prerequisites before a new experience is published.
+The last three rows cannot be automated and do not stop a deployment by themselves, which is why § 8.5 makes them explicit prerequisites, and why the pull request template asks for each.
 
 ### 8.2 Budgets by performance class
 
@@ -404,7 +407,7 @@ KB gzip per page, from `tools/checks/src/budgets.ts`. The Beacon has its own 15 
 | `interactive` | 150 | 50 | 110 | 100 | 100 | 330 |
 | `immersive` | 250 | 50 | 110 | 250 | 8,192 | 430 |
 
-Files no page loads have their own limits (`FILE_BUDGETS`: link-preview images, documents, text downloads, archives). A new kind of emitted file needs a page that loads it or a `FILE_BUDGETS` entry ([ADR-023](adr/adr-023-audit-closure.md)). The image limits are provisional, and the `immersive` class has never been exercised by a real experience.
+Files no page loads have their own limits (`FILE_BUDGETS`: link-preview images, documents, text downloads, archives). A new kind of emitted file needs a page that loads it or a `FILE_BUDGETS` entry ([ADR-023](adr/adr-023-audit-closure.md)). The image limits are provisional. The `immersive` class is exercised by Divya Chakshu (4.1 KB JavaScript, 12.9 KB lazy), far inside its limits; no experience has yet tested the font or image budgets.
 
 ### 8.3 Exceptions
 
@@ -419,7 +422,7 @@ Different experiences need different budgets; the class is the first answer and 
 
 | The experience | Minimum tests |
 | --- | --- |
-| any | its pages in the pipeline test's `PAGES`; its id in the pinned catalog lists (`metadata.test.ts`, `pipeline.test.ts`); axe and structure checks on its main page types |
+| any | nothing to register: the generic accessibility, structure and reflow checks find its pages from the build (ADR-027) |
 | content only | the above; JavaScript-off rendering if it has any script |
 | interactive | unit tests for its logic; browser tests for each interaction with keyboard; error-boundary fallback for each island |
 | with build-time data or generated files | a test that fails when the source and the generated file disagree (the resume's content hash, the Archive's SHA-256 manifest) |
@@ -428,18 +431,20 @@ Different experiences need different budgets; the class is the first answer and 
 
 ### 8.5 Prerequisites for publishing a new experience
 
-Publishing means a release-state change that makes the experience mounted in production (lifecycle `beta`, `published`, `frozen` or `deprecated` with `public` access). Because CI does not gate Vercel deployments and accessibility coverage is hand-listed, these are explicit prerequisites. Each **MUST** be met and recorded before the publishing commit reaches `main`:
+Publishing means a release-state change that makes the experience mounted in production (lifecycle `beta`, `published`, `frozen` or `deprecated` with `public` access). Because CI does not gate Vercel deployments and accessibility coverage is hand-listed, these are explicit prerequisites. Each **MUST** be met and recorded before the publishing pull request is merged. P0 comes first in time: before the bulk of the experience is built.
 
 | # | Prerequisite | Evidence | Until the decision lands |
 | --- | --- | --- | --- |
-| P1 | Every page type of the experience is covered by the automated browser accessibility checks (axe light and dark, structure, reflow, text spacing, forced colours, keyboard), and they pass | the browser suites name its pages | coverage is added by hand (runbook step 8); D12 proposes deriving it from the build |
+| P0 | A direction record exists in `docs/design/registry/<id>.md`, with a brief, acceptance statements and a slice review, each approved by the owner before the rest was built ([creative process](design/creative-process.md)) | the record | **review**; an agent never records the approval |
+| P1 | Every page type of the experience is covered by the automated browser accessibility checks (axe light and dark, structure, reflow, text spacing, forced colours), its interactions by its own suite with keyboard, and they pass | CI on the pull request | generic checks are derived from the build (ADR-027) |
 | P2 | A person has run the manual accessibility checklist on its page types | dated results in [accessibility.md § Results](accessibility.md#results); never recorded unless a person did it | — |
-| P3 | Hosted CI passed both jobs on the exact commit that publishes it | the GitHub Actions run, named in the tracker | the owner checks it before merging; D16 proposes making CI a required deployment check |
+| P3 | Hosted CI passed both jobs on the pull request that publishes it | the required checks on the pull request | enforced by branch protection on `main` (ADR-029); a manual check until the tracker records the setting as on |
 | P4 | The Vercel preview of that commit passes `pnpm smoke <url> --env preview` with the experience mounted | the smoke output | — |
 | P5 | The production build gate passes (typecheck, boundaries, validation, metadata, leaks, budgets) | automatic on Vercel | — |
-| P6 | The owner approves the release-state change | the commit | — |
+| P6 | The owner approves the release-state change | the merged pull request | — |
+| P7 | A final design review of the complete experience against its brief is recorded as approved by the owner, naming the captures and devices looked at | the review in its direction record | **review**; a technically complete experience may be rejected here |
 
-Existing published experiences predate P2 and have no recorded manual check (audit F12); that debt is tracked in the tracker, not waived by this section.
+Existing published experiences predate P0, P2 and P7: none has a recorded manual accessibility check (audit F12) or design review, and their direction records are reconstructions. That debt is tracked in the tracker, not waived by this section.
 
 ## 9. Contract evolution
 
@@ -553,7 +558,7 @@ interface Props { title?: string; description?: string }
 
 **How it would present the Beacon (once D4's mechanism exists):** as a thin cloud-white tab at the top inline-end corner, set in its own typeface, with a dark label for contrast against the pale horizon. The link to `/`, the palette, the keyboard behaviour and the 44 px target stay the platform's (§ 3.5).
 
-**Where version 1.0 would push back today:** a web font of its own hits gap G2 (it uses a system stack instead here); an image imported through `astro:assets` hits gap G3; the Beacon presentation above has no mechanism yet (gap G1), so it would show the default; a physics engine compiled to WebAssembly hits gap G5, and allowing it would change the CSP for every page (§ 7).
+**Where version 1.1 would push back today:** an image optimised through `astro:assets` is refused (§ 3.4; a web font of its own and an image from its CSS now ship, so the system stack here is a choice); the Beacon presentation above has no mechanism yet (gap G1), so it would show the default; a physics engine compiled to WebAssembly hits gap G5, and allowing it would change the CSP for every page (§ 7).
 
 ## 11. Known gaps and proposed changes
 
@@ -562,25 +567,26 @@ Each is a candidate for a minor version. None is implemented by this document; e
 | Gap | Today | Proposed change | Implement when |
 | --- | --- | --- | --- |
 | G1 Beacon presentation | one default presentation, `!important` in `platform.chrome`; § 3.5 permits experience-owned presentation | a mechanism through which an experience sets the Beacon's placement and treatment (D4: custom properties and placement values, or an experience-rendered trigger), with B1–B8 tested for every presentation | the first prototype whose design needs its own Beacon presentation |
-| G2 Experience-owned web fonts | system stacks, the platform face, or an `astro.config.ts` entry | allow content-hashed font files emitted from a mounted experience's own folder in the leak allowlist, keeping the output validation in § 3.6 (D11); budgets already count fonts | the first experience with its own web font |
-| G3 Experience-owned images | image routes only; `astro:assets` output rejected by the allowlist | allow content-hashed images emitted from a mounted experience's folder, keeping the output validation in § 3.6 (D11) | the first experience with in-page raster images |
+| G2 Experience-owned web fonts | **closed in 1.1** (ADR-028) | — | — |
+| G3 Experience-owned images | **closed in 1.1** for files shipped as committed (ADR-028); `astro:assets` transformed output is still refused | accept transformed images by tracing them to their source | the first experience that needs responsive image sets |
 | G4 Budget overrides | `jsKb`, `cssKb`, `transferMb` only | add `fontsKb`, `imagesKb`, `lazyKb` with the same reason rule | the first justified need |
 | G5 WebAssembly | blocked by the CSP | add `'wasm-unsafe-eval'` to `script-src` for the pages of an experience that declares it, or site-wide, by ADR; the CSP is shared, so the ADR weighs every page (§ 7) | the first experience that needs it |
 | G6 Kernel surface | documented here only | no code change; if it grows, a single kernel entry module | — |
-| G7 Accessibility coverage | browser suites use hand-written page lists | derive the pages from the build (as the smoke test derives routes), so every production and preview page gets axe and structure checks (D12) | proposed before Phase 3 prototypes are built; until then P1 is met by hand |
+| G7 Accessibility coverage | **closed in 1.1** (ADR-027): derived, sampled per dynamic route | — | — |
 | G8 CSS layering | review only | a check that experience stylesheets declare `@layer experience` | only if a layering mistake actually happens |
 
 ## 12. Conformance checklist
 
+- [ ] A direction record with an owner-approved brief and slice review, before the bulk is built (P0).
 - [ ] Folder, catalog entry, index line; no release entry until the owner publishes.
 - [ ] Routes canonical, under `/<id>`, one without parameters; files served as routes.
 - [ ] Every page through `ExperienceRoot`; no hand-written SEO tags.
 - [ ] Styles in `@layer experience`, scoped by `[data-experience='<id>']`; no inline styles or scripts.
 - [ ] Imports only from its folder, the supported kernel surface, the schema and npm.
 - [ ] Islands with an error boundary; nothing private in props.
-- [ ] Accessibility outcomes met in its own design; its pages added to the browser suites.
+- [ ] Accessibility outcomes met in its own design; its interactions covered by its own browser suite.
 - [ ] Assets and fonts in its folder, self-hosted, licensed for a public repository, stripped of private metadata, within budget (§ 3.6).
 - [ ] The Beacon present and unobstructed; any presentation of its own keeps B1–B8 (§ 3.5).
 - [ ] `pnpm typecheck && pnpm test && pnpm check && pnpm test:browser` pass; production build does not mount it while it is a draft.
 - [ ] Nothing committed that must stay private.
-- [ ] Before publishing: P1–P6 met and recorded (§ 8.5).
+- [ ] Before publishing: P1–P7 met and recorded (§ 8.5), the final design review included.

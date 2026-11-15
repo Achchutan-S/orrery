@@ -6,12 +6,13 @@ Orrery is also an architecture project in its own right. Its release model, buil
 
 ## Live
 
-| | URL | Status (checked 7 November 2026) |
+| | URL | Status (checked 13 November 2026) |
 | --- | --- | --- |
 | Orrery | https://orrery-teal.vercel.app/ | live |
 | The Orrery Journal | https://orrery-teal.vercel.app/journal | live: the platform's own history, chapter by chapter |
 | Resume | https://orrery-teal.vercel.app/resume | live since 3 November 2026, with a PDF download ([docs/resume.md](docs/resume.md)) |
 | Claude Skills Archive | https://orrery-teal.vercel.app/skills | live since 7 November 2026: five skills with their source and downloadable packages |
+| Divya Chakshu | https://orrery-teal.vercel.app/divya-chakshu | live since 8 November 2026: Bhagavad Gita chapter 11 as a scroll over WebGL scenes |
 | Dev X-Ray | https://devxray-one.vercel.app/ | live; a separate project, linked from Orrery |
 | KawaiUI | https://kawaiui.vercel.app/ | live; a separate project, linked from Orrery |
 

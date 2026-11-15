@@ -3,7 +3,7 @@
 // once unused for a while, so only the scenes near the reader hold GPU memory. Resolution adapts
 // to the frame time. Nothing is drawn when nothing changed (paused or reduced motion).
 import { PROGRAMS, FULLSCREEN_VERT } from './shaders.ts';
-import { frame, stillPosition, type Layer, type Moments, type ProgramName } from './timeline.ts';
+import { frame, names, stillPosition, type Layer, type Moments, type Name, type ProgramName } from './timeline.ts';
 
 export interface Inputs {
   /** Reading position 0–9. */
@@ -17,6 +17,8 @@ export interface Inputs {
   /** Reading speed in positions per second (signed). */
   velocity(): number;
   onInk(ink: number): void;
+  /** Where the named figures are on screen now (labels are drawn by the page, not the canvas). */
+  onNames?(list: Name[]): void;
   /** WebGL stopped working (compile failure or lost context): show the stills. */
   onFail(reason: string): void;
   onRecover(): void;
@@ -29,8 +31,16 @@ const UNUSED_MS = 8000;
 export function start(canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, input: Inputs): () => void {
   const parallel = gl.getExtension('KHR_parallel_shader_compile');
   const lowTier = matchMedia('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 600;
-  const maxScale = Math.min(devicePixelRatio || 1, lowTier ? 1 : 1.5);
-  let scale = Math.min(1, maxScale);
+  // Canvas pixels per CSS pixel. It used to start at 1 and could only rise when a frame took under
+  // 14.5 ms, which a 60 Hz display never reports, so a 2x screen was drawn at half its resolution and
+  // stretched: the haze. It now starts near the display's density and gives ground only when frames
+  // are actually late.
+  const maxScale = Math.min(devicePixelRatio || 1, lowTier ? 1.5 : 2);
+  const minScale = Math.min(maxScale, 0.6);
+  let scale = Math.min(maxScale, lowTier ? 1.25 : 1.5);
+  /** The highest scale worth trying: lowered when a step up proved too slow, restored slowly. */
+  let ceiling = maxScale;
+  let windows = 0;
   const cache = new Map<ProgramName, Compiled>();
   let vao = gl.createVertexArray();
   let failed = false;
@@ -101,7 +111,10 @@ export function start(canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, inp
     if (frameTimes.length < 45) return;
     const avg = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
     frameTimes.length = 0;
-    const next = avg > 0.024 ? Math.max(0.35, scale - 0.12) : avg < 0.0145 ? Math.min(maxScale, scale + 0.08) : scale;
+    if (++windows % 14 === 0) ceiling = Math.min(maxScale, ceiling + 0.25);
+    let next = scale;
+    if (avg > 0.0235) { next = Math.max(minScale, scale - 0.25); ceiling = next; } // under ~43 frames a second
+    else if (avg < 0.0182 && scale < ceiling) next = Math.min(ceiling, scale + 0.25); // holding 60
     if (next !== scale) { scale = next; lastKey = ''; }
   }
 
@@ -134,10 +147,13 @@ export function start(canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, inp
     if (Math.abs(target - gs) < 1e-4) gs = target;
     const fr = frame(gs, input.moments());
     input.onInk(fr.ink);
+    input.onNames?.(names(gs, canvas.clientWidth / Math.max(1, canvas.clientHeight)));
     const still = fr.layers.find((l) => l.program === 'time')?.u.still ?? 0;
     if (moving) {
       time += dt;
-      spin += dt * (0.35 + Math.min(4, Math.abs(input.velocity())) * 2.5) * (1 - still);
+      // The wheel turns the way the reader reads: forward when scrolling on, back when scrolling back.
+      const v = input.velocity();
+      spin += dt * (0.35 + Math.max(-4, Math.min(4, v)) * 2.5) * (1 - still);
       ltime += dt * (1 - still);
     }
     const [x, y] = input.pointer();

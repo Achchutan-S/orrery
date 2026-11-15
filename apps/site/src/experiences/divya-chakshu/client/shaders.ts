@@ -54,7 +54,9 @@ float sdTrap(vec2 p, float r1, float r2, float he){
   float s = (cb.x < 0. && ca.y < 0.) ? -1. : 1.; return s * sqrt(min(dot(ca, ca), dot(cb, cb))); }
 float smin(float a, float b, float k){ float h = clamp(.5 + .5 * (b - a) / k, 0., 1.); return mix(b, a, h) - k * h * (1. - h); }
 out vec4 o;
-void finish(vec3 c){ c = sqrt(aces(c)); c += (h21(gl_FragCoord.xy + fract(u_time * 7.) * 91.) - .5) / 96.; o = vec4(c, u_alpha); }
+// Dither only, to stop banding in the dark gradients: under one 8-bit level and fixed in place. It used
+// to be nearly three levels and re-rolled every frame, which read as grain crawling over every scene.
+void finish(vec3 c){ c = sqrt(aces(c)); c += (h21(gl_FragCoord.xy) + h21(gl_FragCoord.xy + 31.7) - 1.) / 255.; o = vec4(c, u_alpha); }
 void finishLight(vec3 c){ o = vec4(sqrt(aces(c)), u_alpha); }
 `;
 
@@ -62,46 +64,86 @@ void finishLight(vec3 c){ o = vec4(sqrt(aces(c)), u_alpha); }
 // "field" coordinates (along the ground, height above it), so bending the horizon into a small
 // round world bends armies, dust and chariot with it.
 const BATTLEFIELD = HEAD + COMMON + `
-uniform float u_open, u_near, u_sight, u_lattice, u_dawn, u_end;
+uniform float u_open, u_near, u_sight, u_lattice, u_dawn, u_end, u_watch, u_turn, u_named;
+// Where the three he names stand in the opposing ranks, along the plain (timeline.ts FIELD_NAMED).
+const float NX0 = .56, NX1 = .65, NX2 = .74;
 
-float horse(vec2 p){
-  float d = sdEll(p - vec2(0., .42), vec2(.27, .11));
-  d = smin(d, sdSeg(p, vec2(-.2, .46), vec2(-.32, .66)) - .055, .04);
-  d = smin(d, sdEll((p - vec2(-.39, .66)) * rot(.5), vec2(.11, .045)), .03);
-  d = min(d, sdSeg(p, vec2(-.33, .72), vec2(-.31, .79)) - .012);
-  d = min(d, sdSeg(p, vec2(-.17, .38), vec2(-.19, .0)) - .022);
-  d = min(d, sdSeg(p, vec2(-.10, .38), vec2(-.08, .0)) - .02);
-  d = min(d, sdSeg(p, vec2(.15, .38), vec2(.17, .0)) - .022);
-  d = min(d, sdSeg(p, vec2(.21, .38), vec2(.24, .0)) - .02);
-  return min(d, sdSeg(p, vec2(.26, .46), vec2(.33, .22)) - .02);
+float leg(vec2 p, vec2 hip, vec2 knee, vec2 hoof, float w){ return min(sdSeg(p, hip, knee) - w, sdSeg(p, knee, hoof) - w * .7); }
+
+// A horse side-on, facing left, standing: barrel, chest and haunch, an arched neck, a lowered head,
+// a tail, and (when legs > 0) four jointed legs with one fore-hoof lifted by lift. Ground at y = 0.
+float horse(vec2 p, float lift, float legs){
+  float d = sdEll(p - vec2(0., .46), vec2(.25, .1));
+  d = smin(d, length(p - vec2(-.2, .48)) - .11, .07);
+  d = smin(d, length(p - vec2(.2, .48)) - .118, .07);
+  float nk = clamp((p.y - .5) / .28, 0., 1.);
+  d = smin(d, sdSeg(p, vec2(-.23, .52), vec2(-.37, .78)) - mix(.085, .046, nk), .05);
+  d = smin(d, sdEll((p - vec2(-.445, .765)) * rot(1.0), vec2(.115, .046)), .035);
+  d = min(d, sdSeg(p, vec2(-.365, .835), vec2(-.35, .9)) - .011);
+  d = min(d, sdSeg(p, vec2(.31, .52), vec2(.39, .2)) - mix(.012, .03, clamp((.52 - p.y) / .3, 0., 1.)));
+  if (legs < .5) return d;
+  d = min(d, leg(p, vec2(-.22, .42), vec2(-.235, .21), vec2(-.215, 0.), .027));
+  d = min(d, leg(p, vec2(-.15, .42), vec2(-.1 - .05 * lift, .23), vec2(-.15 - .04 * lift, .012 + .07 * lift), .025));
+  d = min(d, leg(p, vec2(.23, .42), vec2(.29, .22), vec2(.24, 0.), .03));
+  d = min(d, leg(p, vec2(.16, .42), vec2(.18, .21), vec2(.14, 0.), .027));
+  return d;
 }
 
-// The chariot side-on, facing left: four horses, the great wheel, canopy and pennant, the
-// charioteer at the reins and the archer standing with his bow at his side. Ground at y = 0.
+// The chariot side-on, facing left: a team of horses under one yoke, the great eight-spoked wheel,
+// the car with its curved guard, a domed canopy with a finial, the standard with its pennant, the
+// charioteer seated at the reins and the archer standing behind him, his bow lowered. Ground at y = 0.
 float chariot(vec2 p, float t){
   float d = 1e3;
-  for (int i = 0; i < 4; i++){ float fi = float(i); d = min(d, horse(p - vec2(-.98 + fi * .055, fi * .02))); }
-  d = min(d, sdSeg(p, vec2(-.75, .5), vec2(-.1, .42)) - .012);
-  vec2 w = p - vec2(0., .34); float rw = length(w);
-  float spoke = max(abs(sin(atan(w.y, w.x) * 6.)) * rw - .014, rw - .3);
-  d = min(d, min(min(abs(rw - .31) - .028, rw - .06), spoke));
-  d = min(d, sdBox(p - vec2(.1, .6), vec2(.36, .1)));
-  d = min(d, sdBox(p - vec2(.1, .73), vec2(.33, .03)));
-  d = min(d, sdSeg(p, vec2(-.2, .7), vec2(-.2, 1.3)) - .014);
-  d = min(d, sdSeg(p, vec2(.4, .7), vec2(.4, 1.3)) - .014);
-  vec2 c = p - vec2(.1, 1.28); d = min(d, max(sdEll(c, vec2(.42, .17)), -c.y));
-  d = min(d, sdSeg(p, vec2(-.32, 1.28), vec2(.52, 1.28)) - .012);
-  d = min(d, sdSeg(p, vec2(.1, 1.42), vec2(.1, 2.05)) - .011);
-  vec2 f = p - vec2(.1, 1.97);
-  float wv = sin(f.x * 10. - t * 3.2) * .035 * f.x / .5;
-  d = min(d, max(abs(f.y - wv) - .075 * (1. - f.x / .52), max(-f.x, f.x - .52)));
-  d = min(d, length(p - vec2(-.16, 1.0)) - .055);
-  d = min(d, sdSeg(p, vec2(-.15, .94), vec2(-.12, .74)) - .05);
-  d = min(d, sdSeg(p, vec2(-.17, .86), vec2(-.4, .8)) - .016);
-  d = min(d, sdSeg(p, vec2(-.4, .8), vec2(-.74, .64)) - .004);
-  d = min(d, length(p - vec2(.22, 1.16)) - .055);
-  d = min(d, sdSeg(p, vec2(.22, 1.09), vec2(.24, .74)) - .055);
-  d = min(d, max(abs(length(p - vec2(.12, .95)) - .3) - .008, .34 - p.x));
+  // The team of four, staggered back and up so each head and back reads. Only the nearest and the
+  // farthest show their legs: twelve legs in a row read as a comb, not as horses.
+  for (int i = 0; i < 4; i++){ float fi = float(i); d = min(d, horse(p - vec2(-1.06 + fi * .12, fi * .024), step(2.5, fi), step(abs(fi - 1.5), 1.) < .5 ? 1. : 0.)); }
+  d = min(d, sdSeg(p, vec2(-.78, .56), vec2(-.28, .5)) - .013);
+  d = min(d, sdSeg(p, vec2(-1.0, .62), vec2(-.62, .66)) - .012);
+  // Wheel.
+  vec2 w = p - vec2(.02, .34); float rw = length(w);
+  float wa = atan(w.y, w.x) + t * .04;
+  float spoke = max(abs(sin(wa * 4.)) * rw - .011, rw - .31);
+  d = min(d, min(min(abs(rw - .315) - .024, rw - .058), spoke));
+  d = min(d, abs(rw - .13) - .007);
+  // Car: floor, panelled side, the guard curling up in front.
+  d = min(d, sdBox(p - vec2(.1, .61), vec2(.4, .028)) - .008);
+  d = min(d, sdBox(p - vec2(.13, .74), vec2(.33, .085)) - .016);
+  d = min(d, sdSeg(p, vec2(-.3, .62), vec2(-.37, .86)) - .02);
+  d = min(d, length(p - vec2(-.345, .9)) - .04);
+  d = min(d, sdSeg(p, vec2(.5, .62), vec2(.53, .9)) - .018);
+  // Canopy on two posts, with a valance and a finial.
+  d = min(d, sdSeg(p, vec2(-.24, .8), vec2(-.24, 1.5)) - .012);
+  d = min(d, sdSeg(p, vec2(.42, .8), vec2(.42, 1.5)) - .012);
+  vec2 c = p - vec2(.09, 1.5);
+  d = min(d, max(sdEll(c, vec2(.45, .2)), -c.y));
+  d = min(d, sdBox(c - vec2(0., -.012), vec2(.47, .016)));
+  d = min(d, max(abs(fract(c.x * 9.) - .5) * .11 - .02, max(abs(c.x) - .46, abs(c.y + .05) - .028)));
+  d = min(d, length(p - vec2(.09, 1.73)) - .034);
+  d = min(d, sdSeg(p, vec2(.09, 1.76), vec2(.09, 1.86)) - .008);
+  // Standard and pennant, moving in the wind.
+  d = min(d, sdSeg(p, vec2(.5, .8), vec2(.5, 2.22)) - .01);
+  vec2 f = p - vec2(.5, 2.13);
+  float wv = sin(f.x * 9. - t * 2.6) * .04 * f.x / .5;
+  d = min(d, max(abs(f.y - wv) - .085 * (1. - f.x / .56), max(-f.x, f.x - .56)));
+  // The charioteer, seated at the front, crowned, reins in his hands.
+  d = min(d, sdSeg(p, vec2(-.14, .84), vec2(-.125, 1.04)) - .056);
+  d = smin(d, sdEll(p - vec2(-.13, 1.07), vec2(.085, .04)), .03);
+  d = min(d, length(p - vec2(-.135, 1.2)) - .054);
+  // His face in profile, toward the horses; at the end of the chapter it turns back to the archer.
+  float side = cos(u_turn * PI);
+  d = min(d, length(p - vec2(-.135 - .056 * side, 1.19)) - .019 * abs(side));
+  d = min(d, sdSeg(p, vec2(-.125, 1.25), vec2(-.095, 1.33)) - mix(.016, .004, clamp((p.y - 1.25) / .08, 0., 1.)));
+  d = min(d, sdSeg(p, vec2(-.15, 1.02), vec2(-.36, .93)) - .018);
+  d = min(d, sdSeg(p, vec2(-.36, .93), vec2(-.7, .7)) - .0045);
+  d = min(d, sdSeg(p, vec2(-.36, .93), vec2(-.84, .76)) - .0045);
+  // The archer, standing, the bow lowered at his side.
+  d = min(d, sdSeg(p, vec2(.22, .84), vec2(.235, 1.17)) - .056);
+  d = smin(d, sdEll(p - vec2(.235, 1.2), vec2(.09, .04)), .03);
+  d = min(d, length(p - vec2(.24, 1.33)) - .054);
+  d = min(d, sdSeg(p, vec2(.22, 1.14), vec2(.1, .96)) - .02);
+  vec2 b = p - vec2(.3, 1.02);
+  d = min(d, max(abs(length(b) - .3) - .009, b.x + .16));
+  d = min(d, max(abs(b.x + .16) - .003, abs(b.y) - .254));
   return d;
 }
 
@@ -139,12 +181,13 @@ vec3 field(vec2 s, float t, float sightAmt, float px, out float silh){
   vec2 sp = vec2(0., mix(.05, .13, dawn));
   float sd = length(s - sp);
   vec3 sunC = mix(lin(vec3(1., .74, .42)), lin(vec3(1., .87, .64)), dawn);
-  col += sunC * (exp(-sd * sd * 900.) * mix(1.1, 2., dawn) + exp(-sd * 7.) * .35 + exp(-sd * 1.8) * .12);
+  col += sunC * (smoothstep(.034 + px, .034 - px, sd) * mix(.9, 1.6, dawn) + exp(-sd * sd * 420.) * mix(.7, 1.2, dawn) + exp(-sd * 7.) * .3 + exp(-sd * 1.8) * .12);
   vec3 dustC = mix(lin(vec3(.52, .42, .30)), lin(vec3(.80, .67, .47)), dawn);
   float dz = fbm(vec2(s.x * 2.2 + t * .03, sy * 5. - t * .01));
   float dz2 = fbm3(vec2(s.x * 6. - t * .07, sy * 12.));
   float band = exp(-max(sy, 0.) * mix(6., 9., dawn));
-  col = mix(col, dustC, clamp((dz * .8 + dz2 * .3 - .35) * band * mix(1.3, .6, dawn) * (.4 + .6 * open), 0., .75));
+  // Haze lies low along the horizon and thins quickly above it, so the sky above stays clear and deep.
+  col = mix(col, dustC, clamp((dz * .8 + dz2 * .25 - .38) * band * mix(1.05, .6, dawn) * (.4 + .6 * open), 0., .5));
   if (sy < 0.){
     float depth = .05 / (-sy + .004);
     vec2 gp = vec2(s.x * depth * 2., depth);
@@ -174,7 +217,45 @@ vec3 field(vec2 s, float t, float sightAmt, float px, out float silh){
     // With divine sight each figure is threaded to the sky.
     if (sightAmt > 0.) col += lin(vec3(1., .75, .4)) * clamp((hw * .6 - abs(dx)) / px + .5, 0., 1.) * side * step(top, y) * exp(-y * 5.) * .5 * sightAmt * step(.55, hh);
   }
+  // Three he knows by sight in the opposing ranks (11.26, 11.34): a little taller, and, while the text
+  // speaks of them, a faint light on each. The same three stand among the teeth in sequence V.
+  for (int i = 0; i < 3; i++){
+    float nx = i == 0 ? NX0 : i == 1 ? NX1 : NX2;
+    vec2 q = vec2(s.x - nx, sy);
+    float d = min(sdSeg(q, vec2(0., 0.), vec2(0., .011)) - .0034, length(q - vec2(0., .0158)) - .0033);
+    d = min(d, sdSeg(q, vec2(.0042, 0.), vec2(.0042, .031)) - .0008);
+    float m = clamp(.5 - d / px, 0., 1.) * (1. - sightAmt);
+    col = mix(col, lin(vec3(.05, .04, .035)), m);
+    col += lin(vec3(1., .8, .5)) * exp(-length(q - vec2(0., .016)) * 150.) * .7 * u_named * (1. - sightAmt);
+    silh = max(silh, m);
+  }
   return col;
+}
+
+// Divine sight begins in the plain itself: before the great eye opens, its surface is eyes. They open
+// first where the reader is not looking and, open, look at the pointer. Drawn over the picture, so the
+// world they open in is the one already there.
+vec3 watch(vec3 c, float amt){
+  if (amt <= 0.) return c;
+  vec2 fc = gl_FragCoord.xy;
+  float cw = 22. * u_px, chh = cw * .66;
+  float row = floor(fc.y / chh), off = mod(row, 2.) * .5 * cw, ci = floor((fc.x - off) / cw);
+  vec2 cen = vec2((ci + .5) * cw + off, (row + .5) * chh), q = fc - cen;
+  float h = h21(vec2(ci, row));
+  vec2 pp = (u_ptr * .5 + .5) * u_res;
+  float dn = length(cen - pp) / length(u_res) * 1.5;
+  float at = clamp(1.05 - dn, 0., 1.) * .8 + h * .08;
+  float open = smoothstep(at, at + .16, amt) * (1. - smoothstep(.992, 1., sin(u_time * (.4 + h * .5) + h * 70.)));
+  float ew = cw * .41, eh = chh * .4 * open;
+  float prof = max(0., 1. - (q.x / ew) * (q.x / ew));
+  float alm = abs(q.y) - eh * prof, inside = smoothstep(.8, -.8, alm);
+  vec2 to = pp - cen; float dl = length(to);
+  vec2 ic = to / max(dl, 1.) * min(1., dl / (cw * 5.)) * vec2(ew * .4, eh * .32);
+  float ir = max(eh * .86, .6), rr = length(q - ic);
+  vec3 eye = mix(c * 1.4 + .01, lin(vec3(.55, .36, .14)) * (.25 + c * 2.), smoothstep(ir + .7, ir - .7, rr));
+  eye = mix(eye, vec3(0.), smoothstep(ir * .5 + .6, ir * .5 - .6, rr));
+  eye += vec3(.6) * smoothstep(1.1, .2, length(q - ic - vec2(ir * .35, ir * .38))) * smoothstep(.3, .6, open);
+  return mix(c * mix(1., .3, amt), eye, inside) + c * smoothstep(1.1, 0., abs(alm)) * .5 * smoothstep(.05, .3, open);
 }
 
 vec3 view(vec2 uv, float bendAmt, float t, float px, float hz){
@@ -189,21 +270,39 @@ vec3 view(vec2 uv, float bendAmt, float t, float px, float hz){
     vec3 sky = mix(col, lin(vec3(.025, .03, .10)), smoothstep(0., .6, bendAmt) * smoothstep(-.01, .02, s.y));
     col = sky + lattice(uv - vec2(0., hz), t, u_lattice * bendAmt, px) * smoothstep(0., .02, s.y);
     col = mix(col, col * vec3(.7, .8, 1.3), bendAmt * step(s.y, 0.) * .6);
+    // The plain has become a small world: it keeps a thin skin of air, lit from behind.
+    col += mix(lin(vec3(1., .78, .45)), lin(vec3(.45, .62, 1.)), smoothstep(0., .05, s.y)) * exp(-max(s.y, 0.) * 46.) * smoothstep(-.004, .004, s.y) * bendAmt * bendAmt * .55;
+    col *= 1. - .5 * bendAmt * smoothstep(0., -.5, s.y) * step(s.y, 0.);
   }
-  // The chariot, silhouetted against the low sun; with divine sight, light gathers at the reins.
+  // The chariot against the low sun. No halo: it is a solid thing, dark where it faces us, with a thin
+  // edge of light where it turns toward the sun behind it, and a long shadow thrown toward the viewer.
   float nearE = u_near * (1. - .8 * bendAmt);
   float cs = mix(.035, .2, nearE * nearE);
-  vec2 cp = (s - vec2(mix(0., .26, nearE), -mix(0., .07, nearE))) / cs;
+  // On a wide screen it stands further right, clear of the text column; on a narrow one it stays in frame.
+  vec2 org = vec2(mix(0., mix(.26, .44, smoothstep(1.05, 1.6, aspect())), nearE), -mix(0., .07, nearE));
+  vec2 cp = (s - org) / cs;
   float show = smoothstep(.45, 1., u_open);
-  if (abs(cp.x + .3) < 1.5 && cp.y > -.2 && cp.y < 2.3){
+  float pc = px / cs;
+  vec3 sunC = mix(lin(vec3(1., .72, .38)), lin(vec3(1., .85, .6)), u_dawn);
+  if (abs(cp.x + .35) < 1.75 && cp.y > -1.1 && cp.y < 2.4 && show > 0.){
+    if (cp.y < .04 && bendAmt < .5){
+      float sh = chariot(vec2(cp.x + cp.y * .5, -cp.y * 2.6 + .01), t);
+      col *= 1. - .62 * smoothstep(.05 + pc * 2., -.03, sh) * exp(cp.y * 1.4) * show * (1. - bendAmt * 2.);
+    }
     float d = chariot(cp, t);
-    float pc = px / cs;
     float m = clamp(.5 - d / pc, 0., 1.) * show;
-    vec3 sil = mix(lin(vec3(.05, .04, .035)), lin(vec3(.17, .13, .10)), u_dawn);
-    col = mix(col, sil, m);
-    col += mix(lin(vec3(1., .72, .38)), lin(vec3(1., .85, .6)), u_dawn) * exp(-max(d, 0.) / (pc * 2.5 + .015)) * (1. - m) * .5 * show;
+    if (d < .06){
+      float eps = max(pc, .012);
+      vec2 n = normalize(vec2(chariot(cp + vec2(eps, 0.), t) - d, chariot(cp + vec2(0., eps), t) - d) + 1e-5);
+      // The sun is behind and to the left: only edges that turn that way, or up into the sky, catch it.
+      float edge = exp(d / mix(.02, .009, nearE)) * step(d, 0.);
+      float rim = pow(max(dot(n, normalize(vec2(-1., .45))), 0.), 2.2) * edge;
+      vec3 body = mix(lin(vec3(.05, .038, .03)), lin(vec3(.2, .15, .1)), u_dawn) * (1. + .5 * smoothstep(1.2, 0., cp.y));
+      col = mix(col, body + sunC * rim * mix(.85, .6, u_dawn), m);
+    }
+    col += sunC * exp(-max(d, 0.) / (pc * 1.2 + .003)) * (1. - m) * .14 * show;
   }
-  col += lin(vec3(1., .82, .5)) * exp(-length(cp - vec2(-.16, 1.)) * 1.6) * bendAmt * .6 * show;
+  col += lin(vec3(1., .82, .5)) * exp(-length(cp - vec2(-.135, 1.2)) * 1.6) * bendAmt * .6 * show;
   return col;
 }
 
@@ -214,14 +313,15 @@ void main(){
   uv += u_ptr * vec2(.012, .006);
   float px = 1. / (u_res.y * fov);
   float t = u_time;
-  float hz = mix(-.03, -.13, u_near);
+  // A low horizon under a tall sky at first; it rises to its working height as the chariot comes near.
+  float hz = mix(-.37, -.13, smoothstep(0., .7, u_near));
   float s = u_sight;
   vec3 col;
-  if (s <= 0.) col = view(uv, 0., t, px, hz);
+  if (s <= 0.) col = watch(view(uv, 0., t, px, hz), u_watch);
   else if (s >= 1.) col = view(uv, 1., t, px, hz);
   else {
     // An eye opens along the horizon: inside it, the world as divine sight sees it.
-    vec3 before = view(uv, 0., t, px, hz);
+    vec3 before = watch(view(uv, 0., t, px, hz), u_watch);
     vec3 after = view(uv, smoothstep(.25, 1., s), t, px, hz);
     float W = mix(.02, 2.6, smoothstep(0., .35, s));
     float H = smoothstep(.05, .75, s) * .9;
@@ -285,12 +385,15 @@ void main(){
   finish(col);
 }`;
 
-// The universal form. A circle of flame bounds everything there is; inside it, rings of cells in
-// log-polar space (conformal, so every cell is near-square) hold eyes, spiral worlds and lotuses,
-// and the pattern repeats at every scale, so depth dives in without end. Terror re-colours the same
-// structure: eyes become mouths, rings grow teeth, fire pours inward. Fold gathers it into a point.
+// The universal form. Rings of cells in log-polar space (conformal, so every cell is near-square)
+// hold eyes, spiral worlds and lotuses, and the pattern repeats at every scale, so depth dives in
+// without end. At first it is seen whole, bounded by a circle of flame. u_within carries that rim out
+// past the edges of the frame: from then on there is no outside, the nearest ring is wider than the
+// view, light pours out from the heart through the rings, and the reader is in it. Terror re-colours
+// the same structure: eyes become mouths, rings grow teeth, fire pours inward. u_gather draws the
+// whole burning form in to one point (the flame of 11.29); u_fold gathers the gentle one (the feather).
 const COSMOS = HEAD + COMMON + `
-uniform float u_reveal, u_depth, u_terror, u_emblem, u_eyes, u_sunmoon, u_dim, u_fold;
+uniform float u_reveal, u_depth, u_terror, u_emblem, u_eyes, u_sunmoon, u_dim, u_fold, u_within, u_gather, u_flash;
 const float N = 12.;
 const float P = TAU / N;
 
@@ -374,8 +477,10 @@ vec4 emblems(vec2 e, float t, float px){
 void main(){
   vec2 uv = suv();
   float fit = min(1., aspect() * 1.05);
-  vec2 heart = vec2(0., -.04);
-  float T = u_terror, t = u_time;
+  float T = u_terror, t = u_time, W = u_within;
+  // Inside, the heart is not pinned to the screen: it drifts, and leans away from the pointer, so the
+  // rings slide over one another like things at different distances.
+  vec2 heart = vec2(0., -.04) + W * (vec2(sin(t * .11), cos(t * .083)) * .018 - u_ptr * vec2(.035, .022));
   vec2 p0 = uv / fit + vec2(sin(t * 37.), cos(t * 29.)) * T * T * .003;
   float F = exp(u_fold * 7.);
   vec2 e = (p0 - heart) * F;
@@ -421,17 +526,30 @@ void main(){
     col = mix(col, fire, T * .6);
   }
   col += cWhite() * (exp(-r * 30. / F) * 2. + exp(-r * 6. / F) * .12);
-  float revealR = max(mix(0., 2.2, u_reveal * u_reveal), 1e-3) * F;
+  if (W > 0.){
+    // Light from the heart, travelling outward through the rings: shafts that turn slowly, brightest
+    // where they leave, and a wide bloom. Then air: what is deep is veiled, what is near is clear.
+    float rn = r / F;
+    // Distance first: the rings nearest the eye are in shadow, deep blue between their cells; the
+    // light is all ahead, at the heart, and everything is seen against it.
+    float near = smoothstep(.12, 1.05, rn);
+    col = mix(col, col * mix(vec3(.5, .56, .9), vec3(.9, .4, .3), T) * .34, W * near * (1. - T * .6));
+    float shaft = pow(fbm3(vec2(a * 3.5 + lr * .35, t * .04 + lr * .2)), 3.4);
+    col += mix(cWhite(), cGold(), smoothstep(0., .6, rn)) * shaft * exp(-rn * 2.1) * 2.4 * W * (1. - T * .7);
+    col += cWhite() * (exp(-rn * 3.4) * .3 + exp(-rn * 11.) * .5) * W;
+    col *= 1. - W * (1. - T) * .5 * smoothstep(.5, 1.2, length(uv * vec2(.82, 1.)));
+  }
+  float revealR = max(mix(0., 3.6, u_reveal * u_reveal), 1e-3) * F;
   col *= smoothstep(revealR, revealR * .6, r);
   // The circle of flame that bounds the form; outside it there is nothing.
   vec2 ea = p0 - heart;
   float as = atan(ea.x, ea.y);
-  float RA = mix(.46, 1.7, T * T) * F;
+  float RA = mix(.46, 2.8, max(W * W, T * T * .6)) * mix(1., .012, u_gather * u_gather * (3. - 2. * u_gather)) * F;
   float flick = fbm3(vec2(as * 6., t * (1.5 + T * 3.)));
-  float rimR = RA + .05 * F * pow(1. - abs(fract(as / TAU * 44. + flick * .6) * 2. - 1.), 2.) * (.2 + 1.4 * flick * flick) * (1. + T * 2.);
+  float rimR = RA + .05 * F * pow(1. - abs(fract(as / TAU * 44. + flick * .6) * 2. - 1.), 2.) * (.2 + 1.4 * flick * flick) * (1. + T * 2.) * clamp(RA / (.46 * F), .12, 1.);
   float epx = F / (u_res.y * fit);
   float inside = smoothstep(rimR + epx * 2., rimR - epx * 2., r);
-  vec3 voidC = mix(lin(vec3(.012, .012, .03)), lin(vec3(.07, .01, .004)), T) * (.6 + .8 * fbm3(ea * 3. + t * .05));
+  vec3 voidC = mix(lin(vec3(.012, .012, .03)), lin(vec3(.07, .01, .004)), T * (1. - u_gather)) * (.6 + .8 * fbm3(ea * 3. + t * .05)) * (1. - .85 * u_gather);
   col = mix(voidC, col, inside);
   col += mix(cGold(), lin(vec3(1., .35, .06)), T) * (exp(-abs(r - rimR) / (epx * 3. + .006 * F)) * .9 + exp(-max(r - RA, 0.) * 12. / F) * .18) * (.7 + .6 * flick) * smoothstep(0., .5, u_reveal);
   // The moon and the sun, its eyes (11.19).
@@ -442,6 +560,20 @@ void main(){
     col += (moonC * moon * 2.5 + moonC * exp(-length(ms) * 18. / F) * .5) * u_sunmoon;
     float sd = length(ss2);
     col += (cWhite() * smoothstep(.03 * F, .026 * F, sd) * 3. + cGold() * exp(-sd * 14. / F) * .9) * u_sunmoon;
+    // And they are eyes: lids open round them, the moon and the sun are the irises, each with a pupil
+    // of night, and both look where the reader's pointer is.
+    float lpx = epx / F;
+    for (int i = 0; i < 2; i++){
+      vec2 q = e / F - vec2(i == 0 ? -.17 : .17, .15);
+      float open = smoothstep(0., .7, u_sunmoon);
+      float lid = abs(q.y) - .052 * open * pow(max(0., 1. - (q.x / .1) * (q.x / .1)), .75);
+      float ins = smoothstep(lpx * 1.5, -lpx * 1.5, lid);
+      float ir = length(q - u_ptr * vec2(.008, .005));
+      col = mix(col, col * .3 + mix(cWhite(), cGold(), .4) * .1, ins * u_sunmoon);
+      col += (i == 0 ? moonC * .9 : cWhite() * 2.2) * smoothstep(.034 + lpx, .034 - lpx, ir) * ins * u_sunmoon;
+      col = mix(col, vec3(0.), smoothstep(.012 + lpx, .012 - lpx, ir) * ins * u_sunmoon);
+      col += cGold() * exp(-abs(lid) / (lpx * 2. + .002)) * .9 * u_sunmoon;
+    }
   }
   if (u_emblem > 0.){
     vec4 em = emblems(e, t, epx);
@@ -449,11 +581,118 @@ void main(){
   }
   col = mix(col, col * col * 2.4, T * .7);
   // Terror compresses the view: the dark closes in from every edge.
-  col *= mix(1., smoothstep(.95, .12, length(uv * vec2(.8, 1.))), T * .85);
+  col *= mix(1., smoothstep(.95, .12, length(uv * vec2(.8, 1.))), T * .85 * (1. - u_gather));
   float lum = dot(col, vec3(.3, .5, .2));
   col = mix(vec3(lum), col, .4 + .6 * u_dim) * u_dim;
   col = mix(col, col * lin(vec3(1., .88, .66)), u_fold) + lin(vec3(1., .86, .6)) * exp(-length(p0 - heart) * mix(60., 9., u_fold)) * u_fold * 1.2;
-  finish(col * .8);
+  // Out of the white of the point flown into: the form unfolds from its own heart.
+  finish(mix(col * .8, vec3(7.), u_flash * u_flash * u_flash));
+}`;
+
+// "Here, in one place, the whole universe" (11.7, 11.13), made literal by geometry. Space is inverted
+// through one sphere hanging over the plain: whatever is outside it appears inside it, so inside it the
+// same plain with every army is rolled into a small world, and everything infinitely far away (the
+// whole sky) is gathered into one point at its centre. The camera rises from the plain and flies into
+// that point, which is the heart of the universal form. Ray-marched; the inverted distance is scaled by
+// the inversion's local magnification.
+const ORB = HEAD + COMMON + `
+uniform float u_fly, u_white;
+const vec3 C = vec3(0., 1.3, 7.);
+const vec3 SUN = normalize(vec3(.25, .09, 1.));
+vec3 inv(vec3 p){ vec3 d = p - C; return C + d / dot(d, d); }
+float soldier(vec3 p){
+  float b = length(p - vec3(0., clamp(p.y, .02, .3), 0.)) - .055;
+  b = min(b, length(p - vec3(0., .39, 0.)) - .05);
+  return min(b, length(p - vec3(.08, clamp(p.y, 0., .78), 0.)) - .007);
+}
+float army(vec3 p){
+  float ax = abs(p.x);
+  if (ax < 1.1 || ax > 9. || p.z < 1.5 || p.z > 40. || p.y > 1.) return max(max(1.1 - ax, ax - 9.), max(max(1.5 - p.z, p.z - 40.), p.y - 1.)) + .05;
+  vec2 id = floor(p.xz / .62);
+  vec2 q = (fract(p.xz / .62) - .5) * .62 + (vec2(h21(id), h21(id + 7.)) - .5) * .18;
+  return soldier(vec3(q.x, p.y, q.y));
+}
+float real(vec3 p, out float m){ float g = p.y, a = army(p); m = a < g ? 1. : 0.; return min(g, a); }
+float map(vec3 p, out float m){ vec3 d = p - C; float r2 = dot(d, d); if (r2 > 1.) return real(p, m); return real(inv(p), m) * r2 * .8; }
+vec3 sky(vec3 rd){
+  vec3 c = mix(lin(vec3(.78, .54, .32)), lin(vec3(.08, .07, .09)), smoothstep(-.02, .5, rd.y));
+  float sd = acos(clamp(dot(rd, SUN), -1., 1.));
+  return c + lin(vec3(1., .8, .5)) * (smoothstep(.02, .016, sd) * 3. + exp(-sd * 9.) * .5 + exp(-sd * 2.) * .1);
+}
+void main(){
+  vec2 uv = suv();
+  float a = smoothstep(.1, .65, u_fly), b = smoothstep(.6, 1., u_fly);
+  vec3 near = C + vec3(0., .05, -1.35);
+  vec3 ro = mix(mix(vec3(0., .48, 0.), near, a), C + vec3(0., .02, -.03), b);
+  // at first looking a little down the plain, so the small world hangs high, clear of the title
+  vec3 fw = normalize(mix(vec3(0., -.07, 1.), normalize(C - near), a));
+  vec3 rt = normalize(cross(vec3(0., 1., 0.), fw)), up = cross(fw, rt);
+  vec3 rd = normalize(uv.x * rt + uv.y * up + 1.25 * fw);
+  vec3 p = ro; float t = 0., m = 0., glow = 0.; bool hit = false, inside = false;
+  for (int i = 0; i < 170; i++){
+    float r = length(p - C), d = map(p, m);
+    if (r < 1.) glow += exp(-r * 22.) * .02 + exp(-r * 5.) * .0015;
+    if (d < .0006 * (r < 1. ? r * r : 1. + t * .5)){ hit = true; inside = r < 1.; break; }
+    t += min(d, max(abs(r - 1.), .004)); p = ro + rd * t;
+    if (t > 90.) break;
+  }
+  vec3 col = sky(rd);
+  if (hit){
+    vec2 e = vec2(.0007, 0.) * (inside ? max(dot(p - C, p - C), .01) : 1. + t * .01);
+    float mm;
+    vec3 n = normalize(vec3(map(p + e.xyy, mm) - map(p - e.xyy, mm), map(p + e.yxy, mm) - map(p - e.yxy, mm), map(p + e.yyx, mm) - map(p - e.yyx, mm)));
+    vec3 q = inside ? inv(p) : p;
+    vec3 base = m < .5 ? mix(lin(vec3(.16, .12, .085)), lin(vec3(.30, .23, .15)), .4 * (.5 + .5 * sin(q.x * 9. + fbm(q.xz * .7) * 4.)) + .6 * fbm(q.xz * 3.)) : lin(vec3(.06, .045, .04));
+    col = base * (lin(vec3(1., .75, .45)) * max(dot(n, SUN), 0.) * 1.1 + lin(vec3(.35, .3, .3)) * (.5 + .5 * n.y) * .5);
+    col = mix(col, sky(normalize(q - ro)) * .9, 1. - exp(-(inside ? length(q - ro) : t) * .045));
+  }
+  // the surface itself is invisible; light only bends faintly at its rim
+  vec3 oc = ro - C; float bq = dot(oc, rd), cq = dot(oc, oc) - 1., disc = bq * bq - cq;
+  if (cq > 0. && disc > 0. && -bq - sqrt(disc) > 0.) col += lin(vec3(1., .85, .6)) * exp(-sqrt(disc) * 28.) * .5;
+  col += lin(vec3(1., .88, .66)) * glow * 3.;
+  // the last of the flight is into the point where all the sky is gathered: it fills the view with light
+  finish(mix(col, vec3(7.), max(u_white, smoothstep(.82, 1., u_fly))));
+}`;
+
+// 11.26–27: the plain again, under the burning form, and the two armies are its jaws. The horizon the
+// armies stand on curves into a lower lip; its mirror image comes down as the upper, the soldiers
+// are the teeth, and the three named in sequence I stand among them. Sky and throat are left
+// transparent, so the burning form behind shows through as the fire inside the mouth.
+const JAWS = HEAD + COMMON + `
+uniform float u_form, u_close;
+// Where the three named stand, as fractions of the mouth's half-width (timeline.ts JAW_NAMED).
+const float NX0 = .35, NX1 = .51, NX2 = .67;
+float A0(){ return exp(mix(log(4.), log(.24), u_form)); }
+float jA(){ return A0() * mix(1., .07, u_close); }
+float jW(){ return exp(mix(log(80.), log(min(.98, aspect() * .47)), u_form)); }
+float H(float x){ float w = jW(); return jA() * pow(max(0., 1. - (x / w) * (x / w)), .62); }
+float soldier(vec2 q, float k){
+  float body = min(sdSeg(q, vec2(0.), vec2(0., .012 * k)) - .0032 * k, length(q - vec2(0., .017 * k)) - .0034 * k);
+  return min(body, sdSeg(q, vec2(.0042 * k, 0.), vec2(.0042 * k, .04 * k)) - mix(.0011, .0003, clamp(q.y / (.04 * k), 0., 1.)) * k);
+}
+void main(){
+  vec2 p = suv();
+  float Z = mix(1., 1.75, u_form), k = mix(1., 2.1, u_form), px = Z / u_res.y;
+  float yc = mix(-.13, -.02, u_form) + jA(), hx = H(p.x);
+  float upper = step(yc, p.y);
+  float s = (upper > .5 ? (yc + hx) - p.y : p.y - (yc - hx)) * Z, x = p.x * Z;
+  // the teeth: rank on rank of soldiers; the three named among them, taller
+  float cw = .016 * k, cell = floor(x / cw), dx = (fract(x / cw) - .5) * cw, hh = h11(cell + 3.);
+  float d = soldier(vec2(dx, s), k * (.8 + .4 * hh));
+  d = abs(x) < .06 ? 1. : d;
+  for (int i = 0; i < 3; i++){ float nx = (i == 0 ? NX0 : i == 1 ? NX1 : NX2) * jW() * Z; float di = soldier(vec2(x - nx, s), k * 1.35); d = abs(x - nx) < .012 * k ? di : min(d, di); }
+  float m = clamp(.5 - d / px, 0., 1.);
+  float gum = step(s, 0.);
+  vec3 col = mix(lin(vec3(.05, .02, .018)), lin(vec3(.24, .1, .05)), exp(min(s, 0.) * 16.));
+  vec3 fig = lin(vec3(.04, .02, .018));
+  col = mix(col, fig, m);
+  // firelight from inside the mouth, catching the lips and the edges of the teeth
+  col += lin(vec3(1., .45, .12)) * exp(-max(d, 0.) / (px * 2.5 + .002)) * (1. - m) * .5 * (1. - gum);
+  col += lin(vec3(1., .5, .16)) * exp(-abs(s) / (px * 3. + .003)) * .6;
+  float cover = max(gum, m);
+  // beyond the corners of the mouth there is nothing
+  cover = max(cover, smoothstep(jW() * .9, jW() * 1.02, abs(p.x)) * u_form);
+  o = vec4(sqrt(aces(col)) + (h21(gl_FragCoord.xy) - .5) / 255., u_alpha * cover);
 }`;
 
 // Time: a wheel of concentric dials, each marked like an astronomical instrument and turning at its
@@ -479,16 +718,25 @@ void main(){
     float grp = n > 59. ? 5. : 3.;
     float dt = abs(fract(ang / TAU * n) - .5) * TAU / n * rb;
     float dm = abs(fract(ang / TAU * n / grp) - .5) * TAU / n * grp * rb;
+    float ringW = rb * .351;
     float band = smoothstep(.55, .62, f) * smoothstep(.98, .9, f);
     float ticks = smoothstep(px * 1.2, 0., dt) * band * .7 + smoothstep(px * 1.6, 0., dm) * smoothstep(.4, .5, f) * smoothstep(.98, .9, f);
-    float ringW = rb * .351;
     float circ = smoothstep(px * 1.5, 0., min(f, 1. - f) * ringW) + smoothstep(px * 1.2, 0., abs(f - .5) * ringW) * .35;
-    float pa = ang / TAU + h11(i) * 7.;
-    float marker = smoothstep(.06, .0, abs(fract(pa) - .5) * TAU * rb) * smoothstep(.3, .0, abs(f - .3)) * step(.4, h11(i * 3.1));
-    col += gold * (ticks * .8 + circ * .9 + marker * 1.6) * (.4 + .6 * exp(-i * .12)) * (1. - u_kala * .55);
+    // One body riding each ring: a small bright disc with a little light around it, as on an orrery.
+    // (These were soft smears a twentieth of the screen wide.)
+    float pa = fract(ang / TAU + h11(i) * 7.) - .5;
+    vec2 mk = vec2(pa * TAU * rb, (f - .3) * ringW);
+    float md = length(mk), mr = .0045 + .0035 * h11(i * 5.3);
+    float marker = (smoothstep(mr + px, mr - px, md) * 1.6 + exp(-md * 150.) * .5) * step(.4, h11(i * 3.1));
+    col += gold * (ticks * .8 + circ * .9 + marker) * (.4 + .6 * exp(-i * .12)) * (1. - u_kala * .55);
   }
+  // The hand: one fine line sweeping the dials, with a short wake of light behind it. (It used to
+  // drag a filled wedge a quarter of the wheel wide.)
   float hand = fract((a - u_spin * .6) / TAU);
-  col += gold * (pow(hand, 8.) * .25 + smoothstep(px * 2., 0., (1. - hand) * TAU * r) * .8) * smoothstep(1.4, .05, r) * (1. - u_still);
+  col += gold * (pow(hand, 260.) * .16 + smoothstep(px * 1.6, 0., (1. - hand) * TAU * r) * .9) * smoothstep(1.4, .05, r) * (1. - u_still);
+  // Depth: the wheel is lit from its centre and falls into dark at its rim; nothing floats flat.
+  col *= .55 + .75 * exp(-r * 1.5);
+  col += gold * exp(-r * 9.) * .1;
   vec2 sp = vec2(cos(-u_spin * .21), sin(-u_spin * .21)) * .06 * pow(1.42, 6.5) * breathe;
   col += lin(vec3(1., .82, .5)) * (smoothstep(.022, .018, length(p - sp)) * 2. + exp(-length(p - sp) * 22.) * .5);
   vec2 mp = vec2(cos(u_spin * .37 + 2.), sin(u_spin * .37 + 2.)) * .06 * pow(1.42, 5.5) * breathe;
@@ -496,7 +744,7 @@ void main(){
   col += lin(vec3(.8, .86, 1.)) * moon * 1.6;
   float kr = .43;
   col += lin(vec3(1., .93, .8)) * u_kala * (exp(-abs(r - kr) / (px * 2. + .003)) * 3. + exp(-abs(r - kr) * 8.) * .45);
-  col += lin(vec3(.9, .25, .05)) * u_ember * pow(fbm(p * 3. + u_time * .1), 3.) * .9;
+  col += lin(vec3(.9, .25, .05)) * u_ember * pow(fbm(p * 3. + u_time * .1), 3.) * .9 * exp(-r * 1.2);
   if (u_instrument > 0.){
     float ia = PI * .62 - u_spin * speedOf(5.);
     vec2 ip = vec2(cos(ia), sin(ia)) * .06 * pow(1.42, 5.55) * breathe;
@@ -507,37 +755,47 @@ void main(){
   finish(col);
 }`;
 
-// One flame. Raging (heat 1) for the moths of 11.29; small and steady on a clay lamp (heat 0) for
-// the friend. Additive light.
+// One flame. Tall and fierce (heat 1) for the moths of 11.29: it stands where the burning form drew
+// in to a point, and it is the only light, so everything that moves is moving toward it. Small and
+// steady on a clay lamp (heat 0) for the friend, with the pool of light a lamp makes on the ground
+// it stands on. Additive light.
 const LAMP = HEAD + COMMON + `
 uniform float u_heat;
 void main(){
   vec2 uv = suv();
   float H = u_heat, t = u_time;
-  vec2 F = vec2(0., mix(-.28, -.10, H));
-  float s = mix(.045, .11, H);
+  vec2 F = vec2(0., mix(-.26, -.13, H));
+  float s = mix(.058, .13, H);
   vec2 q = (uv - F) / s;
-  q.x += (fbm3(vec2(q.y * 1.5 - t * (2. + 3. * H), t * .9)) - .5) * .6 * smoothstep(-.4, 1.6, q.y) * (.5 + .9 * H);
-  q.x *= 1. + .08 * sin(t * 13.) * H;
+  q.x += (fbm3(vec2(q.y * 1.5 - t * (2. + 3. * H), t * .9)) - .5) * .6 * smoothstep(-.4, 1.6, q.y) * (.45 + .9 * H);
+  q.x *= 1. + .06 * sin(t * 13.) * H;
   float d = q.y < 0. ? length(q * vec2(1., 1.25)) - .42 : abs(q.x) - .42 * pow(max(0., 1. - q.y / 1.9), 1.3);
   d = max(d, q.y - 1.9);
   float body = smoothstep(.08, -.12, d);
   float core = smoothstep(0., -.3, d) * smoothstep(1.3, .2, q.y);
   vec3 c = lin(vec3(1., .42, .08)) * body * 1.4 + lin(vec3(1., .85, .5)) * core * 2.5;
   c += lin(vec3(.25, .4, 1.)) * exp(-length(q - vec2(0., -.25)) * 7.) * .6 * (1. - H * .5);
-  float rr = length(uv - F - vec2(0., s * .4));
-  c += lin(vec3(1., .55, .2)) * (exp(-rr * mix(9., 3., H)) * mix(.3, .75, H) + exp(-rr * mix(40., 14., H)) * .5);
+  // Its light on the air: close and falling off fast, so the dark around it stays dark.
+  float rr = length(uv - F - vec2(0., s * .5));
+  c += lin(vec3(1., .55, .2)) * (exp(-rr * mix(11., 6.5, H)) * mix(.34, .5, H) + exp(-rr * mix(40., 16., H)) * .5 + exp(-rr * 2.2) * .06 * H);
   if (H > .5){
-    vec2 sp = uv * vec2(34., 14.) + vec2(sin(uv.y * 9. + t), t * 3.);
-    float spark = step(.993, h21(floor(sp))) * smoothstep(.5, 0., length(fract(sp) - .5)) * exp(-length(uv - F) * 2.5);
-    c += lin(vec3(1., .6, .2)) * spark * 2. * H;
+    // Embers going up from it: few, small, round.
+    vec2 sp = vec2(uv.x * 52. + sin(uv.y * 7. + t) * .7, uv.y * 52. - t * 5.);
+    vec2 cell = floor(sp);
+    float spark = step(.988, h21(cell)) * smoothstep(.2, 0., length(fract(sp) - .5)) * exp(-length((uv - F) * vec2(3.2, 1.3)) * 2.2) * smoothstep(-.02, .1, uv.y - F.y);
+    c += lin(vec3(1., .62, .22)) * spark * 2.4 * H;
   } else {
     vec2 lq = (uv - F - vec2(0., -s * .72)) / s;
     float bowl = max(sdEll(lq, vec2(1.7, .62)), lq.y - .02);
     bowl = min(bowl, max(sdEll(lq - vec2(-1.55, .02), vec2(.5, .16)), lq.y - .05));
     float bm = smoothstep(.04, -.04, bowl);
-    c += lin(vec3(.62, .34, .17)) * bm * (.12 + .7 * exp(-length(lq - vec2(0., .1)) * .9)) * (1. - H);
-    c += lin(vec3(1., .75, .4)) * smoothstep(.05, 0., abs(lq.y - .0)) * step(abs(lq.x), 1.3) * .25 * (1. - H);
+    c += lin(vec3(.62, .34, .17)) * bm * (.12 + .7 * exp(-length(lq - vec2(0., .1)) * .9));
+    c += lin(vec3(1., .75, .4)) * smoothstep(.05, 0., abs(lq.y - .0)) * step(abs(lq.x), 1.3) * .25;
+    // The ground it stands on: a pool of warm light, wide and shallow, darker under the bowl.
+    vec2 gq = (uv - F - vec2(0., -s * 1.42)) / s;
+    float pool = exp(-dot(gq * vec2(.17, 1.05), gq * vec2(.17, 1.05)) * 1.6) * smoothstep(.5, -.2, gq.y);
+    float under = 1. - .75 * exp(-dot(gq * vec2(.6, 3.), gq * vec2(.6, 3.)));
+    c += lin(vec3(1., .6, .28)) * pool * under * (.34 + .05 * sin(t * 2.3) * fbm3(vec2(t * .7, 0.)));
   }
   finishLight(c);
 }`;
@@ -615,14 +873,15 @@ void main(){
   float ang = h1 * TAU + u_time * .05 * (mod(k, 2.) * 2. - 1.);
   vec2 ring = vec2(0., -.03) + .08 * pow(1.45, k) * vec2(cos(ang), sin(ang));
   gl_Position = clip(mix(free, ring, smoothstep(0., 1., u_align)));
-  gl_PointSize = (1. + 2.5 * h3 * h3) * u_px;
-  v_b = (.15 + .55 * h2) * mix(.7, 1., u_dawn);
+  gl_PointSize = (1.4 + 2.2 * h3 * h3) * u_px;
+  v_b = (.1 + .34 * h2) * mix(.75, .55, u_dawn);
   v_c = mix(vec3(.85, .7, .45), vec3(1., .82, .5), u_align);
 }`;
 
 // 11.28: currents of light running from every direction through ever fewer, broader channels into
 // the mouth, like tributaries into rivers into the sea.
 const RIVERS_VERT = POINT_HEAD + `
+uniform float u_gather;
 void main(){
   uint id = uint(gl_VertexID);
   float h1 = hf(id * 3u + 1u), h2 = hf(id * 3u + 2u), h3 = hf(id * 7u + 5u);
@@ -638,10 +897,12 @@ void main(){
   gl_Position = clip((vec2(0., -.04) + r * vec2(cos(th), sin(th))) * fit);
   gl_PointSize = (1.2 + 1.3 * h2) * u_px * (1. + ph);
   v_b = smoothstep(0., .15, ph) * (.25 + .55 * ph);
-  v_c = mix(vec3(.45, .65, 1.), vec3(1., .82, .55), smoothstep(.5, .95, ph));
+  v_c = mix(mix(vec3(.45, .65, 1.), vec3(1., .82, .55), smoothstep(.5, .95, ph)), vec3(1., .5, .18), u_gather);
 }`;
 
-// 11.29: moths circling the flame, drawn in, catching fire, gone.
+// 11.29: moths flying into the flame. They come from the dark beyond the frame on the same inward
+// spiral the rivers ran, nearly all turning the same way, faster the closer they are; each is lit on
+// the flame's side as it nears, flares, and is gone. Positions are functions of index and time.
 const MOTHS_VERT = `#version 300 es
 precision highp float;
 uniform vec2 u_res;
@@ -654,20 +915,29 @@ out float v_flap;
 out float v_burn;
 out float v_fade;
 out float v_lit;
+out vec2 v_dir;
+vec2 path(float ph, float h3, float h4, float turn, float h1){
+  float r = (.5 + .95 * h3) * pow(1. - ph, 1.55);
+  float ang = h4 * TAU + turn * (2.4 * log(1.4 / (r + .06)) + .25 * sin(u_time * 2.3 + h1 * 20.));
+  return vec2(0., -.03) + r * vec2(cos(ang), sin(ang) * .86);
+}
 void main(){
   uint id = uint(gl_VertexID);
   float h1 = hf(id * 5u + 1u), h2 = hf(id * 5u + 2u), h3 = hf(id * 5u + 3u), h4 = hf(id * 5u + 4u), h5 = hf(id * 5u + 5u);
-  float ph = fract(u_time * (.045 + .035 * h2) + h1);
-  vec2 fc = vec2(0., -.05);
-  float r = mix(.42 + .35 * h3, 0., pow(ph, 1.6));
-  float ang = h4 * TAU + u_time * (1.2 + 1.5 * h5) * (h2 > .5 ? 1. : -1.) + sin(u_time * 3.1 + h1 * 20.) * .5;
-  vec2 pos = fc + r * vec2(cos(ang), sin(ang) * .62) + .012 * vec2(sin(u_time * 17. + h3 * 40.), cos(u_time * 13. + h4 * 30.));
+  float ph = fract(u_time * (.05 + .04 * h2) + h1);
+  float turn = h5 > .14 ? 1. : -1.;
+  vec2 pos = path(ph, h3, h4, turn, h1);
+  vec2 ahead = path(min(ph + .012, 1.), h3, h4, turn, h1);
+  pos += .006 * vec2(sin(u_time * 15. + h3 * 40.), cos(u_time * 12. + h4 * 30.));
+  float r = length(pos - vec2(0., -.03));
   gl_Position = vec4(pos.x * 2. * u_res.y / u_res.x, pos.y * 2., 0., 1.);
-  gl_PointSize = mix(16., 40., h5 * h5) * u_px * (.7 + .3 * (1. - ph));
-  v_flap = u_time * (22. + 14. * h3) + h1 * 30.;
-  v_burn = smoothstep(.9, .99, ph);
-  v_fade = 1. - smoothstep(.985, 1., ph);
-  v_lit = exp(-r * 3.);
+  // Size as distance from the eye: a few are near and large, most are small.
+  gl_PointSize = mix(15., 46., pow(h2, 2.6)) * u_px * (.75 + .25 * (1. - ph));
+  v_dir = normalize(ahead - pos + 1e-5);
+  v_flap = u_time * (20. + 12. * h3) + h1 * 30.;
+  v_burn = smoothstep(.93, .995, ph);
+  v_fade = smoothstep(0., .08, ph) * (1. - smoothstep(.99, 1., ph));
+  v_lit = exp(-r * 3.4);
 }`;
 
 const MOTHS_FRAG = `#version 300 es
@@ -677,19 +947,23 @@ in float v_flap;
 in float v_burn;
 in float v_fade;
 in float v_lit;
+in vec2 v_dir;
 out vec4 o;
 void main(){
-  vec2 c = gl_PointCoord * 2. - 1.; c.y = -c.y;
-  float flap = .25 + .75 * abs(sin(v_flap));
+  // The sprite turns to face the way the moth is flying: head along +y.
+  vec2 c0 = gl_PointCoord * 2. - 1.; c0.y = -c0.y;
+  vec2 c = vec2(c0.x * v_dir.y - c0.y * v_dir.x, c0.x * v_dir.x + c0.y * v_dir.y);
+  float flap = .3 + .7 * abs(sin(v_flap));
   vec2 w = vec2(abs(c.x), c.y);
-  float fore = length(vec2((w.x - .45 * flap) / (.5 * flap + .05), (w.y - .12) / .42));
-  float hind = length(vec2((w.x - .3 * flap) / (.32 * flap + .04), (w.y + .28) / .28));
-  float wing = smoothstep(1., .8, min(fore, hind));
-  float body = smoothstep(.12, .05, abs(c.x)) * smoothstep(.6, .4, abs(c.y));
-  float m = max(wing * .85, body);
-  vec3 col = mix(vec3(.62, .57, .5), vec3(1., .84, .6), v_lit) * (.6 + .4 * v_lit);
-  col = mix(col, vec3(1., .55, .2), v_burn);
-  o = vec4(col, m * u_alpha * v_fade);
+  float fore = length(vec2((w.x - .4 * flap) / (.46 * flap + .05), (w.y - .14 - w.x * .25) / .36));
+  float hind = length(vec2((w.x - .26 * flap) / (.3 * flap + .04), (w.y + .26) / .26));
+  float wing = smoothstep(1., .82, min(fore, hind));
+  float body = smoothstep(.1, .04, abs(c.x)) * smoothstep(.62, .42, abs(c.y - .02));
+  float m = max(wing * (.55 + .3 * v_lit), body);
+  // Unlit they are only darker shapes against the dark; the flame gives them colour as they near it.
+  vec3 col = mix(vec3(.2, .16, .13), vec3(1., .82, .55), v_lit) * (.5 + .7 * v_lit);
+  col = mix(col, vec3(1.2, .62, .2), v_burn);
+  o = vec4(col, m * u_alpha * v_fade * (.4 + .6 * smoothstep(0., .25, v_lit) + v_burn));
 }`;
 
 // Lives on the wheel of time: brief sparks born on the rings, going out; a few stars flaring.
@@ -707,8 +981,8 @@ void main(){
   float env = smoothstep(0., .04, ph) * pow(1. - ph, star > 0. ? 1.5 : 3.);
   float fit = min(1., aspect() * 1.1);
   gl_Position = clip(rr * vec2(cos(ang), sin(ang)) * fit);
-  gl_PointSize = (star > 0. ? 3. + 10. * env : 1.2 + 1.5 * env) * u_px;
-  v_b = env * (star > 0. ? 1.4 : .8);
+  gl_PointSize = (star > 0. ? 3. + 7. * env : 1.6 + 1.8 * env) * u_px;
+  v_b = env * (star > 0. ? 1.1 : .7);
   v_c = star > 0. ? vec3(.8, .88, 1.) : vec3(1., .85, .55);
 }`;
 
@@ -718,9 +992,11 @@ export const PROGRAMS: Record<ProgramName, ProgramDef> = {
   cosmos: { frag: COSMOS, blend: 'over' },
   time: { frag: TIME, blend: 'over' },
   feather: { frag: FEATHER, blend: 'over' },
+  orb: { frag: ORB, blend: 'over' },
+  jaws: { frag: JAWS, blend: 'over' },
   lamp: { frag: LAMP, blend: 'add' },
-  dust: { frag: GLOW_FRAG, vert: DUST_VERT, count: { low: 700, high: 2400 }, blend: 'add' },
+  dust: { frag: GLOW_FRAG, vert: DUST_VERT, count: { low: 600, high: 1600 }, blend: 'add' },
   rivers: { frag: GLOW_FRAG, vert: RIVERS_VERT, count: { low: 12000, high: 40000 }, blend: 'add' },
-  moths: { frag: MOTHS_FRAG, vert: MOTHS_VERT, count: { low: 70, high: 140 }, blend: 'over' },
-  lives: { frag: GLOW_FRAG, vert: LIVES_VERT, count: { low: 1500, high: 4000 }, blend: 'add' },
+  moths: { frag: MOTHS_FRAG, vert: MOTHS_VERT, count: { low: 110, high: 260 }, blend: 'over' },
+  lives: { frag: GLOW_FRAG, vert: LIVES_VERT, count: { low: 700, high: 1600 }, blend: 'add' },
 };

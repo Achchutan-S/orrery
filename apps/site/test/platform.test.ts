@@ -1,6 +1,6 @@
 // Kernel units: discovery filtering, track(), authorize(), token contrast.
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { parseCatalog } from '@pu/experience-catalog';
 import { fixtureRelease } from '@pu/experience-catalog/fixture-release';
@@ -134,4 +134,17 @@ test('sample-app: build-time facts agree with the release rules', () => {
   const published = stateFacts().find((f) => f.state === 'published')!;
   assert.deepEqual(published.built.owner, { development: true, preview: true, production: false });
   assert.equal(published.channel, 'stable');
+});
+
+test('every event an experience passes to track() is declared in its catalog entry', () => {
+  const dir = new URL('../src/experiences/', import.meta.url);
+  for (const e of experiences) {
+    if (e.kind !== 'internal') continue;
+    const used = new Set<string>();
+    for (const f of readdirSync(new URL(`${e.id}/`, dir), { recursive: true }).map(String).filter((p) => /\.(ts|tsx|astro)$/.test(p))) {
+      for (const m of readFileSync(new URL(`${e.id}/${f}`, dir), 'utf8').matchAll(/\btrack\(\s*[^,()]+,\s*['"]([^'"]+)['"]/g)) used.add(m[1]!);
+    }
+    assert.deepEqual([...used].filter((name) => !e.events.includes(name)), [], `${e.id}: add these to "events" in its catalog entry`);
+    assert.deepEqual(e.events.filter((name) => !used.has(name)), [], `${e.id}: declared but never tracked`);
+  }
 });

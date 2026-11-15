@@ -18,4 +18,6 @@ export default defineExperience({
   chrome: 'beacon',
   colorScheme: 'dark',
   performanceClass: 'immersive',
+  // Every event client/boot.ts passes to track(), which is still a no-op (apps/site/test/platform.test.ts keeps the two in step).
+  events: ['sequence', 'enter', 'sight', 'replay'],
 });

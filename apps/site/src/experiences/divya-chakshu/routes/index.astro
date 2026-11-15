@@ -5,12 +5,14 @@
 import ExperienceRoot from '../../../platform/root/ExperienceRoot.astro';
 import '../styles/divya.css';
 import { ADAPTATION, SEQUENCES, type Beat } from '../content.ts';
+import { NAMED } from '../client/timeline.ts';
 
 const tone = (b: Beat) => ('tone' in b && b.tone ? ` beat--${b.tone}` : '');
 ---
 <ExperienceRoot experience="divya-chakshu" title="Divya Chakshu: the infinite revealed" description="Arjuna’s vision of the universal form in Bhagavad Gita chapter 11: an immersive journey of light, scale and time, with the Sanskrit verses and their meaning.">
   <div class="dc-stage" data-stage data-seq="0" aria-hidden="true"></div>
   <canvas class="dc-canvas" data-canvas aria-hidden="true"></canvas>
+  <div class="dc-names" aria-hidden="true">{NAMED.map((n) => <span class="dc-name" data-name>{n}</span>)}</div>
 
   <main id="main" class="dc">
     {SEQUENCES.map((seq, si) => (
@@ -77,7 +79,8 @@ const tone = (b: Beat) => ('tone' in b && b.tone ? ` beat--${b.tone}` : '');
     ))}
   </main>
 
-  <div class="dc-controls" data-controls hidden>
+  {/* A landmark, so the controls are not loose content outside every region (axe best practice "region"). */}
+  <aside class="dc-controls" aria-label="Reading controls" data-controls hidden>
     <nav id="dc-chapters" class="dc-chapters" aria-label="Sequences" hidden>
       <ol>
         {SEQUENCES.map((s) => <li><a href={`#seq-${s.id}`} data-chapter={s.id}><span class="dc-chapters__num">{s.numeral ?? ''}</span> {s.title}</a></li>)}
@@ -98,7 +101,7 @@ const tone = (b: Beat) => ('tone' in b && b.tone ? ` beat--${b.tone}` : '');
       </button>
       <p class="dc-bar__now" data-progress-label>Before the infinite</p>
     </div>
-  </div>
+  </aside>
   <div class="dc-rail" aria-hidden="true"><span data-progress-fill></span></div>
   <p class="dc-vh" role="status" aria-live="polite" data-status></p>
 

@@ -4,9 +4,9 @@
 // Screenshots land in apps/site/test-results/ for manual review.
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { after, before, describe, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
@@ -14,6 +14,7 @@ import { preview } from 'astro';
 import { chromium, type Browser, type BrowserContext, type BrowserContextOptions, type Page } from 'playwright';
 import { parseCatalog } from '@pu/experience-catalog';
 import { parseRelease, resolveAll } from '@pu/platform-schema';
+import { ownerOf, samplePages } from '@pu/checks/routes';
 import { frontPage } from '../src/experiences/index/front-page.ts';
 import { publicDiscoveryIndex } from '../src/platform/discovery/index.ts';
 import { views } from '../src/experiences/sample-app/views.ts';
@@ -32,6 +33,8 @@ const VIEWPORTS = {
   desktop: { viewport: { width: 1280, height: 900 } },
   mobile: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 },
 } satisfies Record<string, BrowserContextOptions>;
+// Pages with state the build cannot enumerate (a query string, an unknown address). Every other page
+// the generic checks visit is derived from the builds: see targets().
 const ROUTES = ['/', '/journal', '/journal/today', '/sample-content', '/sample-app', '/sample-app/states', '/sample-app/states/beta?access=owner', '/no-such-page'];
 const EXTERNAL = [
   { title: 'KawaiUI', href: 'https://kawaiui.vercel.app/', host: 'kawaiui.vercel.app' },
@@ -95,6 +98,23 @@ after(async () => {
   rmSync(tmp, { recursive: true, force: true });
 });
 
+/** The permanent fixtures: a canary and a stylesheet that unsets everything. Never held to page-quality checks. */
+const FIXTURES = new Set(['canary-draft', 'sample-hostile']);
+const builtPages = (env: 'production' | 'preview') =>
+  readdirSync(join(tmp, env), { recursive: true }).map((f) => String(f).split(sep).join('/')).filter((f) => f.endsWith('.html'));
+
+/**
+ * Every page the generic accessibility checks visit, derived from the two builds (decision D12, ADR-027):
+ * the sampled pages of the production build, the hand-listed stateful ROUTES, and the pages of any draft
+ * that exists only in the preview build. A new experience is covered with no edit to this file.
+ */
+function targets(): [path: string, env: 'production' | 'preview'][] {
+  const production = [...new Set([...samplePages(builtPages('production'), experiences), ...ROUTES])];
+  const inProduction = new Set(builtPages('production'));
+  const drafts = samplePages(builtPages('preview').filter((f) => !inProduction.has(f) && !FIXTURES.has(ownerOf(f, experiences)?.id ?? '')), experiences);
+  return [...production.map((p) => [p, 'production'] as [string, 'production']), ...drafts.map((p) => [p, 'preview'] as [string, 'preview'])];
+}
+
 const hydrated = (page: Page) => page.waitForSelector('astro-island:not([ssr])', { state: 'attached' });
 
 async function open(path: string, opts: BrowserContextOptions = VIEWPORTS.desktop, env: keyof typeof base = 'production'): Promise<Page> {
@@ -118,8 +138,8 @@ describe('axe (WCAG 2.2 A/AA rules) and screenshots', () => {
   for (const [name, vp] of Object.entries(VIEWPORTS)) {
     for (const colorScheme of ['light', 'dark'] as const) {
       test(`${name}, ${colorScheme}: no axe violations; no horizontal scroll`, async () => {
-        for (const path of ROUTES) {
-          const page = await open(path, { ...vp, colorScheme });
+        for (const [path, env] of targets()) {
+          const page = await open(path, { ...vp, colorScheme }, env);
           const { violations } = await new AxeBuilder({ page })
             .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
           assert.deepEqual(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`), [], path);
@@ -851,15 +871,18 @@ describe('CSS isolation (adversarial)', () => {
 
 // Runs last: every page every test above opened, production and preview, under Astro's CSP.
 describe('accessibility beyond axe (automated; manual checks: docs/accessibility.md)', () => {
-  // Every page production serves, the resume included when it is released.
-  const PAGES = [...ROUTES, ...(resumeIn('production').mounted ? ['/resume'] : [])];
   const overflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   const palette = (page: Page) => page.getByRole('dialog', { name: 'Go to' });
 
-  test('reflow: no horizontal scrolling at 320 and 640 CSS px wide (400% and 200% zoom of a 1280 px window)', async () => {
-    for (const width of [320, 640]) {
-      for (const path of PAGES) {
-        const page = await open(path, { viewport: { width, height: 720 } });
+  test('every mounted experience is visited: the derived page list is never empty for one', () => {
+    const visited = new Set(targets().map(([p]) => ownerOf(p === '/' ? 'index.html' : `${p.slice(1).split('?')[0]}.html`, experiences)?.id));
+    for (const r of resolveAll(experiences, realState, 'production')) if (r.mounted) assert.ok(visited.has(r.id), `${r.id} has no page in the browser suite`);
+  });
+
+  test('reflow: no horizontal scrolling at 320, 640, 768 and 1024 CSS px wide (phone, 200% zoom, tablet, small laptop)', async () => {
+    for (const width of [320, 640, 768, 1024]) {
+      for (const [path, env] of targets()) {
+        const page = await open(path, { viewport: { width, height: 720 } }, env);
         assert.ok(await overflow(page) <= 0, `${path} at ${width}px scrolls horizontally by ${await overflow(page)}px`);
         await page.context().close();
       }
@@ -869,9 +892,9 @@ describe('accessibility beyond axe (automated; manual checks: docs/accessibility
   test('text spacing (WCAG 1.4.12): wider lines, letters, words and paragraphs lose nothing sideways', async () => {
     const spacing = '* { line-height: 1.5 !important; letter-spacing: 0.12em !important; word-spacing: 0.16em !important; } p { margin-bottom: 2em !important; }';
     for (const vp of [VIEWPORTS.desktop, VIEWPORTS.mobile]) {
-      for (const path of PAGES) {
+      for (const [path, env] of targets()) {
         // A user stylesheet, as a reader's extension would add it; the page's own CSP is tested elsewhere.
-        const page = await open(path, { ...vp, bypassCSP: true });
+        const page = await open(path, { ...vp, bypassCSP: true }, env);
         await page.addStyleTag({ content: spacing });
         assert.equal(await page.evaluate(() => getComputedStyle(document.querySelector('h1')!).lineHeight.endsWith('px') && getComputedStyle(document.querySelector('h1')!).wordSpacing !== '0px'), true, `${path}: the spacing applies`);
         assert.ok(await overflow(page) <= 0, `${path} (${vp.viewport.width}px) overflows by ${await overflow(page)}px with WCAG text spacing`);
@@ -881,8 +904,8 @@ describe('accessibility beyond axe (automated; manual checks: docs/accessibility
   });
 
   test('forced colours: the focus indicator survives (outline, not only the box-shadow band) and the Beacon stays visible', async () => {
-    for (const path of PAGES) {
-      const page = await open(path, { ...VIEWPORTS.desktop, forcedColors: 'active' });
+    for (const [path, env] of targets()) {
+      const page = await open(path, { ...VIEWPORTS.desktop, forcedColors: 'active' }, env);
       await page.keyboard.press('Tab');
       const focus = await page.evaluate(() => {
         const el = document.activeElement as HTMLElement;
@@ -897,8 +920,8 @@ describe('accessibility beyond axe (automated; manual checks: docs/accessibility
   });
 
   test('every page: one h1, one main landmark, headings that never skip a level, a language, and a title', async () => {
-    for (const path of PAGES) {
-      const page = await open(path);
+    for (const [path, env] of targets()) {
+      const page = await open(path, VIEWPORTS.desktop, env);
       const r = await page.evaluate(() => {
         const levels = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')].filter((h) => (h as HTMLElement).offsetParent !== null || h.closest('dialog') === null)
           .filter((h) => !h.closest('dialog, template')).map((h) => Number(h.tagName[1]));
@@ -930,8 +953,8 @@ describe('accessibility beyond axe (automated; manual checks: docs/accessibility
   });
 
   test('axe best practices (beyond WCAG): landmarks, heading order, unique regions, on every page', async () => {
-    for (const path of PAGES) {
-      const page = await open(path);
+    for (const [path, env] of targets()) {
+      const page = await open(path, VIEWPORTS.desktop, env);
       const { violations } = await new AxeBuilder({ page }).withTags(['best-practice']).analyze();
       assert.deepEqual(violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target).join(', ')}`), [], path);
       await page.context().close();

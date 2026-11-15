@@ -14,14 +14,26 @@ import { distArg, isMain, loadPlatform, readDist, readSources, report, type Dist
 
 const PRODUCTION_HINT = ' (is this a development or preview build? run `pnpm build:production`)';
 
-/** Platform output that no route produces: the Not found page and the files in apps/site/public. */
-export const PLATFORM_FILES = ['404.html', 'favicon.svg', 'og.png'];
+/**
+ * Platform output that no experience route produces: the Not found page, the files in
+ * apps/site/public, and the two crawler files built by src/pages (sitemap.xml.ts, robots.txt.ts).
+ */
+export const PLATFORM_FILES = ['404.html', 'favicon.svg', 'og.png', 'sitemap.xml', 'robots.txt'];
 /**
  * Vite's content-hashed assets: `_astro/<name>.<8-character hash>.js|css`, fonts as `_astro/fonts/<16 hex>.woff2`.
  * A page `<script>` too large to inline is named after its component, with a fixed Astro suffix:
  * `_astro/index.astro_astro_type_script_index_0_lang.<hash>.js` (ADR-025).
  */
 const ASTRO_ASSET = /^_astro\/(?:[\w-]+(?:\.astro_astro_type_script_index_\d+_lang)?\.[\w-]{8}\.(?:js|css)|fonts\/[0-9a-f]{16}\.woff2)$/;
+
+/**
+ * A font or image an experience imports from its own folder (CSS `url()`, or an import of the file):
+ * Vite copies it byte for byte to `_astro/<name>.<8-character hash>.<ext>` (decision D11, ADR-028).
+ * The name says nothing about who owns it, so such a file is accepted only when its bytes are those of
+ * a source file of an experience released in this build, or of the platform. A transformed image
+ * (`astro:assets` optimisation) has different bytes and is therefore not accepted.
+ */
+const HASHED_MEDIA = /^_astro\/[\w-]+\.[\w-]{8}\.(?:woff2?|png|jpe?g|webp|avif|gif|svg)$/;
 
 const NAMED: Record<string, string> = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
 const codePoint = (n: number, raw: string) => (n <= 0x10ffff ? String.fromCodePoint(n) : raw);
@@ -68,6 +80,8 @@ function protectedContent(sources: readonly SourceFile[], released: ReadonlySet<
   const publicHashes = new Set(sources.filter(kernel).map((s) => sha256(s.bytes)));
   const publicText = sources.filter((s) => (kernel(s) || released.has(s.owner)) && TEXT_SOURCE.test(s.path))
     .map((s) => decoded(s.bytes.toString('utf8'))).join('\n');
+  // What a released experience or the platform owns, by content: the only owners a hashed font or image may have.
+  const releasedHashes = new Set(sources.filter((s) => kernel(s) || released.has(s.owner)).map((s) => sha256(s.bytes)));
   const hashes = new Map<string, SourceFile>();
   const base64: { needle: string; source: SourceFile }[] = [];
   const prose: { needle: string; source: SourceFile }[] = [];
@@ -84,7 +98,7 @@ function protectedContent(sources: readonly SourceFile[], released: ReadonlySet<
       if (!publicText.includes(p)) prose.push({ needle: p, source: s });
     }
   }
-  return { hashes, base64, prose };
+  return { hashes, base64, prose, releasedHashes };
 }
 
 export function scanLeaks(
@@ -160,7 +174,13 @@ export function scanLeaks(
     else if (/\.(js|mjs|css)$/.test(f.path) && /[#@] sourceMappingURL=/.test(f.text ?? '')) {
       findings.push({ file: f.path, reason: 'references a source map' });
     }
-    if (!f.path.endsWith('.map') && !flagged.has(f.path) && !allowed.some((ok) => ok(f.path))) {
+    if (HASHED_MEDIA.test(f.path)) {
+      // An unreleased experience's file is already reported above as a copy; anything else unowned is reported here.
+      const hash = sha256(f.bytes);
+      if (!content.releasedHashes.has(hash) && !content.hashes.has(hash)) {
+        findings.push({ file: f.path, reason: 'hashed font or image that is not a byte-for-byte copy of a file in a released experience\'s folder (a transformed image, or a file from outside src/experiences)' });
+      }
+    } else if (!f.path.endsWith('.map') && !flagged.has(f.path) && !allowed.some((ok) => ok(f.path))) {
       findings.push({ file: f.path, reason: 'not on the production output allowlist: no released route, platform file or hashed asset produces it' });
     }
   }

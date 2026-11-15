@@ -1,6 +1,6 @@
 # ADR-024 — The Experience Contract, blueprint revision 3 and the new roadmap
 
-Status: proposed (7 November 2026), pending the owner's approval; amended the same day by the architecture amendment pass (decisions 6–10) · Builds on ADR-004, ADR-007, ADR-010, ADR-012, ADR-019, ADR-021, ADR-022. Supersedes no ADR. Reference: [experience-contract.md](../experience-contract.md), [blueprint.md](../blueprint.md), [architecture-review.md](../architecture-review.md).
+Status: accepted (13 November 2026; proposed 7 November 2026); amended the same day by the architecture amendment pass (decisions 6–10) · Builds on ADR-004, ADR-007, ADR-010, ADR-012, ADR-019, ADR-021, ADR-022. Supersedes no ADR. Reference: [experience-contract.md](../experience-contract.md), [blueprint.md](../blueprint.md), [architecture-review.md](../architecture-review.md).
 
 ## Context
 

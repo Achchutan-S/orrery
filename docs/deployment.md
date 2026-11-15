@@ -53,7 +53,35 @@ The smoke test derives every expected address from the catalog and `config/relea
 
 A failed step fails the Vercel build, so Vercel does not deploy it and production keeps serving the previous deployment. Reproduce locally with `VERCEL_ENV=production PU_DEPLOYMENT=1 pnpm build:deployment`.
 
-What the gate does not cover: unit and browser tests (`pnpm test`, `pnpm test:browser`) run only in CI. This is repository-side gating only. GitHub CI is not a deployment gate: Vercel builds a push to `main` in parallel with CI, and `main` has no branch protection. Making CI a required check (branch protection, or Vercel's deployment checks) is a separate change in the GitHub and Vercel dashboards, not made here.
+What the build gate does not cover: unit and browser tests (`pnpm test`, `pnpm test:browser`) run only in CI. They gate production through GitHub instead: `main` accepts only pull requests on which both CI jobs passed, so Vercel's production build only ever sees tested commits ([ADR-029](adr/adr-029-ci-as-the-release-gate.md)). **That holds only once `main` is protected**; whether it is, is recorded in the [tracker](tracker.md) (action O1).
+
+### Protecting `main` (once)
+
+The owner's action; nothing in the repository can do it. On GitHub: **Settings → Branches → Add branch ruleset** (or "Add classic branch protection rule") for `main`:
+
+1. **Require a pull request before merging.** Required approvals: 0 (there is one owner).
+2. **Require status checks to pass**, and **Require branches to be up to date before merging**. Add both checks by name: `Typecheck, tests and guardrails` and `Browser (Playwright and axe)`. They appear in the search box once CI has run on a pull request.
+3. **Block force pushes** and **Restrict deletions**.
+4. Do not add a bypass for administrators ("Do not allow bypassing the above settings").
+
+With the GitHub CLI and admin rights, the same as one command:
+
+```sh
+gh api -X PUT repos/Achchutan-S/orrery/branches/main/protection --input - <<'JSON'
+{
+  "required_status_checks": { "strict": true, "contexts": ["Typecheck, tests and guardrails", "Browser (Playwright and axe)"] },
+  "enforce_admins": true,
+  "required_pull_request_reviews": { "required_approving_review_count": 0 },
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+```
+
+Consequence: `git push origin main` is refused from then on; every change is a branch and a pull request.
+
+**Prove it works, once.** Push a branch whose only change makes a test fail (for example `assert.equal(1, 2)` added to `packages/platform-schema/src/resolve.test.ts`), open a pull request, wait for CI to fail, and confirm that the merge button is blocked ("Required statuses must pass"). Close the pull request without merging and delete the branch. Record the pull request number in the tracker; until then the gate is configured, not proven.
 
 ## Deployment procedure
 
@@ -63,8 +91,8 @@ What the gate does not cover: unit and browser tests (`pnpm test`, `pnpm test:br
    ```sh
    pnpm smoke https://<preview-url> --env preview
    ```
-4. **Production gate**, all required: The repository checks pass (the production build also enforces them, see above); GitHub Actions CI passed on the commit; the preview smoke test passed; no leak reported; the owner approves. A commit that publishes a new experience also needs the publishing prerequisites of [contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience), including a person's recorded manual accessibility check. Vercel does not wait for CI (decision D16), so the owner checks the CI result before merging to `main`.
-5. Merge to `main`. In the production build log, confirm `deploy build (production): typecheck → check:boundaries → build → check:metadata → check:leaks → check:budgets`, `[pu:mount-experiences] production: mounted …` listing exactly what `config/release.json` releases and `✔ deploy build (production): all steps passed`. Then:
+4. **Open a pull request into `main`.** Required: both CI jobs pass on it (enforced by branch protection once `main` is protected, ADR-029); the preview smoke test passed; no leak reported; the owner approves. A pull request that publishes a new experience also needs the publishing prerequisites of [contract § 8.5](experience-contract.md#85-prerequisites-for-publishing-a-new-experience): the approved direction and final design review, and a person's recorded manual accessibility check. The pull request template lists them. A resume change also needs the local private-terms check ([resume.md § Privacy check](resume.md#privacy-check)), which public CI cannot run.
+5. Merge the pull request. In the production build log, confirm `deploy build (production): typecheck → check:boundaries → build → check:metadata → check:leaks → check:budgets`, `[pu:mount-experiences] production: mounted …` listing exactly what `config/release.json` releases and `✔ deploy build (production): all steps passed`. Then:
    ```sh
    pnpm smoke https://<production-url> --env production --external
    ```
@@ -84,6 +112,10 @@ Real HTTP requests, with expectations derived from the catalog, `config/release.
 - A network error (reset, DNS, TLS) is retried once, then reported as `path: request failed twice (<cause>)…` and the run stops; HTTP answers are never retried.
 
 Exit status 0 on success, 1 with `path: reason` lines on failure (the heading names the environment and target), 2 for bad arguments. `PU_SMOKE_URL` and `PU_SMOKE_ENV` can replace the arguments.
+
+### Scheduled smoke test
+
+`.github/workflows/smoke.yml` runs `pnpm smoke https://orrery-teal.vercel.app --env production` every day at 03:17 UTC and on demand (Actions → Production smoke → Run workflow). It needs no secret. A failure means production no longer serves what `config/release.json` on `main` promises: GitHub notifies the owner of the failed run; read its log for the `path: reason` lines. It does not use `--external`, so an outage of KawaiUI or Dev X-Ray does not fail it. Update the URL in the workflow when a custom domain is added.
 
 ### Against a local build (`--local`)
 
@@ -122,13 +154,20 @@ Caching:
 | `/_astro/*` (JS, CSS, fonts) | `public, max-age=31536000, immutable` (from `vercel.json`) | file names are content hashes, so a change gets a new URL |
 | HTML pages | Vercel's default for static files (revalidate on every request) | HTML names never change; a deploy must show immediately |
 | 404 responses | Vercel's default | never long-cached, so a page published later appears |
-| `public/` files (`favicon.svg`, `og.png`) | Vercel's default (revalidate) | stable names; add explicit rules only for hashed names |
+| `public/` files (`favicon.svg`, `og.png`) and the crawler files (`sitemap.xml`, `robots.txt`) | Vercel's default (revalidate) | stable names; add explicit rules only for hashed names |
 
 ## Rollback
 
 - **Bad deployment:** in the Vercel dashboard, Deployments → the last good production deployment → **Instant Rollback** (or **Promote to Production**). Takes effect without a build. A rollback restores that deployment's release state too, so re-apply intended release changes afterwards.
 - **Bad commit:** `git revert` it on a branch, let CI and the preview smoke test pass, merge.
 - **Something unreleased reached production:** roll back first, then fix `config/release.json` (or the code), and run `pnpm check` and the production smoke test before merging. A leaked file stays in old deployment URLs: delete those deployments in the dashboard.
+
+### Rollback drill
+
+Never performed (tracker, action O6). Do it once at a quiet time, by hand, and record the date and how long each part took in the tracker. It changes production for a few minutes.
+
+1. **Withdraw and restore an experience.** On a branch: `pnpm control`, Experiences → `sample-content` → Release → access `owner`; apply. Open a pull request, merge it when CI passes. After the deployment: `pnpm smoke https://orrery-teal.vercel.app --env production` passes, `/sample-content` is the 404 page, and the Index and `/sitemap.xml` no longer list it. Then revert the commit through another pull request and confirm it is back.
+2. **Instant Rollback.** In the Vercel dashboard, Deployments → the previous production deployment → Instant Rollback. Confirm the site serves it (the Index shows or hides `sample-content` accordingly), then promote the latest deployment again and run the smoke test.
 
 ## Troubleshooting
 
@@ -158,6 +197,10 @@ Caching:
 ## Experience files (PDF, images)
 
 An experience's files (today the resume's PDF and link-preview image) are routes of that experience, so they deploy only with it (ADR-020). They are served with Vercel's default revalidating cache, like pages, because their paths are stable and their content changes when regenerated. Deploying only with the experience concerns the website: the committed files are in the public repository regardless (ADR-022).
+
+## Crawler files
+
+`/sitemap.xml` and `/robots.txt` are platform routes (`apps/site/src/pages/`). The sitemap lists the entry page of each experience that is hosted here and listed in that build, from `publicDiscoveryIndex()`: never a draft, an unlisted page or an external site. In production `robots.txt` allows crawling and names the sitemap; in a preview or local build, which also holds drafts, it disallows everything. Neither is access control. Both are on the output allowlist, budgeted, and requested by the smoke test.
 
 ## Link-preview images
 

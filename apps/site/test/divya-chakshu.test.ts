@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { SEQUENCES } from '../src/experiences/divya-chakshu/content.ts';
 import { PROGRAMS } from '../src/experiences/divya-chakshu/client/shaders.ts';
-import { B, BEAT_COUNTS, frame, position, SEQUENCE_COUNT, soundscape, stillPosition } from '../src/experiences/divya-chakshu/client/timeline.ts';
+import { jaw, jawsAt, NAMED, names, sightAt, SIGHT_OPEN, B, BEAT_COUNTS, frame, position, SEQUENCE_COUNT, soundscape, stillPosition } from '../src/experiences/divya-chakshu/client/timeline.ts';
 
 const verses = SEQUENCES.flatMap((s) => s.beats.flatMap((b) => (b.kind === 'verse' ? [b.verse] : [])));
 const DEVANAGARI = /^[ऀ-ॿ\s।॥’‘]+$/;
@@ -52,8 +52,8 @@ describe('content', () => {
 });
 
 describe('timeline', () => {
-  const none = { open: 0, sight: 0 };
-  const full = { open: 1, sight: 1 };
+  const none = { open: 0 };
+  const full = { open: 1 };
 
   test('position runs from 0 to 9 through every beat in order', () => {
     assert.equal(position(0, 0, 0), 0);
@@ -84,12 +84,27 @@ describe('timeline', () => {
     for (const g of samples()) assert.ok(frame(g, full).layers.filter((l) => !PROGRAMS[l.program].vert).length <= 3, String(g));
   });
 
-  test('before entering the plain is dark; divine sight comes by itself if the visitor scrolls past the button', () => {
+  test('before entering the plain is dark; divine sight belongs to a place in the text, so it opens and closes with the scroll', () => {
     assert.equal(frame(0, none).layers[0]!.u.open, 0);
     assert.equal(frame(B(0, 2), none).layers[0]!.u.open, 1);
-    assert.equal(frame(B(2, 2, 0.5), none).layers[0]!.u.sight, 0);
-    assert.equal(frame(B(2, 2, 0.5), full).layers[0]!.u.sight, 1);
-    assert.equal(frame(B(2, 4), none).layers[0]!.u.sight, 1);
+    assert.equal(frame(B(2, 2, 0.5), full).layers[0]!.u.sight, 0, 'closed at the button');
+    assert.equal(frame(B(2, 4), full).layers[0]!.u.sight, 1, 'open after it');
+    assert.equal(frame(B(1, 2), full).layers[0]!.u.sight, 0, 'and closed again for a reader who scrolls back to the chariot');
+    assert.equal(sightAt(SIGHT_OPEN), 1, 'the button carries the reader to where the eye is fully open');
+    let prev = 0;
+    for (const g of samples()) { const v = sightAt(g); assert.ok(v >= prev, 'sight never flickers'); prev = v; }
+  });
+
+  test('the picture is a function of the reading position: nothing remembers which way the reader came', () => {
+    const forward = samples().map((g) => JSON.stringify(frame(g, full)));
+    const backward = [...samples()].reverse().map((g) => JSON.stringify(frame(g, full))).reverse();
+    assert.deepEqual(backward, forward);
+    assert.equal(frame.length, 2, 'frame takes the position and the one-time opening, nothing else');
+  });
+
+  test('the plain has no drifting motes before divine sight: they are what sight reveals', () => {
+    for (const g of [0.3, B(0, 2), B(1, 2), B(2, 1)]) assert.ok(!frame(g, full).layers.some((l) => l.program === 'dust'), String(g));
+    assert.ok(frame(B(2, 4), full).layers.some((l) => l.program === 'dust'));
   });
 
   test('the thousand suns turn the text to dark ink only while the light is white', () => {
@@ -102,8 +117,67 @@ describe('timeline', () => {
     const cosmos = (g: number) => frame(g, full).layers.filter((l) => l.program === 'cosmos');
     assert.equal(cosmos(B(4, 3))[0]!.u.terror, 0);
     assert.equal(cosmos(B(5, 3))[0]!.u.terror, 1);
+    // Seen whole first, then from inside: the rim has left the frame before the eyes open.
+    assert.equal(cosmos(B(4, 2))[0]!.u.within, 0);
+    assert.equal(cosmos(B(4, 4))[0]!.u.within, 1);
+    // At 11.29 the burning form draws in to the point where the flame stands, and the flame is lit.
+    assert.equal(cosmos(B(5, 4))[0]!.u.gather, 0);
+    assert.equal(cosmos(B(5, 5, 0.3))[0]!.u.gather, 1);
+    assert.ok(frame(B(5, 5, 0.4), full).layers.some((l) => l.program === 'lamp' && l.u.heat === 1));
+    assert.ok(frame(B(5, 5), full).layers.some((l) => l.program === 'moths'), 'the moths are already arriving while the form draws in');
+    // Asked to be gentle again, it recedes to a disc seen from outside before it folds.
+    assert.equal(cosmos(B(7, 3))[0]!.u.within, 1);
+    assert.equal(cosmos(B(8, 2, 0.5))[0]!.u.within, 0);
     assert.equal(cosmos(B(8, 4, 0.7))[0]?.u.fold ?? 1, 1);
     assert.ok(!frame(B(8, 6), full).layers.some((l) => l.program === 'cosmos'));
+  });
+
+  test('out of the white, the whole universe in one place: the orb, flown into, opens on the form', () => {
+    const has = (g: number, p: string) => frame(g, full).layers.some((l) => l.program === p);
+    assert.ok(has(B(4, 0, 0.5), 'orb') && !has(B(4, 0, 0.5), 'cosmos'), 'the small world over the plain, before the form');
+    assert.ok(has(B(4, 1, 0.95), 'orb') && has(B(4, 1, 0.95), 'cosmos'), 'the point flown into is the heart of the form');
+    assert.ok(!has(B(4, 2, 0.5), 'orb'));
+    const orb = (g: number) => frame(g, full).layers.find((l) => l.program === 'orb')!.u;
+    assert.equal(orb(B(3, 3, 0.7)).white, frame(B(3, 3, 0.7), full).layers.find((l) => l.program === 'suns')!.u.white, 'it comes out of the same white');
+    assert.ok(orb(B(3, 3, 0.95)).fly === 0 && orb(B(4, 1, 0.92)).fly === 1);
+    const cos = frame(B(4, 1, 0.91), full).layers.find((l) => l.program === 'cosmos')!.u;
+    assert.equal(cos.flash, 1, 'the form starts white where the orb ends white');
+  });
+
+  test('recognition: the three he names are on the plain in sequence I and among the teeth in sequence V', () => {
+    const shown = (g: number) => names(g, 1.6).filter((n) => n.a > 0.5).length;
+    assert.equal(NAMED.length, 3);
+    assert.equal(shown(B(1, 1, 0.5)), 3, 'labelled while the text speaks of his grandfather and teachers');
+    assert.equal(shown(B(0, 2)), 0);
+    assert.equal(shown(B(5, 3, 0.4)), 3, 'labelled among the teeth');
+    assert.equal(shown(B(5, 1)), 0);
+    const bf = frame(B(1, 1, 0.5), full).layers.find((l) => l.program === 'battlefield')!;
+    assert.ok(bf.u.named! > 0.9);
+    // the labels sit where the shader draws the jaws: on the lower lip, inside the frame, above the lip
+    for (const n of names(B(5, 3, 0.4), 1.6)) { const J = jaw(jawsAt(B(5, 3, 0.4)).form, jawsAt(B(5, 3, 0.4)).close, 1.6); assert.ok(n.y > J.yc - J.H(n.x)); assert.ok(Math.abs(n.x) < 0.8); }
+    // on a phone the jaws narrow to fit, and the names on the plain, which are off-frame, are hidden
+    assert.ok(jaw(1, 0, 0.46).W <= 0.46 * 0.47 + 1e-9);
+    assert.ok(names(B(1, 1, 0.5), 0.46).every((n) => n.a === 0));
+    assert.equal(names(B(5, 3, 0.4), 0.46).filter((n) => n.a > 0.5).length, 3, 'all three stay among the teeth on a phone');
+  });
+
+  test('the jaws form, close, then give way to the rivers; the cosmos is the fire inside them', () => {
+    const at = (g: number) => frame(g, full).layers.map((l) => l.program);
+    const iC = at(B(5, 3, 0.5)).indexOf('cosmos'), iJ = at(B(5, 3, 0.5)).indexOf('jaws');
+    assert.ok(iC >= 0 && iJ > iC, 'drawn over the burning form');
+    assert.equal(jawsAt(B(5, 3, 0.5)).form, 1);
+    assert.equal(jawsAt(B(5, 3, 0.95)).close, 1);
+    assert.ok(!at(B(5, 3, 0.5)).includes('rivers') && at(B(5, 4, 0.5)).includes('rivers'));
+  });
+
+  test('divine sight begins as eyes in the plain, then the great eye opens; the friend turns back at 11.51', () => {
+    const bf = (g: number) => frame(g, full).layers.find((l) => l.program === 'battlefield')!.u;
+    assert.equal(bf(B(2, 0)).watch, 0);
+    assert.equal(bf(B(2, 2, 0.6)).watch, 1);
+    assert.equal(bf(B(2, 4)).watch, 0);
+    const dawn = (g: number) => frame(g, full).layers.filter((l) => l.program === 'battlefield').at(-1)!.u;
+    assert.equal(dawn(B(8, 5, 0.5)).turn, 0);
+    assert.equal(dawn(B(8, 6, 0.5)).turn, 1);
   });
 
   test('the end is darkness and silence', () => {
@@ -117,7 +191,7 @@ describe('shaders', () => {
   test('every uniform the timeline sets is declared by its program', () => {
     const extra = { time: ['spin'], lives: ['spin', 'still', 'ltime'] } as Record<string, string[]>;
     const seen = new Map<string, Set<string>>();
-    for (const g of samples(0.02)) for (const l of frame(g, { open: 1, sight: 1 }).layers) {
+    for (const g of samples(0.02)) for (const l of frame(g, { open: 1 }).layers) {
       const set = seen.get(l.program) ?? new Set();
       for (const k of [...Object.keys(l.u), ...(extra[l.program] ?? [])]) set.add(k);
       seen.set(l.program, set);
@@ -125,6 +199,15 @@ describe('shaders', () => {
     for (const [program, keys] of seen) {
       const src = PROGRAMS[program as keyof typeof PROGRAMS].frag + (PROGRAMS[program as keyof typeof PROGRAMS].vert ?? '');
       for (const k of keys) assert.match(src, new RegExp(`uniform float [^;]*\\bu_${k}\\b`), `${program} declares u_${k}`);
+    }
+  });
+
+  test('no scene carries animated grain: the dither is fixed in place and under one 8-bit level', () => {
+    for (const [name, p] of Object.entries(PROGRAMS)) {
+      const finish = /void finish\(vec3 c\)\{([^}]*)\}/.exec(p.frag)?.[1];
+      if (finish === undefined) continue;
+      assert.doesNotMatch(finish, /u_time/, `${name}: the dither must not change from frame to frame`);
+      assert.match(finish, /\/ 255\./, name);
     }
   });
 
