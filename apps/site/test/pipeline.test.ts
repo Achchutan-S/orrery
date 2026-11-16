@@ -143,7 +143,11 @@ describe('production build', () => {
     }
     if (mounted('production').includes('sample-app')) for (const f of appPages) assert.ok(withScript.includes(f), f);
     for (const f of withScript.filter((x) => x.startsWith('sample-app'))) assert.match(out.text(f), /<astro-island/);
-    for (const f of htmlOf(out).filter((x) => !x.startsWith('sample-app'))) assert.doesNotMatch(out.text(f), /<astro-island/, f);
+    // An island is a script of the experience's own: only an internal experience that is not content-class may ship one.
+    for (const f of htmlOf(out).filter((x) => /<astro-island/.test(out.text(x)))) {
+      const owner = ownerOf(f, allExperiences);
+      assert.ok(owner?.kind === 'internal' && owner.performanceClass !== 'content', `${f}: an island on a page that may not have one`);
+    }
   });
 
   test('the views are server-rendered, so their content is in the HTML before JavaScript runs', () => {
@@ -197,9 +201,13 @@ describe('production build', () => {
   });
 
   test('the platform font is the committed file, served locally; nothing refers to Google Fonts (F15)', () => {
-    const fonts = out.files.filter((f) => f.endsWith('.woff2'));
-    assert.equal(fonts.length, 1);
-    assert.deepEqual(readFileSync(join(out.dir, fonts[0]!)), readFileSync(new URL('../src/platform/fonts/atkinson-hyperlegible-next-latin.woff2', import.meta.url)));
+    const fonts = out.files.filter((f) => f.endsWith('.woff2')).map((f) => readFileSync(join(out.dir, f)));
+    const platform = readFileSync(new URL('../src/platform/fonts/atkinson-hyperlegible-next-latin.woff2', import.meta.url));
+    assert.equal(fonts.filter((f) => f.equals(platform)).length, 1, 'the platform font ships once');
+    // Every other font is one an experience committed in its own folder (contract § 3.6, ADR-028): byte for byte.
+    const experiences = new URL('../src/experiences/', import.meta.url);
+    const committed = readdirSync(experiences, { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.woff2')).map((f) => readFileSync(new URL(f, experiences)));
+    for (const f of fonts.filter((k) => !k.equals(platform))) assert.ok(committed.some((c) => c.equals(f)), 'a built font that no experience committed');
     for (const f of out.files.filter((x) => /\.(html|css|js)$/.test(x))) assert.doesNotMatch(out.text(f), /fonts\.(googleapis|gstatic)\.com/, f);
     assert.equal(out.text('index.html').match(/@font-face\{font-family:"Atkinson Hyperlegible Next-[^"]+";src:url\("\/_astro\/fonts\/[0-9a-f]{16}\.woff2"\)/g)?.length, 2, 'weights 400 and 700');
   });

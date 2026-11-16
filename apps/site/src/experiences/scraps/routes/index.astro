@@ -1,0 +1,20 @@
+---
+// The table. Everything on it is the visitor's own and lives in their browser, so the page is a
+// client-only island: there is nothing the server could render. Without JavaScript the page says
+// what Scraps is and why it needs scripts (contract § 4.3).
+import App from '../App.tsx';
+import Layout from '../Layout.astro';
+---
+<Layout>
+  <main id="content" class="k-main">
+    <h1 class="k-name">Scraps</h1>
+    <App client:only="react">
+      <div slot="fallback" class="k-fallback">
+        <noscript>
+          <p>Scraps is a table for whatever you have got: a sentence, half a thought, a doodle. Say something and it becomes a small piece of coloured paper you can pick up, restyle, write on the back of, or clip to another.</p>
+          <p>The table is laid out and kept by your browser, on your device, so it needs JavaScript. Nothing you make here is sent anywhere.</p>
+        </noscript>
+      </div>
+    </App>
+  </main>
+</Layout>

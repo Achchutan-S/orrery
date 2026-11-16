@@ -15,10 +15,15 @@ Production is https://orrery-teal.vercel.app, built from `main` at `b9555cc`, wh
 | `resume` | `/resume`, its PDF and link-preview image, listed since 3 November 2026 | [resume.md](resume.md); certification title confirmation not recorded |
 | `skills` | `/skills`, listed since 7 November 2026 | the Claude Skills Archive; [claude-skills/publication-decisions.md](claude-skills/publication-decisions.md) |
 | `divya-chakshu` | `/divya-chakshu`, listed since 8 November 2026 (`b9555cc`) | published before its manual accessibility check and preview smoke test (contract P2, P4), both still open; never checked on a real GPU or phone; [record](design/registry/divya-chakshu.md) |
+| `scraps` | `/scraps` and `/scraps/letter`, listed; release entry added 16 November 2026 on the owner's written instruction | a permanent experience ([record and contract](design/registry/scraps.md)). Locally verified. Published before a manual accessibility check (contract P2), which is open; P0 and P7 rest on the owner's instruction, not on reviews held under the creative process; never checked on a real phone or with a screen reader |
 | `sample-content`, `sample-app` | listed | permanent fixtures: static essay; React-island regression fixture ([ADR-021](adr/adr-021-platform-integrity.md)) |
 | `kawaiui`, `devxray` | listed links | external projects, never built here; subdomains wait for a domain |
 | `canary-draft`, `sample-hostile` | never (404) | permanent test fixtures; never promote |
 | Control Center | never deployed, by design | local only ([apps/control/README.md](../apps/control/README.md)) |
+
+**Not in production and not in the repository:**
+
+- Soundings (`/soundings`, `/soundings/letter`): the first attempt at the commission that became Scraps, **rejected by the owner on 16 November 2026**. Its code was never committed: it exists only as uncommitted files on the owner's machine, and the owner decides whether to delete them (O9). [Record](design/registry/soundings.md).
 
 **Not in production and not on `main`:** A History of Seeing, branch `feat/seeing` (`441e642`). Rejected by the owner on aesthetic grounds, shelved, never merged; `/seeing` is a 404. [Retrospective](design/registry/seeing.md).
 
@@ -35,11 +40,13 @@ Nothing below can be done by an agent.
 | O5 | **Approve or edit the Journal's new "Ahead" text** | Published content; the live chapter describes an abandoned roadmap | proposed text: `docs/reports/journal-ahead-proposed-text.md`; not applied |
 | O6 | **Rollback drill** | Never performed; deferred to a quiet time (the recommended position, taken on the owner's general instruction of 13 November 2026) | [deployment.md § Rollback drill](deployment.md#rollback-drill) |
 | O7 | **Decide what happens to `docs/reports/`** | `AGENTS.md` allows no per-task reports; the audit was kept until the programme closed | delete, or keep as a record |
+| O9 | **Say whether to remove the rejected Soundings draft** | Rejected on 16 November 2026; its folder, catalog entry and tests are uncommitted, so deleting them is permanent | remove `apps/site/src/experiences/soundings/`, its catalog entry and index line, and its two test files; the record stays |
 
 ## Open work
 
 | Item | Status | Where |
 | --- | --- | --- |
+| Divya Chakshu browser test "scrolling back restores every scene exactly" | failed once in a full local run on 16 November 2026 and passed in every run alone since (13 runs, 3 of them under full CPU load). Investigated, not changed: with motion reduced the engine draws a place once, and redraws it when a shader program that was still linking is ready; a screenshot taken in between is a frame with a layer missing (reproduced: the first frame after arriving differed from the settled one in 2 of 4 runs). The test waits fixed times (2.5 s to warm, 0.9 s per shot) and programs unused for 8 s are deleted, so a slow machine can photograph the gap. A timing weakness in the test, not a regression: no Divya Chakshu or platform file changed. Proposed: wait for two identical consecutive frames instead of a fixed time | `apps/site/test-browser/divya-chakshu.test.ts`, `client/engine.ts` |
 | Manual accessibility checks (audit F12, decision 3) | **not performed** for any experience; automated checks pass, which is not proof | [accessibility.md](accessibility.md) |
 | Hosted preview smoke run (audit F17) | not recorded; production smoke runs passed (latest 13 November 2026) | [deployment.md § Smoke test](deployment.md#smoke-test-toolscheckssrcsmokets) |
 | Design reviews of the published experiences | none recorded; their direction records are reconstructions, not approvals | [design/registry/](design/registry/README.md) |

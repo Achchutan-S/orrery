@@ -1,0 +1,12 @@
+---
+// Scraps' own document body: a fixed frame holding its name and whatever the page puts in it.
+// chrome is "beacon", so the platform adds the Beacon and nothing else.
+import ExperienceRoot from '../../platform/root/ExperienceRoot.astro';
+import './styles/scraps.css';
+
+interface Props { title?: string; description?: string }
+const { title, description } = Astro.props;
+---
+<ExperienceRoot experience="scraps" title={title} description={description}>
+  <slot />
+</ExperienceRoot>
