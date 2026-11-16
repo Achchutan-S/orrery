@@ -1,0 +1,20 @@
+---
+// The chart. Everything on it is the visitor's own and lives in their browser, so the page is a
+// client-only island: there is nothing the server could render. Without JavaScript the page says
+// what Soundings is and why it needs scripts (contract § 4.3).
+import App from '../App.tsx';
+import Layout from '../Layout.astro';
+---
+<Layout>
+  <main id="content" class="s-main">
+    <h1 class="s-name">Soundings</h1>
+    <App client:only="react">
+      <div slot="fallback" class="s-fallback">
+        <noscript>
+          <p>Soundings is a sea chart of your own thinking. Type a sentence and it surfaces as an islet; write at length and the land grows; connect two thoughts and a route is drawn between them.</p>
+          <p>The chart is drawn and stored by your browser, on your device, so it needs JavaScript. Nothing you write here is sent anywhere.</p>
+        </noscript>
+      </div>
+    </App>
+  </main>
+</Layout>

@@ -1,0 +1,1877 @@
+/*
+ * Scraps: a cutting mat with coloured paper on it (docs/design/registry/scraps.md).
+ * The world is cut paper: flat colour, hard shadows, square corners, nothing glossy.
+ * Three voices, one face each: Bricolage Grotesque shouts (the name, posters, buttons), Fraunces
+ * reads (soft looks and all long writing), Kalam is the studio's pencil (everything the place
+ * says to you). Your words are never set in pencil unless a look chooses it.
+ */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../fonts/fraunces-latin-wght-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kalam';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/kalam-latin-400-normal.woff2') format('woff2');
+}
+
+@layer experience {
+  [data-experience='scraps'] {
+    --k-mat: #1d4a3a;
+    --k-mat-line: #28594a;
+    --k-mat-mark: #32705b;
+    --k-mat-deep: #123026;
+    --k-cream: #fff5e1;
+    --k-page: #fdf8ec;
+    --k-ink: #1c1814;
+    --k-tomato: #ee5a3a;
+    --k-mustard: #f5bd3d;
+    --k-cobalt: #2c4fd0;
+    --k-pink: #f6a6c1;
+    --k-sky: #a5d6e8;
+    --k-shout: 'Bricolage Grotesque', 'Arial Black', system-ui, sans-serif;
+    --k-read: 'Fraunces', 'Iowan Old Style', Georgia, serif;
+    --k-pencil: 'Kalam', 'Bradley Hand', 'Segoe Print', cursive;
+    --k-w: 13rem;
+    --k-shadow: 0.2rem 0.3rem 0 rgb(0 0 0 / 0.3);
+  }
+
+  @media (max-width: 47.99rem) {
+    [data-experience='scraps'] {
+      --k-w: 9.5rem;
+    }
+  }
+
+  [data-experience='scraps'] body {
+    background-color: var(--k-mat);
+    /* A cutting mat's grid: fine lines every half unit, a firmer one every five. */
+    background-image:
+      linear-gradient(var(--k-mat-mark) 1px, transparent 1px),
+      linear-gradient(90deg, var(--k-mat-mark) 1px, transparent 1px),
+      linear-gradient(var(--k-mat-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--k-mat-line) 1px, transparent 1px);
+    background-size: 10rem 10rem, 10rem 10rem, 2rem 2rem, 2rem 2rem;
+    background-position: 1.25rem 1.25rem;
+    color: var(--k-cream);
+    font-family: var(--k-read);
+    font-size: 1rem;
+    line-height: 1.45;
+    font-synthesis: none;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  [data-experience='scraps'] :where(button, input, textarea) {
+    font: inherit;
+    color: inherit;
+  }
+
+  [data-experience='scraps'] :where(ul) {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  [data-experience='scraps'] :where(p, h2, h3) {
+    margin: 0;
+  }
+
+  [data-experience='scraps'] a {
+    color: inherit;
+    text-underline-offset: 0.2em;
+  }
+
+  [data-experience='scraps'] .k-vh,
+  [data-experience='scraps'][data-k-view='back'] .k-name,
+  [data-experience='scraps'] .k-vh-until-focus:not(:focus) {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  [data-experience='scraps'] .k-hand {
+    font-family: var(--k-pencil);
+    font-size: 1.0625rem;
+    line-height: 1.35;
+  }
+
+  /* --- The frame ------------------------------------------------------------------------------ */
+  [data-experience='scraps'] .k-main {
+    position: fixed;
+    inset: 0;
+    overflow: clip;
+  }
+
+  /* The name is a scrap too. */
+  [data-experience='scraps'] .k-name {
+    position: absolute;
+    z-index: 5;
+    inset: 0.9rem auto auto 1.1rem;
+    margin: 0;
+    padding: 0.1rem 0.7rem 0.2rem;
+    background: var(--k-tomato);
+    color: var(--k-ink);
+    font-family: var(--k-shout);
+    font-size: 1.625rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    rotate: -3deg;
+    filter: drop-shadow(var(--k-shadow));
+  }
+
+  [data-experience='scraps'] .k-app,
+  [data-experience='scraps'] .k-fallback {
+    position: absolute;
+    inset: 0;
+  }
+
+  [data-experience='scraps'] .k-loading,
+  [data-experience='scraps'] .k-fallback noscript {
+    position: absolute;
+    inset-block-start: 36%;
+    inset-inline: 1rem;
+    margin-inline: auto;
+    max-inline-size: 32rem;
+    text-align: center;
+    font-size: 1.25rem;
+  }
+
+  [data-experience='scraps'] .k-fallback noscript {
+    display: block;
+    padding: 1.25rem 1.5rem;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    font-size: 1.0625rem;
+    text-align: start;
+    rotate: -1deg;
+  }
+
+  [data-experience='scraps'] .k-fallback noscript p + p {
+    margin-block-start: 0.75rem;
+  }
+
+  /* --- Things to press ------------------------------------------------------------------------ */
+  [data-experience='scraps'] .k-button {
+    min-block-size: 44px;
+    padding: 0.35rem 1.1rem;
+    border: 0;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    font-family: var(--k-shout);
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    cursor: pointer;
+    filter: drop-shadow(var(--k-shadow));
+    transition: translate 0.12s;
+  }
+
+  [data-experience='scraps'] .k-button--play {
+    background: var(--k-mustard);
+  }
+
+  [data-experience='scraps'] .k-button:hover:not(:disabled) {
+    translate: -1px -2px;
+  }
+
+  [data-experience='scraps'] .k-button:disabled {
+    background: none;
+    color: inherit;
+    outline: 1px dashed currentcolor;
+    outline-offset: -1px;
+    filter: none;
+    cursor: default;
+  }
+
+  /* The quiet kind: pencilled words with a pencilled line under them. Takes the colour of what it sits on. */
+  [data-experience='scraps'] :is(.k-tab, .k-text-button) {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    min-inline-size: 44px;
+    padding: 0 0.5rem;
+    border: 0;
+    background: none;
+    font-family: var(--k-pencil);
+    font-size: 1.0625rem;
+    text-align: start;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+    cursor: pointer;
+  }
+
+  [data-experience='scraps'] :is(.k-tab, .k-text-button):hover:not(:disabled) {
+    text-decoration-style: solid;
+    text-decoration-thickness: 2px;
+  }
+
+  [data-experience='scraps'] .k-tab:is([aria-pressed='true'], [aria-expanded='true']) {
+    text-decoration-style: solid;
+    text-decoration-thickness: 3px;
+  }
+
+  [data-experience='scraps'] :is(.k-tab, .k-text-button):disabled {
+    text-decoration: none;
+    opacity: 0.75;
+    cursor: default;
+  }
+
+  [data-experience='scraps'] .k-do {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem 0.9rem;
+  }
+
+  [data-experience='scraps'] .k-do--small {
+    gap: 0 0.4rem;
+  }
+
+  [data-experience='scraps'] .k-field label {
+    display: block;
+    font-family: var(--k-pencil);
+    font-size: 1.0625rem;
+  }
+
+  [data-experience='scraps'] .k-field :is(input, textarea),
+  [data-experience='scraps'] .k-slip input {
+    display: block;
+    inline-size: 100%;
+    min-block-size: 44px;
+    padding: 0.5rem 0.7rem;
+    border: 0;
+    border-radius: 0;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    font-size: 1.0625rem;
+    resize: vertical;
+  }
+
+  [data-experience='scraps'] ::placeholder {
+    color: inherit;
+    font-family: var(--k-pencil);
+    opacity: 0.72;
+  }
+
+  /* --- A scrap -------------------------------------------------------------------------------
+     The button is the container; the face inside is sized in its units, so the same markup is a
+     thumbnail in the drawer, a scrap on the table and a poster in the hand. */
+  [data-experience='scraps'] .k-scrap {
+    position: relative;
+    display: block;
+    inline-size: var(--k-w);
+    padding: 0;
+    border: 0;
+    background: none;
+    container-type: inline-size;
+    text-align: start;
+    cursor: grab;
+    rotate: var(--r, 0deg);
+    filter: drop-shadow(var(--k-shadow));
+    transition: translate 0.15s, filter 0.15s;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  [data-experience='scraps'] .k-scrap:is(:hover, :focus-visible) {
+    translate: -2px -4px;
+    filter: drop-shadow(0.4rem 0.55rem 0 rgb(0 0 0 / 0.26));
+  }
+
+  [data-experience='scraps'] .k-scrap:active {
+    cursor: grabbing;
+  }
+
+  [data-experience='scraps'] :is(.k-held-scrap, .k-letter-scrap) {
+    inline-size: var(--k-w);
+    container-type: inline-size;
+    filter: drop-shadow(0.4rem 0.55rem 0 rgb(0 0 0 / 0.3));
+  }
+
+  [data-experience='scraps'] .k-face {
+    --paper: var(--k-cream);
+    --on: var(--k-ink);
+    --accent: var(--k-tomato);
+    --on-accent: var(--k-ink);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4cqi;
+    min-block-size: 76cqi;
+    max-block-size: 150cqi;
+    padding: 9cqi;
+    overflow: hidden;
+    background: var(--paper);
+    color: var(--on);
+  }
+
+  [data-experience='scraps'] .paper-1 { --paper: var(--k-mustard); --accent: var(--k-cobalt); --on-accent: var(--k-cream); }
+  [data-experience='scraps'] .paper-2 { --paper: var(--k-tomato); --accent: var(--k-cream); }
+  [data-experience='scraps'] .paper-3 { --paper: var(--k-cobalt); --on: var(--k-cream); --accent: var(--k-mustard); }
+  [data-experience='scraps'] .paper-4 { --paper: var(--k-pink); --accent: var(--k-cobalt); --on-accent: var(--k-cream); }
+  [data-experience='scraps'] .paper-5 { --paper: var(--k-sky); --accent: var(--k-tomato); }
+
+  /* Long words are cut off by the face's own height, not by a line clamp: plain block layout only. */
+  [data-experience='scraps'] .k-words {
+    display: block;
+    /* Size steps keep ordinary words whole (faceOf); a word too long for any step breaks with a hyphen. */
+    hyphens: auto;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+
+  [data-experience='scraps'] .size-0 .k-words { font-size: 25cqi; }
+  [data-experience='scraps'] .size-1 .k-words { font-size: 16.5cqi; }
+  [data-experience='scraps'] .size-2 .k-words { font-size: 12.2cqi; }
+  [data-experience='scraps'] .size-3 .k-words { font-size: 9.4cqi; }
+  [data-experience='scraps'] .size-4 .k-words { font-size: 7.6cqi; }
+
+  [data-experience='scraps'] .k-prompt {
+    font-family: var(--k-pencil);
+    font-size: 6.4cqi;
+    line-height: 1.25;
+  }
+
+  [data-experience='scraps'] .k-blank {
+    font-size: 7.6cqi;
+    opacity: 0.8;
+  }
+
+  [data-experience='scraps'] :is(.k-drawing, .k-pad) polyline {
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 12;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  [data-experience='scraps'] .k-face .k-drawing {
+    display: block;
+    inline-size: 100%;
+    max-block-size: 82cqi;
+  }
+
+  [data-experience='scraps'] .k-face .k-words + .k-drawing {
+    max-block-size: 46cqi;
+  }
+
+  /* Something on the back: the corner is turned up. */
+  [data-experience='scraps'] .k-face.has-back::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 auto;
+    inline-size: 13cqi;
+    block-size: 13cqi;
+    background: linear-gradient(135deg, var(--k-page) 50%, var(--k-mat) 50%);
+  }
+
+  /* Look 0, the poster: heavy grotesque, set tight, sitting on the bottom edge. */
+  [data-experience='scraps'] .look-0 {
+    justify-content: flex-end;
+  }
+
+  [data-experience='scraps'] .look-0 .k-words {
+    font-family: var(--k-shout);
+    font-weight: 800;
+    line-height: 0.96;
+    letter-spacing: -0.025em;
+  }
+
+  /* Look 1, the soft one: the serif, centred, over a short bar of the accent. */
+  [data-experience='scraps'] .look-1 {
+    align-items: center;
+    text-align: center;
+  }
+
+  [data-experience='scraps'] .look-1 .k-words {
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+
+  [data-experience='scraps'] .look-1::before {
+    content: '';
+    order: 3;
+    flex: none;
+    inline-size: 22cqi;
+    block-size: 3.2cqi;
+    background: var(--accent);
+  }
+
+  /* Look 2, the note: pencil on ruled paper. */
+  [data-experience='scraps'] .look-2 {
+    justify-content: flex-start;
+    background-image: linear-gradient(transparent calc(100% - 1px), color-mix(in srgb, var(--on) 22%, transparent) 0);
+    background-size: 100% 11cqi;
+    background-position: 0 4cqi;
+  }
+
+  [data-experience='scraps'] .look-2 .k-words {
+    font-family: var(--k-pencil);
+    line-height: 1.18;
+  }
+
+  /* Look 3, the cut-out: the words on a shape cut from the accent paper. */
+  [data-experience='scraps'] .look-3 {
+    align-items: center;
+    padding: 7cqi;
+  }
+
+  [data-experience='scraps'] .look-3 .k-words {
+    display: block;
+    max-block-size: 118cqi;
+    padding: 9cqi 8cqi;
+    background: var(--accent);
+    color: var(--on-accent);
+    border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%;
+    font-family: var(--k-shout);
+    font-weight: 700;
+    line-height: 1.02;
+    text-align: center;
+    scale: 0.92;
+  }
+
+  [data-experience='scraps'] .look-3.size-3 .k-words,
+  [data-experience='scraps'] .look-3.size-4 .k-words {
+    border-radius: 9cqi;
+  }
+
+  /* Look 4, the clipping: a heavy rule above, a hair below, the first line in bold. */
+  [data-experience='scraps'] .look-4 {
+    justify-content: flex-start;
+  }
+
+  [data-experience='scraps'] .look-4 .k-words {
+    padding-block: 5cqi;
+    border-block-start: 2.6cqi solid var(--on);
+    border-block-end: 1px solid var(--on);
+    font-weight: 400;
+    line-height: 1.12;
+  }
+
+  [data-experience='scraps'] .look-4 .k-words::first-line {
+    font-weight: 800;
+  }
+
+  /* --- The table ----------------------------------------------------------------------------- */
+  [data-experience='scraps'] .k-table {
+    position: absolute;
+    inset: 4.75rem 1.5rem 9rem;
+    /* Its own layer: however many piles there are, none lies over the tools or a slip. */
+    z-index: 1;
+  }
+
+  [data-experience='scraps'] .k-at {
+    position: absolute;
+    inset-inline-start: calc(var(--x) * (100% - var(--k-w)));
+    inset-block-start: calc(var(--y) * (100% - var(--k-w)));
+    /* The pile picked up most recently lies on top; the elements themselves never change order. */
+    z-index: var(--z);
+  }
+
+  [data-experience='scraps'] .k-at.is-new {
+    animation: k-land 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.12) backwards;
+  }
+
+  [data-experience='scraps'] .k-at.is-found {
+    animation: k-wiggle 0.5s ease-in-out 0.4s 3;
+  }
+
+  @keyframes k-land {
+    from {
+      translate: 0 60vh;
+      rotate: 16deg;
+      opacity: 0;
+    }
+  }
+
+  @keyframes k-wiggle {
+    25% { rotate: -4deg; }
+    75% { rotate: 4deg; }
+  }
+
+  /* A pile: the edges of what is underneath, and the clip that holds it. */
+  [data-experience='scraps'] .k-scrap.is-pile .k-face {
+    box-shadow: 0.45rem 0.4rem 0 var(--k-cream), 0.9rem 0.8rem 0 var(--k-pink);
+  }
+
+  [data-experience='scraps'] .k-clip {
+    position: absolute;
+    inset: -0.9rem auto auto 1rem;
+    fill: none;
+    stroke: #dfe3e6;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    rotate: 8deg;
+  }
+
+  /* --- The strip: say something ---------------------------------------------------------------- */
+  [data-experience='scraps'] .k-strip {
+    position: absolute;
+    z-index: 3;
+    inset: auto 0 0;
+    margin-inline: auto;
+    inline-size: min(34rem, calc(100% - 44rem));
+    display: flex;
+    padding: 0.7rem 1rem 1.1rem;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    /* A perforated edge, where the last one was torn off. */
+    border-block-start: 2px dashed var(--k-mat);
+    rotate: -0.6deg;
+    transform-origin: bottom center;
+    filter: drop-shadow(0 -0.2rem 0 rgb(0 0 0 / 0.22));
+  }
+
+  [data-experience='scraps'] .k-strip input {
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 44px;
+    padding: 0 0.25rem;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    font-size: 1.3125rem;
+    font-weight: 500;
+  }
+
+  [data-experience='scraps'] .k-strip ::placeholder {
+    font-size: 1.25rem;
+  }
+
+  /* Pencilled on the mat beside the strip until the first scrap exists. */
+  [data-experience='scraps'] .k-hint {
+    position: absolute;
+    z-index: 3;
+    inset: auto 0 5.4rem;
+    margin-inline: auto;
+    inline-size: fit-content;
+    font-size: 1.25rem;
+    rotate: -2deg;
+    animation: k-nudge 1.6s ease-in-out 1s 3;
+  }
+
+  [data-experience='scraps'] .k-hint::after {
+    content: '↓';
+    display: block;
+    text-align: center;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  @keyframes k-nudge {
+    50% { translate: 0 6px; }
+  }
+
+  /* --- The tray: three things to make with, and the slip the place hands you ---------------- */
+  [data-experience='scraps'] .k-tray {
+    position: absolute;
+    z-index: 4;
+    inset: auto auto 0.6rem 1rem;
+    display: grid;
+    gap: 0.75rem;
+    max-inline-size: min(23rem, calc(100% - 1.5rem));
+    pointer-events: none;
+  }
+
+  [data-experience='scraps'] .k-tray > * {
+    pointer-events: auto;
+  }
+
+  [data-experience='scraps'] .k-tools {
+    display: flex;
+    gap: 0.25rem;
+    justify-self: start;
+  }
+
+  [data-experience='scraps'] .k-tool {
+    display: grid;
+    justify-items: center;
+    gap: 0.1rem;
+    min-inline-size: 4.9rem;
+    min-block-size: 44px;
+    padding: 0.2rem 0.3rem;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  [data-experience='scraps'] .k-tool .k-hand {
+    font-size: 1rem;
+    line-height: 1.1;
+  }
+
+  [data-experience='scraps'] .k-icon {
+    overflow: visible;
+    filter: drop-shadow(0.12rem 0.18rem 0 rgb(0 0 0 / 0.3));
+    transition: rotate 0.2s, translate 0.2s;
+  }
+
+  [data-experience='scraps'] .k-tool:is(:hover, :focus-visible) .k-icon {
+    rotate: -7deg;
+    translate: 0 -3px;
+  }
+
+  [data-experience='scraps'] .i-a { fill: var(--k-cream); }
+  [data-experience='scraps'] .i-b { fill: var(--k-mustard); }
+  [data-experience='scraps'] .i-c { fill: var(--k-pink); }
+  [data-experience='scraps'] .i-d { fill: var(--k-tomato); }
+  [data-experience='scraps'] .i-e { fill: var(--k-ink); }
+  [data-experience='scraps'] .i-f { fill: none; stroke: var(--k-cobalt); stroke-width: 2.5; stroke-linecap: round; }
+
+  [data-experience='scraps'] .k-slip {
+    padding: 0.85rem 1rem 0.3rem;
+    background: var(--k-mustard);
+    color: var(--k-ink);
+    rotate: -1.2deg;
+    filter: drop-shadow(var(--k-shadow));
+    animation: k-unfold 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    transform-origin: bottom left;
+  }
+
+  [data-experience='scraps'] :is(.k-slip--found, .k-slip--continue) {
+    background: var(--k-pink);
+  }
+
+  @keyframes k-unfold {
+    from {
+      scale: 0.6 0.2;
+    }
+  }
+
+  [data-experience='scraps'] .k-slip > .k-hand {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+
+  [data-experience='scraps'] .k-slip form {
+    margin-block-start: 0.6rem;
+  }
+
+  [data-experience='scraps'] .k-slip .k-do {
+    justify-content: flex-start;
+    margin-block-start: 0.3rem;
+  }
+
+  [data-experience='scraps'] .k-slip .k-button {
+    background: var(--k-ink);
+    color: var(--k-cream);
+    filter: none;
+  }
+
+  /* --- The drawer's handle, and passing remarks ----------------------------------------------- */
+  [data-experience='scraps'] .k-drawer-pull {
+    position: absolute;
+    z-index: 4;
+    inset: 0 1.25rem auto auto;
+    min-block-size: 44px;
+    padding: 0.9rem 1rem 0.5rem;
+    border: 0;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    cursor: pointer;
+    filter: drop-shadow(var(--k-shadow));
+    transition: padding 0.15s;
+  }
+
+  [data-experience='scraps'] .k-drawer-pull:is(:hover, :focus-visible) {
+    padding-block-start: 1.3rem;
+  }
+
+  [data-experience='scraps'] .k-warning,
+  [data-experience='scraps'] .k-toast {
+    position: absolute;
+    z-index: 2147482000;
+    inset: 4.6rem 0.75rem auto;
+    margin-inline: auto;
+    inline-size: fit-content;
+    max-inline-size: 30rem;
+    padding: 0.25rem 0.9rem;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    rotate: 0.8deg;
+    filter: drop-shadow(var(--k-shadow));
+  }
+
+  [data-experience='scraps'] .k-warning {
+    background: var(--k-tomato);
+    font-size: 1rem;
+  }
+
+  /* --- In the hand; a pile spread out --------------------------------------------------------- */
+  [data-experience='scraps'] dialog {
+    color: var(--k-cream);
+  }
+
+  [data-experience='scraps'] dialog::backdrop {
+    background: rgb(12 34 26 / 0.86);
+  }
+
+  [data-experience='scraps'] :is(.k-held, .k-spread) {
+    inline-size: min(44rem, 100vw);
+    max-inline-size: none;
+    max-block-size: 100dvh;
+    padding: 1.5rem 1rem 5rem;
+    border: 0;
+    background: none;
+    overflow: auto;
+  }
+
+  [data-experience='scraps'] .k-held-in {
+    display: grid;
+    justify-items: center;
+    gap: 1rem;
+  }
+
+  [data-experience='scraps'] .k-held-scrap {
+    --k-w: min(23rem, 82vw);
+    rotate: -1.5deg;
+    animation: k-pick 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+  }
+
+  @keyframes k-pick {
+    from {
+      scale: 0.7;
+      rotate: 6deg;
+    }
+  }
+
+  [data-experience='scraps'] .k-held-facts {
+    text-align: center;
+  }
+
+  [data-experience='scraps'] :is(.k-held, .k-spread) .k-field {
+    inline-size: min(26rem, 100%);
+  }
+
+  [data-experience='scraps'] .k-choices .k-tab {
+    padding-inline-start: 0;
+  }
+
+  [data-experience='scraps'] .k-down {
+    margin-block-start: 0.5rem;
+  }
+
+  [data-experience='scraps'] .k-spread h2 {
+    margin-block-end: 1.5rem;
+    font-size: 1.375rem;
+    font-weight: 400;
+    text-align: center;
+  }
+
+  [data-experience='scraps'] .k-fan {
+    --k-w: 11rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1.5rem 1.25rem;
+    margin-block-end: 1.75rem;
+  }
+
+  [data-experience='scraps'] .k-fan .k-scrap {
+    cursor: pointer;
+    touch-action: auto;
+  }
+
+  [data-experience='scraps'] .k-fan li:nth-child(3n + 1) .k-scrap { rotate: -2.5deg; }
+  [data-experience='scraps'] .k-fan li:nth-child(3n + 2) .k-scrap { rotate: 1.5deg; }
+  [data-experience='scraps'] .k-fan li:nth-child(3n) .k-scrap { rotate: 3deg; }
+
+  @media (max-width: 47.99rem) {
+    [data-experience='scraps'] .k-fan {
+      --k-w: min(9.5rem, 42vw);
+      gap: 1.1rem 0.8rem;
+    }
+  }
+
+  /* --- The drawer ----------------------------------------------------------------------------- */
+  [data-experience='scraps'] .k-drawer {
+    inset: 0 0 0 auto;
+    inline-size: min(48rem, 100vw);
+    block-size: 100dvh;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: 1rem 1.5rem 6rem;
+    border: 0;
+    border-inline-start: 0.6rem solid var(--k-cream);
+    background: var(--k-mat-deep);
+    overflow: auto;
+    animation: k-slide 0.28s cubic-bezier(0.2, 0.8, 0.3, 1);
+  }
+
+  @keyframes k-slide {
+    from { translate: 100% 0; }
+  }
+
+  [data-experience='scraps'] .k-drawer-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  [data-experience='scraps'] .k-drawer h2 {
+    font-family: var(--k-shout);
+    font-size: 1.75rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  [data-experience='scraps'] .k-drawer .k-field {
+    max-inline-size: 24rem;
+    margin-block: 0.5rem 0.75rem;
+  }
+
+  [data-experience='scraps'] .k-drawer .k-fan {
+    justify-content: flex-start;
+    margin-block: 1.5rem 3rem;
+  }
+
+  [data-experience='scraps'] .k-keeping {
+    max-inline-size: 34rem;
+    padding-block-start: 1rem;
+    border-block-start: 2px dashed var(--k-mat-mark);
+  }
+
+  [data-experience='scraps'] .k-keeping h3 {
+    font-family: var(--k-pencil);
+    font-size: 1.1875rem;
+    font-weight: 400;
+  }
+
+  [data-experience='scraps'] .k-keeping p {
+    margin-block-start: 0.6rem;
+  }
+
+  [data-experience='scraps'] .k-keeping .k-do {
+    justify-content: flex-start;
+  }
+
+  /* --- Sending: a sheet of its own -------------------------------------------------------------- */
+  [data-experience='scraps'] .k-send {
+    inline-size: min(33rem, calc(100vw - 1.5rem));
+    padding: 1.4rem 1.6rem 1.2rem;
+    border: 0;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    filter: drop-shadow(0.4rem 0.55rem 0 rgb(0 0 0 / 0.3));
+  }
+
+  [data-experience='scraps'] .k-send h2 {
+    margin-block-end: 0.75rem;
+    font-family: var(--k-shout);
+    font-size: 1.625rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  [data-experience='scraps'] .k-send p {
+    margin-block-end: 0.75rem;
+  }
+
+  [data-experience='scraps'] .k-send label {
+    font-family: var(--k-pencil);
+    font-size: 1.0625rem;
+  }
+
+  [data-experience='scraps'] .k-send textarea {
+    display: block;
+    inline-size: 100%;
+    margin-block: 0.25rem 0.6rem;
+    padding: 0.5rem;
+    border: 1px dashed var(--k-ink);
+    border-radius: 0;
+    background: none;
+    font-family: ui-monospace, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    word-break: break-all;
+    resize: none;
+  }
+
+  [data-experience='scraps'] .k-send .k-do {
+    justify-content: flex-start;
+  }
+
+  [data-experience='scraps'] .k-send .k-button {
+    background: var(--k-ink);
+    color: var(--k-cream);
+    filter: none;
+  }
+
+  /* --- The back: a sheet for writing at length ------------------------------------------------ */
+  [data-experience='scraps'] .k-back {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  [data-experience='scraps'] .k-back-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.75rem;
+    padding: 0.2rem 0.6rem;
+    background: var(--k-mat-deep);
+  }
+
+  [data-experience='scraps'] .k-save {
+    flex: 1 1 9rem;
+    opacity: 0.9;
+  }
+
+  [data-experience='scraps'] .k-back-tools {
+    display: flex;
+    max-inline-size: 100%;
+    overflow-x: auto;
+  }
+
+  [data-experience='scraps'] .k-back-tools .k-tab {
+    flex: none;
+  }
+
+  [data-experience='scraps'] .k-back-scroll {
+    overflow: auto;
+    overscroll-behavior: contain;
+    perspective: 90rem;
+  }
+
+  [data-experience='scraps'] .k-sheet {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    min-block-size: 100%;
+    padding: 1.5rem 0.75rem 0;
+  }
+
+  /* The page: paper-white, ink, one comfortable column. Everything loud stays on the table. */
+  [data-experience='scraps'] .k-page {
+    inline-size: min(100%, 43rem);
+    min-block-size: calc(100dvh - 5rem);
+    padding: clamp(1.5rem, 5vw, 3.5rem) clamp(1.25rem, 7vw, 4.5rem) 42vh;
+    background: var(--k-page);
+    color: var(--k-ink);
+    filter: drop-shadow(0.35rem 0.45rem 0 rgb(0 0 0 / 0.28));
+    animation: k-turn 0.45s cubic-bezier(0.2, 0.8, 0.3, 1);
+    transform-origin: left center;
+  }
+
+  @keyframes k-turn {
+    from {
+      transform: rotateY(-70deg);
+    }
+  }
+
+  [data-experience='scraps'] :is(.k-title, .k-body) {
+    display: block;
+    /* The platform's focus ring frames whichever field is being typed in; the fields are padded so
+       the frame stands off the words, and pulled back out so the text still aligns with the page. */
+    inline-size: calc(100% + 2rem);
+    margin-inline: -1rem;
+    padding: 0.6rem 1rem;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    resize: none;
+    overflow: hidden;
+  }
+
+  [data-experience='scraps'] .k-title {
+    font-family: var(--k-shout);
+    font-size: clamp(1.75rem, 1.2rem + 2.2vw, 2.625rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.025em;
+  }
+
+  [data-experience='scraps'] .k-page-prompt {
+    margin-block: 0.25rem 0.5rem;
+    opacity: 0.8;
+  }
+
+  /* About 66 characters to the line; generous leading because the page is long. */
+  [data-experience='scraps'] :is(.k-body, .k-reading) {
+    font-size: 1.1875rem;
+    line-height: 1.68;
+    font-weight: 400;
+  }
+
+  [data-experience='scraps'] .k-body {
+    min-block-size: 45vh;
+  }
+
+  @media (max-width: 39.99rem) {
+    [data-experience='scraps'] :is(.k-body, .k-reading) {
+      font-size: 1.125rem;
+      line-height: 1.6;
+    }
+  }
+
+  [data-experience='scraps'] .k-reading {
+    margin-block-start: 0.6rem;
+  }
+
+  [data-experience='scraps'] .k-reading > * {
+    margin: 0 0 1.1em;
+    overflow-wrap: anywhere;
+  }
+
+  [data-experience='scraps'] .k-reading :is(h2, h3) {
+    margin-block-start: 1.6em;
+    font-family: var(--k-shout);
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  [data-experience='scraps'] .k-reading h3 {
+    font-size: 1.1875rem;
+  }
+
+  [data-experience='scraps'] .k-reading blockquote {
+    padding: 0.1rem 0 0.1rem 1.1rem;
+    border-inline-start: 0.4rem solid var(--k-mustard);
+    font-weight: 500;
+  }
+
+  [data-experience='scraps'] .k-reading ul {
+    list-style: disc;
+    padding-inline-start: 1.3rem;
+  }
+
+  [data-experience='scraps'] .k-margin {
+    inline-size: min(100%, 43rem);
+    padding: 1.5rem 0.5rem 7rem;
+  }
+
+  [data-experience='scraps'] .k-margin section + section {
+    margin-block-start: 1.5rem;
+  }
+
+  [data-experience='scraps'] .k-margin h2 {
+    font-size: 1.1875rem;
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  [data-experience='scraps'] .k-margin li {
+    margin-block-start: 0.6rem;
+  }
+
+  [data-experience='scraps'] .k-margin li p {
+    overflow-wrap: anywhere;
+  }
+
+  [data-experience='scraps'] .k-margin .k-tab {
+    padding-inline-start: 0;
+  }
+
+  @media (min-width: 76rem) {
+    [data-experience='scraps'] .k-sheet {
+      grid-template-columns: minmax(0, 1fr) 43rem minmax(0, 1fr);
+      justify-items: stretch;
+    }
+
+    [data-experience='scraps'] .k-page {
+      grid-column: 2;
+      inline-size: auto;
+    }
+
+    [data-experience='scraps'] .k-margin {
+      grid-column: 3;
+      max-inline-size: 17rem;
+      padding: 2.5rem 0 0 2rem;
+    }
+  }
+
+  /* --- The doodle pad ------------------------------------------------------------------------- */
+  [data-experience='scraps'] .k-sketch {
+    inline-size: 100vw;
+    block-size: 100dvh;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--k-mat);
+  }
+
+  [data-experience='scraps'] .k-sketch[open] {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  [data-experience='scraps'] .k-sketch-bar {
+    justify-self: stretch;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 0.5rem;
+    padding: 0.3rem 0.75rem;
+    background: var(--k-mat-deep);
+  }
+
+  [data-experience='scraps'] .k-sketch-bar p {
+    flex: 1 1 12rem;
+    font-family: var(--k-pencil);
+    font-size: 1.0625rem;
+  }
+
+  [data-experience='scraps'] .k-pad {
+    align-self: center;
+    inline-size: min(100vw - 1.5rem, 100dvh - 8.5rem);
+    block-size: min(100vw - 1.5rem, 100dvh - 8.5rem);
+    background: var(--k-cream);
+    color: var(--k-ink);
+    filter: drop-shadow(0.35rem 0.45rem 0 rgb(0 0 0 / 0.28));
+    touch-action: none;
+    cursor: crosshair;
+  }
+
+  [data-experience='scraps'] .k-error {
+    position: absolute;
+    inset: 28% 1rem auto;
+    margin-inline: auto;
+    max-inline-size: 30rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    rotate: -1deg;
+  }
+
+  [data-experience='scraps'] .k-error h2 {
+    font-family: var(--k-shout);
+    font-size: 1.5rem;
+    font-weight: 800;
+  }
+
+  [data-experience='scraps'] .k-error p {
+    margin-block-start: 0.75rem;
+  }
+
+  [data-experience='scraps'] .k-error .k-button {
+    background: var(--k-ink);
+    color: var(--k-cream);
+  }
+
+  /* --- Phones: the strip moves up under the name, out of the keyboard's way ------------------ */
+  @media (max-width: 47.99rem) {
+    [data-experience='scraps'] .k-name {
+      inset: 0.6rem auto auto 0.7rem;
+      font-size: 1.375rem;
+    }
+
+    [data-experience='scraps'] .k-drawer-pull {
+      inset-inline-end: 0.6rem;
+      padding: 0.6rem 0.7rem 0.35rem;
+    }
+
+    [data-experience='scraps'] .k-strip {
+      inset: 3.6rem 0.6rem auto;
+      inline-size: auto;
+      padding: 0.25rem 0.75rem 0.3rem;
+      border-block-start: 0;
+      border-block-end: 2px dashed var(--k-mat);
+      rotate: 0.5deg;
+      filter: drop-shadow(var(--k-shadow));
+    }
+
+    [data-experience='scraps'] .k-hint {
+      inset: 7.2rem 0 auto;
+    }
+
+    [data-experience='scraps'] .k-hint::after {
+      content: none;
+    }
+
+    [data-experience='scraps'] .k-hint::before {
+      content: '↑';
+      display: block;
+      text-align: center;
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    [data-experience='scraps'] .k-strip input,
+    [data-experience='scraps'] .k-strip ::placeholder {
+      font-size: 1.125rem;
+    }
+
+    [data-experience='scraps'] .k-table {
+      inset: 8rem 0.6rem 8.25rem;
+    }
+
+    @keyframes k-land {
+      from {
+        translate: 0 -50vh;
+        rotate: -14deg;
+        opacity: 0;
+      }
+    }
+
+    [data-experience='scraps'] .k-tray {
+      inset: auto auto 0.4rem 0.4rem;
+    }
+
+    [data-experience='scraps'] .k-tool {
+      min-inline-size: 3.25rem;
+      padding-inline: 0.1rem;
+    }
+
+    [data-experience='scraps'] .k-icon {
+      inline-size: 44px;
+      block-size: 44px;
+    }
+
+    [data-experience='scraps'] .k-tool .k-hand {
+      font-size: 0.875rem;
+    }
+
+    [data-experience='scraps'] .k-toast,
+    [data-experience='scraps'] .k-warning {
+      inset-block-start: 7.4rem;
+    }
+  }
+
+  /* --- The letter page: one scrap, sent to someone ---------------------------------------------- */
+  [data-experience='scraps'] .k-letter {
+    display: grid;
+    justify-items: center;
+    gap: 1.5rem;
+    max-inline-size: 43rem;
+    margin-inline: auto;
+    padding: clamp(2rem, 8vh, 5rem) 1rem 7rem;
+  }
+
+  [data-experience='scraps'] .k-letter h1 {
+    margin: 0;
+    padding: 0.8rem 1.2rem;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    font-family: var(--k-shout);
+    font-size: clamp(1.5rem, 1.1rem + 2vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    rotate: -1.5deg;
+  }
+
+  [data-experience='scraps'] .k-letter-scrap {
+    --k-w: min(25rem, 86vw);
+    rotate: -2deg;
+  }
+
+  [data-experience='scraps'] .k-letter-note {
+    font-size: 1.25rem;
+    text-align: center;
+    max-inline-size: 30rem;
+  }
+
+  [data-experience='scraps'] .k-letter .k-reading {
+    inline-size: 100%;
+    padding: clamp(1.5rem, 5vw, 3rem) clamp(1.25rem, 7vw, 4rem);
+    background: var(--k-page);
+    color: var(--k-ink);
+    filter: drop-shadow(0.35rem 0.45rem 0 rgb(0 0 0 / 0.28));
+  }
+
+  [data-experience='scraps'] .k-letter .k-reading:empty {
+    display: none;
+  }
+
+  [data-experience='scraps'] .k-letter .k-reading > :last-child {
+    margin-block-end: 0;
+  }
+
+  [data-experience='scraps'] .k-letter-foot {
+    margin-block-start: 1.5rem;
+    font-size: 1.125rem;
+    text-align: center;
+  }
+
+  [data-experience='scraps'] .k-letter-foot a {
+    display: inline-block;
+    padding-block: 0.6rem;
+  }
+
+  /* === Scraps 3 ================================================================================= */
+
+  /* --- A device that asks for less motion gets none: everything is simply in place ----------------- */
+  @media (prefers-reduced-motion: reduce) {
+    [data-experience='scraps'] *,
+    [data-experience='scraps'] *::before,
+    [data-experience='scraps'] *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  /* --- Paper in the hand: lifted while it is carried, and the pile beneath says it will take it ---- */
+  [data-experience='scraps'] .k-at.is-air {
+    z-index: 999;
+  }
+
+  [data-experience='scraps'] .k-at.is-air .k-scrap {
+    translate: -3px -7px;
+    scale: 1.03;
+    filter: drop-shadow(0.7rem 0.9rem 0 rgb(0 0 0 / 0.22));
+    cursor: grabbing;
+    transition: scale 0.12s, filter 0.12s;
+  }
+
+  [data-experience='scraps'] .k-at.is-target .k-scrap {
+    rotate: calc(var(--r, 0deg) - 3deg);
+    outline: 3px dashed var(--k-cream);
+    outline-offset: 5px;
+  }
+
+  [data-experience='scraps'] .k-at.is-settling .k-scrap {
+    animation: k-settle 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+
+  @keyframes k-settle {
+    from {
+      translate: -3px -7px;
+      scale: 1.03;
+    }
+  }
+
+  /* --- An addressed letter waits in its envelope ---------------------------------------------- */
+  [data-experience='scraps'] .k-envelope--letter {
+    --k-w: min(24rem, 86vw);
+    align-content: end;
+    justify-items: center;
+    gap: 0.15rem;
+    padding: 0 1rem 1.1rem;
+    border: 0;
+    cursor: pointer;
+    rotate: -2deg;
+    transition: translate 0.15s;
+  }
+
+  [data-experience='scraps'] .k-envelope--letter[hidden],
+  [data-experience='scraps'] .k-leaves[hidden],
+  [data-experience='scraps'] .k-letter-note[hidden] {
+    display: none;
+  }
+
+  [data-experience='scraps'] .k-envelope--letter:hover {
+    translate: 0 -4px;
+  }
+
+  [data-experience='scraps'] .k-envelope-for {
+    font-family: var(--k-shout);
+    font-size: clamp(1.5rem, 1.1rem + 2vw, 2.125rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  [data-experience='scraps'] .k-envelope--letter .k-envelope-do {
+    margin-block-start: 0.4rem;
+    font-size: 1.125rem;
+    text-decoration: underline dashed 1px;
+    text-underline-offset: 0.3em;
+  }
+
+  [data-experience='scraps'] .k-zine-name {
+    justify-self: center;
+    max-inline-size: 30rem;
+    padding: 0.6rem 1.2rem 0.75rem;
+    background: var(--k-mustard);
+    color: var(--k-ink);
+    font-family: var(--k-shout);
+    font-size: clamp(1.75rem, 1.2rem + 3vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.025em;
+    line-height: 1;
+    text-align: center;
+    overflow-wrap: anywhere;
+    rotate: 1.5deg;
+    filter: drop-shadow(var(--k-shadow));
+  }
+
+  [data-experience='scraps'] .k-leaf-n {
+    font-size: 1rem;
+  }
+
+  /* --- Your studio: the mat's colour, stillness, bigger writing --------------------------------- */
+  [data-experience='scraps'][data-k-mat='blue'] { --k-mat: #1c3f6e; --k-mat-line: #264c80; --k-mat-mark: #335f9c; --k-mat-deep: #11284a; }
+  [data-experience='scraps'][data-k-mat='plum'] { --k-mat: #4a1f3d; --k-mat-line: #5a2a4c; --k-mat-mark: #70375f; --k-mat-deep: #30122a; }
+  [data-experience='scraps'][data-k-mat='slate'] { --k-mat: #2b3138; --k-mat-line: #363d45; --k-mat-mark: #485058; --k-mat-deep: #1a1e23; }
+
+  [data-experience='scraps'][data-k-still='true'] *,
+  [data-experience='scraps'][data-k-still='true'] *::before,
+  [data-experience='scraps'][data-k-still='true'] *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  [data-experience='scraps'][data-k-big='true'] :is(.k-body, .k-reading) {
+    font-size: 1.375rem;
+  }
+
+  [data-experience='scraps'] .k-studio-pull {
+    position: absolute;
+    z-index: 4;
+    inset: 0.55rem auto auto 9.25rem;
+  }
+
+  [data-experience='scraps'] .k-check {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-block-size: 48px;
+    font-family: var(--k-shout);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  [data-experience='scraps'] .k-check input,
+  [data-experience='scraps'] .k-mat input {
+    flex: none;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    margin: 0;
+    accent-color: var(--k-ink);
+  }
+
+  [data-experience='scraps'] .k-check small {
+    display: block;
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  [data-experience='scraps'] .k-mats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin: 0 0 0.75rem;
+    padding: 0;
+    border: 0;
+  }
+
+  [data-experience='scraps'] .k-mats legend {
+    padding: 0;
+    margin-block-end: 0.25rem;
+  }
+
+  [data-experience='scraps'] .k-mat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 48px;
+    cursor: pointer;
+  }
+
+  [data-experience='scraps'] .k-mat span::before {
+    content: '';
+    display: inline-block;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    margin-inline-end: 0.5rem;
+    vertical-align: middle;
+    background: #1d4a3a;
+    box-shadow: 0.15rem 0.2rem 0 rgb(0 0 0 / 0.3);
+  }
+
+  [data-experience='scraps'] .k-mat--blue span::before { background: #1c3f6e; }
+  [data-experience='scraps'] .k-mat--plum span::before { background: #4a1f3d; }
+  [data-experience='scraps'] .k-mat--slate span::before { background: #2b3138; }
+
+  /* --- Paper of different sizes; tape, stars, pictures ------------------------------------------- */
+  [data-experience='scraps'] .k-table .k-scrap {
+    inline-size: calc(var(--k-w) * var(--s, 1));
+  }
+
+  [data-experience='scraps'] .k-held-scrap {
+    position: relative;
+  }
+
+  [data-experience='scraps'] .k-tape {
+    position: absolute;
+    z-index: 1;
+    inset: -0.55rem auto auto 50%;
+    inline-size: 4.2rem;
+    block-size: 1.25rem;
+    background: rgb(255 245 225 / 0.72);
+    translate: -50% 0;
+    rotate: -4deg;
+  }
+
+  [data-experience='scraps'] .k-star {
+    position: absolute;
+    z-index: 1;
+    inset: -0.7rem -0.6rem auto auto;
+    inline-size: 2rem;
+    block-size: 2rem;
+    fill: var(--k-mustard);
+    stroke: var(--k-ink);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    rotate: 12deg;
+  }
+
+  [data-experience='scraps'] .k-face.has-pic {
+    justify-content: flex-start;
+    gap: 3cqi;
+    padding: 5cqi 5cqi 7cqi;
+  }
+
+  [data-experience='scraps'] .k-pic {
+    display: block;
+    inline-size: 100%;
+    max-block-size: 96cqi;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  [data-experience='scraps'] .k-face.has-pic .k-words {
+    font-size: 7.6cqi;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+    scale: 1;
+  }
+
+  [data-experience='scraps'] .i-g { fill: var(--k-sky); }
+
+  /* Who a kept letter came from: written by the place, so it is not part of the scrap's own words. */
+  [data-experience='scraps'] .k-from::before {
+    content: 'from ' attr(data-from);
+  }
+
+  /* --- The slip says which instrument it came from; undo by the tools -------------------------- */
+  [data-experience='scraps'] .k-slip > .k-slip-kind {
+    margin-block-end: 0.2rem;
+    font-size: 1rem;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.3em;
+  }
+
+  [data-experience='scraps'] .k-slip--arrived {
+    background: var(--k-sky);
+  }
+
+  [data-experience='scraps'] .k-again {
+    position: fixed;
+    inset: 0.55rem auto auto 17.25rem;
+    display: flex;
+  }
+
+  /* Between a phone and a wide desk the strip takes the whole bottom edge and the tools stand on it. */
+  @media (min-width: 48rem) and (max-width: 71.99rem) {
+    [data-experience='scraps'] .k-strip {
+      inline-size: min(34rem, calc(100% - 26rem));
+    }
+
+    [data-experience='scraps'] .k-tray {
+      inset-block-end: 5.25rem;
+    }
+
+    [data-experience='scraps'] .k-table {
+      inset-block-end: 13rem;
+    }
+  }
+
+  [data-experience='scraps'] .k-warning .k-tab {
+    min-block-size: 44px;
+  }
+
+  /* --- In the hand: the second row of things to do ---------------------------------------------- */
+  [data-experience='scraps'] .k-more {
+    padding-block-start: 0.4rem;
+    border-block-start: 2px dashed var(--k-mat-mark);
+  }
+
+  [data-experience='scraps'] .k-kin {
+    text-align: center;
+  }
+
+  [data-experience='scraps'] .k-kin .k-choices {
+    display: grid;
+    justify-items: center;
+  }
+
+  [data-experience='scraps'] .k-held form.k-field {
+    display: grid;
+    gap: 0.5rem;
+    justify-items: start;
+  }
+
+  /* --- The drawer as a calendar ---------------------------------------------------------------- */
+  [data-experience='scraps'] .k-shelves {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.25rem;
+    margin-block-end: 0.5rem;
+  }
+
+  [data-experience='scraps'] .k-month h3 {
+    margin-block-start: 1.75rem;
+    padding-block-end: 0.2rem;
+    border-block-end: 2px dashed var(--k-mat-mark);
+    font-size: 1.375rem;
+    font-weight: 400;
+  }
+
+  [data-experience='scraps'] .k-drawer .k-month .k-fan {
+    margin-block: 1.25rem 1rem;
+  }
+
+  [data-experience='scraps'] .k-drawer .k-fan li {
+    display: grid;
+    justify-items: start;
+    max-inline-size: var(--k-w);
+  }
+
+  [data-experience='scraps'] .k-scrap--still {
+    cursor: default;
+  }
+
+  [data-experience='scraps'] .k-tile-note {
+    margin-block-start: 0.6rem;
+    font-size: 1rem;
+  }
+
+  [data-experience='scraps'] .k-envelope {
+    position: relative;
+    display: grid;
+    place-items: end center;
+    inline-size: var(--k-w);
+    aspect-ratio: 3 / 2;
+    padding: 0.5rem;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    text-align: center;
+    filter: drop-shadow(var(--k-shadow));
+  }
+
+  [data-experience='scraps'] .k-envelope::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 45%;
+    background: var(--k-mustard);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+
+  [data-experience='scraps'] .k-envelope .k-hand {
+    font-size: 0.9375rem;
+  }
+
+  /* --- Sending: who it is for ------------------------------------------------------------------- */
+  [data-experience='scraps'] .k-send-who {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+    gap: 0.5rem 0.75rem;
+    margin-block-end: 0.75rem;
+  }
+
+  [data-experience='scraps'] .k-send-who input {
+    display: block;
+    inline-size: 100%;
+    min-block-size: 44px;
+    padding: 0.3rem 0.5rem;
+    border: 1px dashed var(--k-ink);
+    border-radius: 0;
+    background: none;
+  }
+
+  /* --- Absorbed in writing: everything but the page gets out of the way ------------------------- */
+  [data-experience='scraps'] .k-back-bar {
+    transition: translate 0.35s;
+  }
+
+  /* Only where a pointer can bring it back by moving: on a touch screen the bar stays. */
+  @media (hover: hover) {
+    [data-experience='scraps'] .k-back.is-absorbed .k-back-bar:not(:focus-within) {
+      translate: 0 -100%;
+    }
+  }
+
+  [data-experience='scraps'] .k-back.is-absorbed .k-margin {
+    visibility: hidden;
+  }
+
+  [data-experience='scraps'] .k-reading strong {
+    font-weight: 700;
+  }
+
+  /* --- The letter page: a note, a zine, or something still folded ------------------------------ */
+  [data-experience='scraps'] .k-leaves {
+    display: grid;
+    gap: 3rem;
+    inline-size: 100%;
+  }
+
+  [data-experience='scraps'] .k-leaves:empty,
+  [data-experience='scraps'] .k-letter-doing[hidden] {
+    display: none;
+  }
+
+  [data-experience='scraps'] .k-leaf {
+    display: grid;
+    justify-items: center;
+    gap: 1.5rem;
+    animation: k-pick 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.15) backwards;
+  }
+
+  [data-experience='scraps'] .k-leaf:nth-child(even) .k-letter-scrap {
+    rotate: 2deg;
+  }
+
+  [data-experience='scraps'] .k-leaf + .k-leaf {
+    padding-block-start: 3rem;
+    border-block-start: 2px dashed var(--k-mat-mark);
+  }
+
+  [data-experience='scraps'] .k-letter-sign {
+    justify-self: end;
+    font-size: 1.5rem;
+    rotate: -2deg;
+  }
+
+  [data-experience='scraps'] .k-letter-doing {
+    text-align: center;
+  }
+
+  [data-experience='scraps'] .k-letter-doing .k-hand {
+    margin-block-start: 0.5rem;
+  }
+
+  [data-experience='scraps'][data-k-letter='folded'] .k-letter-note {
+    padding: 4.5rem 1.5rem 1.5rem;
+    background: var(--k-cream);
+    color: var(--k-ink);
+    background-image: linear-gradient(var(--k-mustard), var(--k-mustard));
+    background-size: 100% 3.25rem;
+    background-repeat: no-repeat;
+    filter: drop-shadow(var(--k-shadow));
+    rotate: -1deg;
+  }
+
+  @media (max-width: 47.99rem) {
+    [data-experience='scraps'] .k-studio-pull {
+      inset: 0.15rem auto auto 6.75rem;
+    }
+
+    [data-experience='scraps'] .k-tool {
+      min-inline-size: 3rem;
+    }
+
+    [data-experience='scraps'] .k-again {
+      position: static;
+      justify-self: start;
+    }
+  }
+
+  /* --- On paper: the sheet, or the zine, and nothing else ---------------------------------------- */
+  @media print {
+    [data-experience='scraps'] body {
+      background: #fff;
+      color: #000;
+    }
+
+    [data-experience='scraps'] :is(.k-name, .k-back-bar, .k-margin, .k-letter-doing, .k-letter-foot, .k-toast, .k-warning, .pu-colophon),
+    [data-experience='scraps'] body > :not(main) {
+      display: none !important;
+    }
+
+    [data-experience='scraps'] :is(.k-main, .k-app, .k-back) {
+      position: static;
+      display: block;
+      overflow: visible;
+    }
+
+    [data-experience='scraps'] .k-back-scroll {
+      overflow: visible;
+    }
+
+    [data-experience='scraps'] .k-sheet {
+      display: block;
+      padding: 0;
+    }
+
+    [data-experience='scraps'] .k-page {
+      inline-size: auto;
+      min-block-size: 0;
+      padding: 0;
+      background: none;
+      filter: none;
+      animation: none;
+    }
+
+    [data-experience='scraps'] .k-letter {
+      padding: 0;
+    }
+
+    [data-experience='scraps'] .k-letter :is(h1, .k-letter-note, .k-letter-sign) {
+      background: none;
+      color: #000;
+      filter: none;
+    }
+
+    [data-experience='scraps'] .k-letter .k-reading {
+      padding: 0;
+      background: none;
+      filter: none;
+    }
+
+    [data-experience='scraps'] :is(.k-letter-scrap, .k-face) {
+      filter: none;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    [data-experience='scraps'] .k-leaf {
+      break-inside: avoid;
+      animation: none;
+    }
+
+    [data-experience='scraps'] .k-leaf + .k-leaf {
+      break-before: page;
+      border: 0;
+    }
+
+    [data-experience='scraps'] .k-zine-name {
+      background: none;
+      filter: none;
+      rotate: none;
+    }
+
+    [data-experience='scraps'] .k-envelope--letter {
+      display: none;
+    }
+  }
+}

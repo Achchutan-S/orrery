@@ -1,0 +1,32 @@
+---
+// A scrap someone was sent. It travels inside the link's fragment, which a browser never sends to
+// a server: this page is the same static file for every letter, and the script below unfolds the
+// one in the address (letter.ts).
+import Layout from '../Layout.astro';
+---
+<Layout title="A scrap someone sent you" description="A small piece of someone’s thinking, folded up inside its own link. Made on a table called Scraps.">
+  <main id="content" class="k-letter">
+    <h1 data-letter-title>A scrap for you</h1>
+    <p class="k-hand k-letter-note" data-letter-note>This page unfolds a scrap of paper that travels inside its link. The link you followed has none in it, or part of it got cut off on the way. Ask whoever sent it for the whole thing.</p>
+    <noscript><p class="k-hand k-letter-note">The scrap is folded inside the link itself, so unfolding it needs JavaScript.</p></noscript>
+    <button type="button" class="k-envelope k-envelope--letter" data-letter-open hidden>
+      <span class="k-envelope-for" data-letter-for></span>
+      <span class="k-hand" data-letter-by></span>
+      <span class="k-hand k-envelope-do">open it</span>
+    </button>
+    <div class="k-leaves" data-letter-leaves></div>
+    <div class="k-letter-doing" data-letter-doing hidden>
+      <p class="k-do">
+        <button type="button" class="k-button" data-letter-keep>Keep it on my table, and write back</button>
+        <button type="button" class="k-tab" data-letter-print>Print it</button>
+      </p>
+      <p class="k-hand">Keeping it copies it into this browser, onto a table of your own. Nobody is told, and nothing is sent.</p>
+    </div>
+    <p class="k-hand k-letter-foot">Made on a table called Scraps. <a href="/scraps">Clear one for yourself</a></p>
+  </main>
+</Layout>
+
+<script>
+  import { openLetter } from '../letter.ts';
+  void openLetter();
+</script>

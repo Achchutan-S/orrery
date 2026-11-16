@@ -11,6 +11,8 @@ import sampleContent from './entries/sample-content.ts';
 import resume from './entries/resume.ts';
 import sampleHostile from './entries/sample-hostile.ts';
 import skills from './entries/skills.ts';
+import scraps from './entries/scraps.ts';
+import soundings from './entries/soundings.ts';
 
 // One line per experience. Order is the discovery order.
 export const catalog: readonly ExperienceInput[] = [
@@ -22,7 +24,9 @@ export const catalog: readonly ExperienceInput[] = [
   sampleApp,
   skills,
   divyaChakshu,
+  scraps,
   resume,
+  soundings,
   canaryDraft,
   sampleHostile,
 ];

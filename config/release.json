@@ -88,6 +88,14 @@
       "discoverability": "unlisted",
       "note": "Permanent CSS isolation fixture. Never promote."
     },
+    "scraps": {
+      "lifecycle": "published",
+      "access": {
+        "kind": "public"
+      },
+      "discoverability": "listed",
+      "note": "Scraps. Published on the owner's written instruction of 16 November 2026, which names it a permanent Orrery experience (docs/design/registry/scraps.md). Contract § 8.5 P2 (manual accessibility check) was not met first and is open in docs/tracker.md; P0 and P7 rest on that instruction, not on reviews held under the creative process."
+    },
     "skills": {
       "lifecycle": "published",
       "access": {
