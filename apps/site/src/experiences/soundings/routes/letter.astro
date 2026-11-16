@@ -1,0 +1,24 @@
+---
+// A released piece, read by someone else. The piece travels inside the link's fragment, which a
+// browser never sends to a server: this page is the same static file for every letter, and the
+// script below unfolds the one in the address (letter.ts).
+import Layout from '../Layout.astro';
+---
+<Layout title="A letter from Soundings" description="A piece of writing carried inside its own link, written in Soundings.">
+  <main id="content" class="s-letter">
+    <article>
+      <h1 data-letter-title>A letter from Soundings</h1>
+      <p class="s-letter-date" data-letter-date>This page unfolds a piece of writing that travels inside its link.</p>
+      <div class="s-reading" data-letter-body>
+        <p data-letter-empty>The link you followed carries no letter, or part of it was cut off on the way. Ask whoever sent it for the whole link.</p>
+        <noscript><p>The letter is folded inside the link itself, so unfolding it needs JavaScript.</p></noscript>
+      </div>
+    </article>
+    <p class="s-letter-foot">Written in Soundings, a sea chart for thinking. <a href="/soundings">Start a chart of your own</a></p>
+  </main>
+</Layout>
+
+<script>
+  import { openLetter } from '../letter.ts';
+  void openLetter();
+</script>
